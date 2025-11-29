@@ -1,0 +1,18 @@
+/* Hide scrollbar but keep scrolling */
+.overflow-y-auto::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari */
+}
+
+.overflow-y-auto {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+.badge{
+    font-size: 14px;
+    font-weight: bold;
+    background-color: blue;
+    color: white;
+}
