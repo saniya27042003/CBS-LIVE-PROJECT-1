@@ -15,7 +15,7 @@ export class DatabaseMappingController {
         return { success: true, data: result };
     }
     //for different databse connection 
-    @Post('connect')
+    @Post('connect-client')
     async connectClient(@Body() config: any) {
         console.log('Received config:', config);
         return this.dbService.connect(config);

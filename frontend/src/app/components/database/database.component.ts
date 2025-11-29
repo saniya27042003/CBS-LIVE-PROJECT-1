@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { AppService } from '../../../service/app.service';
 
 @Component({
   selector: 'app-database',
@@ -11,6 +12,7 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
   styleUrls: ['./database.component.css'],
   imports: [CommonModule, ReactiveFormsModule, HttpClientModule]
 })
+
 export class DatabaseComponent implements OnInit {
 
   databases = [
@@ -36,7 +38,8 @@ export class DatabaseComponent implements OnInit {
   constructor(
     private router: Router,
     private fb: FormBuilder,
-    private http: HttpClient
+    private http: HttpClient,
+    private appService: AppService
   ) { }
 
   ngOnInit(): void {
@@ -47,7 +50,7 @@ export class DatabaseComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@#$%^&*!])[A-Za-z\d@#$%^&*!]{6,20}$/)
+          Validators.minLength(4)    // temporary simple rule
         ]
       ],
       port: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
@@ -55,7 +58,7 @@ export class DatabaseComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.pattern(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/)
+          Validators.pattern(/^(localhost|127\.0\.0\.1)$/)   // only localhost for now
         ]
       ],
       database: ['', Validators.required]
@@ -82,8 +85,6 @@ export class DatabaseComponent implements OnInit {
       type: dbName
     });
   }
-
-  // CONNECT CLIENT
   onOkClick() {
     if (this.databaseForm.invalid) {
       this.databaseForm.markAllAsTouched();
@@ -92,36 +93,37 @@ export class DatabaseComponent implements OnInit {
     }
 
     const clientConfig = {
-      type: this.databaseForm.value.type,      // engine from card (e.g. 'Postgres')
+      type: this.databaseForm.value.type.toLowerCase(),  // 'Postgres' -> 'postgres'
       host: this.databaseForm.value.host,
       port: this.databaseForm.value.port,
       username: this.databaseForm.value.username,
       password: this.databaseForm.value.password,
-      database: this.databaseForm.value.database  // actual DB name typed by user (e.g. 'chatdb')
+      database: this.databaseForm.value.database
     };
 
-    this.http.post('http://localhost:3000/database-mapping/connect-client', clientConfig)
-      .subscribe({
-        next: (res: any) => {
-          if (res.success) {
-            alert('✅ Client Database Connected Successfully!');
-            this.router.navigate(['/table'], {
-              queryParams: {
-                primary: this.selectedPrimary,           // or 'testdb' if your backend expects that
-                clientType: this.selectedClient,         // engine
-                client: this.databaseForm.value.database // actual DB name
-              }
-            });
-          } else {
-            alert('Client connection failed: ' + res.message);
-          }
-        },
-        error: (err) => {
-          console.error('Client Connection error:', err);
-          alert('❌ Failed to connect Client database.');
+
+    this.appService.connectClient(clientConfig).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          alert('✅ Client Database Connected Successfully!');
+          this.router.navigate(['/table'], {
+            queryParams: {
+              primary: this.selectedPrimary,
+              clientType: this.selectedClient,
+              client: this.databaseForm.value.database
+            }
+          });
+        } else {
+          alert('Client connection failed: ' + res.message);
         }
-      });
+      },
+      error: (err) => {
+        console.error('Client Connection error:', err);
+        alert('❌ Failed to connect Client database.');
+      }
+    });
   }
+
 
   // CANCEL
   onCancelClick() {
