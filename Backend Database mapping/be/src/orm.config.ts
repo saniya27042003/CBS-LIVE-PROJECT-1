@@ -21,7 +21,6 @@ export const primaryDBConfig: TypeOrmModuleOptions = {
   entities: [],
   migrations: ['dist/migration/*{.ts,.js}'],
 };
-
 // clientDBConfig removed/commented
 
 // export let clientDBConfig: TypeOrmModuleOptions = {

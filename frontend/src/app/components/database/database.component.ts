@@ -28,8 +28,8 @@ export class DatabaseComponent implements OnInit {
   primaryClassMap: { [key: string]: string } = {};
   clientClassMap: { [key: string]: string } = {};
 
-  primaryDatabaseName: string = '';
-  clientDatabaseName: string = '';
+  primaryDatabaseName = '';
+  clientDatabaseName = '';
 
   databaseForm!: FormGroup;
 
@@ -37,7 +37,7 @@ export class DatabaseComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private http: HttpClient
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.databaseForm = this.fb.group({
@@ -62,7 +62,7 @@ export class DatabaseComponent implements OnInit {
     });
   }
 
-  // ✅ SELECT PRIMARY DATABASE
+  // SELECT PRIMARY DATABASE
   selectPrimary(dbName: string) {
     this.selectedPrimary = dbName;
     this.primaryClassMap = {};
@@ -70,71 +70,60 @@ export class DatabaseComponent implements OnInit {
     this.primaryDatabaseName = dbName;
   }
 
-  // ✅ SELECT CLIENT DATABASE (FIXED)
-selectClient(dbName: string) {
-  // ✅ dbName is ONLY the engine label (Postgres)
-  this.selectedClient = dbName;
+  // SELECT CLIENT DATABASE – only sets engine type
+  selectClient(dbName: string) {
+    this.selectedClient = dbName;
+    this.clientClassMap = {};
+    this.clientClassMap[dbName] = 'ring-4 ring-green-400';
+    this.clientDatabaseName = dbName;
 
-  this.clientClassMap = {};
-  this.clientClassMap[dbName] = 'ring-4 ring-green-400';
-
-  // ✅ IMPORTANT: DO NOT TOUCH the database NAME here
-  // User must type: chatdb in the input field
-
-  // ✅ Only force DB ENGINE TYPE
-  this.databaseForm.patchValue({
-    type:dbName   // fixed engine
-  });
-}
-
-
-
-
-  // ✅ CONNECT BOTH PRIMARY + CLIENT
- onOkClick() {
-  if (this.databaseForm.invalid) {
-    this.databaseForm.markAllAsTouched();
-    alert('Please fill all required fields correctly.');
-    return;
+    // force only the ENGINE type in the form
+    this.databaseForm.patchValue({
+      type: dbName
+    });
   }
 
-const clientConfig = {
-  type: 'postgres',
-  host: this.databaseForm.value.host,
-  port: this.databaseForm.value.port,
-  username: this.databaseForm.value.username,
-  password: this.databaseForm.value.password,
+  // CONNECT CLIENT
+  onOkClick() {
+    if (this.databaseForm.invalid) {
+      this.databaseForm.markAllAsTouched();
+      alert('Please fill all required fields correctly.');
+      return;
+    }
 
-  // ✅ ONLY THIS FIELD defines the actual DB name (chatdb)
-  database: this.databaseForm.value.database
-};
+    const clientConfig = {
+      type: this.databaseForm.value.type,      // engine from card (e.g. 'Postgres')
+      host: this.databaseForm.value.host,
+      port: this.databaseForm.value.port,
+      username: this.databaseForm.value.username,
+      password: this.databaseForm.value.password,
+      database: this.databaseForm.value.database  // actual DB name typed by user (e.g. 'chatdb')
+    };
 
-
-  this.http.post('http://localhost:3000/database-mapping/connect-client', clientConfig)
-    .subscribe({
-      next: (res: any) => {
-        if (res.success) {
-          alert('✅ Client Database Connected Successfully!');
-          this.router.navigate(['/table'], {
-            queryParams: {
-              primary: 'testdb',
-              client: this.clientDatabaseName
-            }
-          });
-        } else {
-          alert('Client connection failed: ' + res.message);
+    this.http.post('http://localhost:3000/database-mapping/connect-client', clientConfig)
+      .subscribe({
+        next: (res: any) => {
+          if (res.success) {
+            alert('✅ Client Database Connected Successfully!');
+            this.router.navigate(['/table'], {
+              queryParams: {
+                primary: this.selectedPrimary,           // or 'testdb' if your backend expects that
+                clientType: this.selectedClient,         // engine
+                client: this.databaseForm.value.database // actual DB name
+              }
+            });
+          } else {
+            alert('Client connection failed: ' + res.message);
+          }
+        },
+        error: (err) => {
+          console.error('Client Connection error:', err);
+          alert('❌ Failed to connect Client database.');
         }
-      },
-      error: (err) => {
-        console.error('Client Connection error:', err);
-        alert('❌ Failed to connect Client database.');
-      }
-    });
-}
+      });
+  }
 
-
-
-  // ✅ CANCEL
+  // CANCEL
   onCancelClick() {
     this.databaseForm.reset();
 
