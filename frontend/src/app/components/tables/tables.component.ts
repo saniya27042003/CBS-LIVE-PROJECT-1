@@ -35,7 +35,6 @@ export class TablesComponent implements OnInit {
   primaryDatabaseName = '';
   primaryTableSearch = '';
 
-  // table -> column "rows" (each row = one column)
   primaryTableRowsByName: Record<string, any[]> = {};
   activePrimaryTable: string | null = null;
 
@@ -60,9 +59,9 @@ export class TablesComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      if (params['primary']) this.primaryDatabaseName = params['primary'];      // "PostgreSQL"
-      if (params['clientType']) this.clientDatabaseName = params['clientType']; // "Postgres"
-      if (params['client']) this.actualClientDbName = params['client'];         // db name
+      if (params['primary']) this.primaryDatabaseName = params['primary'];
+      if (params['clientType']) this.clientDatabaseName = params['clientType'];
+      if (params['client']) this.actualClientDbName = params['client'];
     });
   }
 
@@ -91,14 +90,12 @@ export class TablesComponent implements OnInit {
       this.selectedPrimaryTable.push(tableName);
     }
 
-    // make selected table active
     this.activePrimaryTable = tableName;
 
     this.appService.getAllColumnsNames(tableName).subscribe((res: any) => {
       const rows = Array.isArray(res)
         ? res.map((col: any, idx: number) => ({
-          // keep id as numeric position if you want, but name holds the column
-          id: idx + 1,
+          id: idx + 1, // row id / position
           name: typeof col === 'string' ? col : col?.column_name,
           source: tableName,
           position: '',
@@ -107,7 +104,6 @@ export class TablesComponent implements OnInit {
 
       this.primaryTableRowsByName[tableName] = rows;
     });
-
   }
 
   setActivePrimaryTable(tableName: string) {
@@ -131,7 +127,6 @@ export class TablesComponent implements OnInit {
       this.selectedClientTable.push(tableName);
     }
 
-    // make selected client table active
     this.activeClientTable = tableName;
 
     this.appService.getClientColumns(tableName).subscribe((res: any) => {
@@ -156,34 +151,41 @@ export class TablesComponent implements OnInit {
       : [];
   }
 
-  // ===== MAPPING (same idea as old) =====
+  // ===== MAPPING =====
 
   onOkClick() {
     this.mappingDataByTable = {};
 
     this.selectedPrimaryTable.forEach(tableName => {
       const primaryRows = this.primaryTableRowsByName[tableName] || [];
-      const mappings: any[] = [];
+      const clientRows =
+        this.activeClientTable
+          ? this.clientTableRowsByName[this.activeClientTable] || []
+          : [];
 
-      primaryRows.forEach(primaryRow => {
+      const mappings = primaryRows.map((primaryRow, index) => {
         const enteredClientIndex = primaryRow.position;
         let clientMatch: any = null;
 
-        if (enteredClientIndex && this.activeClientTable) {
-          const clientRows =
-            this.clientTableRowsByName[this.activeClientTable] || [];
+        if (enteredClientIndex) {
           clientMatch = clientRows.find((_, i) => i + 1 == enteredClientIndex);
         }
 
-        mappings.push({
+        return {
+          // for “No” column
+          no: index + 1,
+          // ids for debugging / later use
+          rowId: primaryRow.id,
+          clientId: clientMatch ? clientMatch.id : null,
+          // shown columns
           serverColumn: primaryRow.name,
-          clientColumn: clientMatch ? clientMatch.name || clientMatch.id : '-',
+          clientColumn: clientMatch ? (clientMatch.name ?? clientMatch.id ?? '-') : '-',
           clientDisplayName: clientMatch
             ? clientMatch.name || clientMatch.id || 'Unknown'
             : enteredClientIndex
               ? 'Not Found'
               : 'No Mapping',
-        });
+        };
       });
 
       this.mappingDataByTable[tableName] = mappings;
@@ -206,25 +208,5 @@ export class TablesComponent implements OnInit {
     if (this.activeClientTable === table) {
       this.activeClientTable = this.selectedClientTable[0] || null;
     }
-  }
-
-  isPrimaryDropdownOpen = false;
-
-  closePrimaryDropdown(event: Event) {
-    event.stopPropagation();
-    const dropdown = document.querySelector('details.dropdown');
-    dropdown?.removeAttribute('open');
-    this.isPrimaryDropdownOpen = false;
-  }
-
-  isClientDropdownOpen = false;
-
-  closeClientDropdown(event: Event) {
-    event.stopPropagation();
-    const dropdown = document.querySelectorAll(
-      'details.dropdown',
-    )[1] as HTMLElement;
-    dropdown?.removeAttribute('open');
-    this.isClientDropdownOpen = false;
   }
 }
