@@ -35,7 +35,7 @@ export class TablesComponent implements OnInit {
   groupedPrimaryTables: { [key: string]: any[] } = {};
   // mappingDataByTable: { [tableName: string]: any[] } = {};
   mappingDataByTable: Record<string, any[]> = {};
-
+  actualClientDbName: string = '';
 
 
 
@@ -59,13 +59,17 @@ export class TablesComponent implements OnInit {
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       if (params['primary']) {
-        this.primaryDatabaseName = params['primary'];
+        this.primaryDatabaseName = params['primary'];      // 'PostgreSQL'
+      }
+      if (params['clientType']) {
+        this.clientDatabaseName = params['clientType'];    // 'Postgres'
       }
       if (params['client']) {
-        this.clientDatabaseName = params['client'];
+        this.actualClientDbName = params['client'];        // 'postgres' (use only when you need the db name)
       }
     });
   }
+
 
   goToDatabase() {
     this.router.navigate(['/database']);
@@ -80,18 +84,18 @@ export class TablesComponent implements OnInit {
   // }
 
   // ✅ For PRIMARY dropdown
-getPrimaryTables() {
-  this.appService.getPrimaryTableNames().subscribe((res: any) => {
-    this.dropdownItemsPrimary = res || [];
-  });
-}
+  getPrimaryTables() {
+    this.appService.getPrimaryTableNames().subscribe((res: any) => {
+      this.dropdownItemsPrimary = res || [];
+    });
+  }
 
-// ✅ For CLIENT dropdown
-getClientTables() {
-  this.appService.getClientTableNames().subscribe((res: any) => {
-    this.dropdownItemsClient = res || [];
-  });
-}
+  // ✅ For CLIENT dropdown
+  getClientTables() {
+    this.appService.getClientTableNames().subscribe((res: any) => {
+      this.dropdownItemsClient = res || [];
+    });
+  }
 
 
   // onSelectPrimaryTable(tableName: string) {
@@ -109,19 +113,19 @@ getClientTables() {
   //   });
   // }
 
-onSelectPrimaryTable(tableName: string) {
-  if (!this.selectedPrimaryTable.includes(tableName)) {
-    this.selectedPrimaryTable.push(tableName);
+  onSelectPrimaryTable(tableName: string) {
+    if (!this.selectedPrimaryTable.includes(tableName)) {
+      this.selectedPrimaryTable.push(tableName);
+    }
+
+    this.appService.getPrimaryColumns(tableName).subscribe((res: any) => {
+      const tableData = Array.isArray(res)
+        ? res.map(r => ({ id: r, source: tableName }))
+        : [];
+
+      this.primaryTableData = [...this.primaryTableData, ...tableData];
+    });
   }
-
-  this.appService.getPrimaryColumns(tableName).subscribe((res: any) => {
-    const tableData = Array.isArray(res)
-      ? res.map(r => ({ id: r, source: tableName }))
-      : [];
-
-    this.primaryTableData = [...this.primaryTableData, ...tableData];
-  });
-}
 
 
   getRowsForTable(tableName: string) {
@@ -131,16 +135,16 @@ onSelectPrimaryTable(tableName: string) {
 
 
 
-//  onSelectClientTable(tableName: string) {
-//   this.selectedClientTable = tableName;
+  //  onSelectClientTable(tableName: string) {
+  //   this.selectedClientTable = tableName;
 
-//   this.appService.getClientColumns(tableName).subscribe((res: any) => {
-//     this.clientTableData = Array.isArray(res)
-//       ? res.map(r => ({ id: r }))
-//       : [];
-//   });
-// }
-  
+  //   this.appService.getClientColumns(tableName).subscribe((res: any) => {
+  //     this.clientTableData = Array.isArray(res)
+  //       ? res.map(r => ({ id: r }))
+  //       : [];
+  //   });
+  // }
+
   onSelectClientTable(tableName: string) {
     if (this.selectedClientTable.includes(tableName)) {
       // If yes, remove it from the array
@@ -148,16 +152,16 @@ onSelectPrimaryTable(tableName: string) {
     } else {
       // If no, add it to the array
       this.selectedClientTable.push(tableName);
-      
+
       // Fetch data only if we don't have it yet
       if (!this.clientTableDataMap[tableName]) {
-       this.appService.getClientColumns(tableName).subscribe((res: any) => {
-          const rows = Array.isArray(res) 
-            ? res.map(r => (typeof r === 'object' ? r : { id: r })) 
+        this.appService.getClientColumns(tableName).subscribe((res: any) => {
+          const rows = Array.isArray(res)
+            ? res.map(r => (typeof r === 'object' ? r : { id: r }))
             : [];
-            
+
           // Store data in the map
-          this.clientTableDataMap[tableName] = rows; 
+          this.clientTableDataMap[tableName] = rows;
         });
       }
     }
@@ -271,31 +275,31 @@ onSelectPrimaryTable(tableName: string) {
   }
 
   removePrimaryTable(table: string) {
-  this.selectedPrimaryTable =
-    this.selectedPrimaryTable.filter(t => t !== table);
-}
+    this.selectedPrimaryTable =
+      this.selectedPrimaryTable.filter(t => t !== table);
+  }
 
-removeClientTable(table: string) {
-  this.selectedClientTable =
-    this.selectedClientTable.filter(t => t !== table);
-}
+  removeClientTable(table: string) {
+    this.selectedClientTable =
+      this.selectedClientTable.filter(t => t !== table);
+  }
 
-isPrimaryDropdownOpen = false;
+  isPrimaryDropdownOpen = false;
 
-closePrimaryDropdown(event: Event) {
-  event.stopPropagation(); // prevents reopening
-  const dropdown = document.querySelector('details.dropdown');
-  dropdown?.removeAttribute('open');
-  this.isPrimaryDropdownOpen = false;
-}
-isClientDropdownOpen = false;
+  closePrimaryDropdown(event: Event) {
+    event.stopPropagation(); // prevents reopening
+    const dropdown = document.querySelector('details.dropdown');
+    dropdown?.removeAttribute('open');
+    this.isPrimaryDropdownOpen = false;
+  }
+  isClientDropdownOpen = false;
 
-closeClientDropdown(event: Event) {
-  event.stopPropagation(); // prevents dropdown reopening
-  const dropdown = document.querySelectorAll('details.dropdown')[1] as HTMLElement;
-  dropdown?.removeAttribute('open');
-  this.isClientDropdownOpen = false;
-}
+  closeClientDropdown(event: Event) {
+    event.stopPropagation(); // prevents dropdown reopening
+    const dropdown = document.querySelectorAll('details.dropdown')[1] as HTMLElement;
+    dropdown?.removeAttribute('open');
+    this.isClientDropdownOpen = false;
+  }
 
 }
 

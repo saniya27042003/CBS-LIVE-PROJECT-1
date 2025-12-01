@@ -16,12 +16,12 @@ import { AppService } from '../../../service/app.service';
 export class DatabaseComponent implements OnInit {
 
   databases = [
-    { name: 'MySQL', img: 'assets/images/mysql.png' },
-    { name: 'MsSQL', img: 'assets/images/mssql.png' },
-    { name: 'Postgres', img: 'assets/images/postgres.png' },
-    { name: 'MariaDB', img: 'assets/images/mariadb2(2).png' },
-    { name: 'MongoDB', img: 'assets/images/mongodb.png' },
-    { name: 'Oracle', img: 'assets/images/oracle.png' },
+    { name: 'MySQL', img: 'assets/images/mysql.png', type: 'mysql' },
+    { name: 'MsSQL', img: 'assets/images/mssql.png', type: 'mssql' },
+    { name: 'PostgreSQL', img: 'assets/images/postgres.png', type: 'postgres' },
+    { name: 'MariaDB', img: 'assets/images/mariadb2(2).png', type: 'mariadb' },
+    { name: 'MongoDB', img: 'assets/images/mongodb.png', type: 'mongodb' },
+    { name: 'Oracle', img: 'assets/images/oracle.png', type: 'oracle' },
   ];
 
   selectedPrimary: string | null = null;
@@ -80,9 +80,11 @@ export class DatabaseComponent implements OnInit {
     this.clientClassMap[dbName] = 'ring-4 ring-green-400';
     this.clientDatabaseName = dbName;
 
-    // force only the ENGINE type in the form
+    const selected = this.databases.find(d => d.name === dbName);
+
+    // set ENGINE/driver type for backend
     this.databaseForm.patchValue({
-      type: dbName
+      type: selected?.type || ''
     });
   }
   onOkClick() {
