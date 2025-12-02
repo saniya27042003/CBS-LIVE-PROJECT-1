@@ -1,5 +1,7 @@
 import knex from 'knex';
 import { dbConfig } from './db.config';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export async function getSourceConnection() {
   const { host, port, user, password, database, options } = dbConfig.source;
