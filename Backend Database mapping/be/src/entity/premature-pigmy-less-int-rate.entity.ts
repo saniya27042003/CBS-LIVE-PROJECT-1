@@ -1,4 +1,4 @@
-import { SCHEMAST } from 'src/entity//schemeParameters.entity';
+import { SCHEMAST } from './schemeParameters.entity';
 import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PREMATULESS } from './pigmy-less-int.entity';
 
