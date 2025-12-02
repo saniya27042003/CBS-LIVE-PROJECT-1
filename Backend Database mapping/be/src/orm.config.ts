@@ -1,14 +1,12 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
-dotenv.config();
-// import { IDMASTER } from './entity/customer-id.entity';
-// import { DAILYTRAN } from './entity/voucher.entity';
-// import { DEPOTRAN } from './entity/depotran.entity';
-// import { LOANTRAN } from './entity/loantran.entity';
-// import { PIGMYTRAN } from './entity/pigmytran.entity';
-// import { SCHEMAST } from './entity/schemeParameters.entity';
-// import { SHARETRAN } from './entity/sharetran.entity';
-// import { SYSPARA } from './entity/system-master-parameters.entity';
+import { IDMASTER } from './entity/customer-id.entity';
+import { DAILYTRAN } from './entity/voucher.entity';
+import { DEPOTRAN } from './entity/depotran.entity';
+import { LOANTRAN } from './entity/loantran.entity';
+import { PIGMYTRAN } from './entity/pigmytran.entity';
+import { SCHEMAST } from './entity/schemeParameters.entity';
+import { SHARETRAN } from './entity/sharetran.entity';
+import { SYSPARA } from './entity/system-master-parameters.entity';
 
 export const primaryDBConfig: TypeOrmModuleOptions = {
   name: 'primaryDB',
