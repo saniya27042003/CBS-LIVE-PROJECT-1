@@ -1,4 +1,4 @@
-import { SHARECAPITALAMTDETAILS } from 'src/entity//SHARECAPITALANTDETAILS.entity';
+import { SHARECAPITALAMTDETAILS } from './SHARECAPITALANTDETAILS.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()

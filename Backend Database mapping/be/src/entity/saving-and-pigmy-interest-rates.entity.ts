@@ -1,5 +1,5 @@
-import { INTCATEGORYMASTER } from 'src/entity//interest-category-master.entity';
-import { SCHEMAST } from 'src/entity//schemeParameters.entity';
+import { INTCATEGORYMASTER } from './interest-category-master.entity';
+import { SCHEMAST } from './schemeParameters.entity';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class INTRATESBPG {
