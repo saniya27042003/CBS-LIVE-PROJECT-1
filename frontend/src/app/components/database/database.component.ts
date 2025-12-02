@@ -58,7 +58,7 @@ export class DatabaseComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.pattern(/^(localhost|127\.0\.0\.1)$/)   // only localhost for now
+          Validators.pattern(/^192\.168\.\d{1,3}\.\d{1,3}$/)  // only localhost for now
         ]
       ],
       database: ['', Validators.required]
