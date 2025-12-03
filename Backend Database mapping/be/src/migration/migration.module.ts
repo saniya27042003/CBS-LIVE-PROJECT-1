@@ -15,7 +15,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MigrateController } from './migration.controller';
 import { MigrateService } from './migration.service';
-import { JointAcLink } from 'src/entity/joint-account.entity';
+// import { JointAcLink } from 'src/entity/joint-account.entity';
 
 @Module({
   imports: [],

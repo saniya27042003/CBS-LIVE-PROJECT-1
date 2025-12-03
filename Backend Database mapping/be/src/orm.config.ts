@@ -1,24 +1,14 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { IDMASTER } from './entity/customer-id.entity';
-import { DAILYTRAN } from './entity/voucher.entity';
-import { DEPOTRAN } from './entity/depotran.entity';
-import { LOANTRAN } from './entity/loantran.entity';
-import { PIGMYTRAN } from './entity/pigmytran.entity';
-import { SCHEMAST } from './entity/schemeParameters.entity';
-import { SHARETRAN } from './entity/sharetran.entity';
-import { SYSPARA } from './entity/system-master-parameters.entity';
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-console.log('ENV CHECK', {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  pass: process.env.DB_PASS,
-  name: process.env.DB_NAME,
-});
+// import { IDMASTER } from './entity/customer-id.entity';
+// import { DAILYTRAN } from './entity/voucher.entity';
+// import { DEPOTRAN } from './entity/depotran.entity';
+// import { LOANTRAN } from './entity/loantran.entity';
+// import { PIGMYTRAN } from './entity/pigmytran.entity';
+// import { SCHEMAST } from './entity/schemeParameters.entity';
+// import { SHARETRAN } from './entity/sharetran.entity';
+// import { SYSPARA } from './entity/system-master-parameters.entity';
+import 'dotenv/config'
 
 export const primaryDBConfig: TypeOrmModuleOptions = {
   name: 'primaryDB',
@@ -30,17 +20,9 @@ export const primaryDBConfig: TypeOrmModuleOptions = {
   database: process.env.DB_NAME,
   synchronize: false,
   logging: false,
-  entities: [],
-  migrations: ['dist/migration/*{.ts,.js}'],
+  // entities: [],
+  // migrations: ['dist/migration/*{.ts,.js}'],
 };
-
-console.log('PRIMARY DB ENV', {
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  pass: process.env.DB_PASS,
-  name: process.env.DB_NAME,
-});
 // clientDBConfig removed/commented
 
 // export let clientDBConfig: TypeOrmModuleOptions = {
@@ -56,3 +38,12 @@ console.log('PRIMARY DB ENV', {
 //   entities: ['dist/**/*.entity{.ts,.js}'],
 //   migrations: ['dist/migration/*{.ts,.js}'],
 // };
+
+
+console.log('ENV CHECK', {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  pass: process.env.DB_PASS,
+  name: process.env.DB_NAME,
+});

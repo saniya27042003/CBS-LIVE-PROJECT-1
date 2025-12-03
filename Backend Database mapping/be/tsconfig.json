@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // {
 //   "compilerOptions": {
 //     "module": "nodenext",
@@ -50,3 +51,57 @@
     "ignoreDeprecations": "5.0"
   }
 }
+=======
+// {
+//   "compilerOptions": {
+//     "module": "nodenext",
+//     "moduleResolution": "nodenext",
+//     "resolvePackageJsonExports": true,
+//     "esModuleInterop": true,
+//     "isolatedModules": true,
+//     "declaration": true,
+//     "removeComments": true,
+//     "emitDecoratorMetadata": true,
+//     "experimentalDecorators": true,
+//     "allowSyntheticDefaultImports": true,
+//     "target": "ES2023",
+//     "sourceMap": true,
+//     "outDir": "./dist",
+//     "baseUrl": "./",
+//     "incremental": true,
+//     "skipLibCheck": true,
+//     "strictNullChecks": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "noImplicitAny": false,
+//     "strictBindCallApply": false,
+//     "noFallthroughCasesInSwitch": false
+//   }
+// }
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    // "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    // "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "5.0"
+  }
+}
+>>>>>>> 4ad060f30ce45d7b10b77bb6e7522ec4db76c0ea
