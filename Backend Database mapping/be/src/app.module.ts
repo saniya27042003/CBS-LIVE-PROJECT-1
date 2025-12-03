@@ -16,4 +16,4 @@ import { primaryDBConfig } from './orm.config';
     DatabaseMappingModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

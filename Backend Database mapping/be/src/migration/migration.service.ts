@@ -344,10 +344,8 @@
 //         // @InjectRepository(SMSMAST) private SmsService: Repository<SMSMAST>,
 //         private connection: Connection
 //     ) {
-//         // this.genAI = new GoogleGenerativeAI(this.API_KEY); 
+//         // this.genAI = new GoogleGenerativeAI(this.API_KEY);
 //     }
-
-
 
 //     async getAllTableNames() {
 //         try {
@@ -370,7 +368,6 @@
 //         }
 //     }
 
-
 //     async getAllColumnsNames(tableName) {
 //         try {
 //             let result = await this.jointAccountRepository.query(`
@@ -391,75 +388,63 @@
 //         }
 //     }
 
-
-
-
-
-
-
-
 // }
-
 
 import { Injectable } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 
-
 @Injectable()
 export class MigrateService {
-    // constructor(
-    //     @InjectRepository(JointAcLink)
-    //     private readonly jointAccountRepository: Repository<JointAcLink>,
-    //     private readonly dataSource: DataSource,
-    // ) { }
+  // constructor(
+  //     @InjectRepository(JointAcLink)
+  //     private readonly jointAccountRepository: Repository<JointAcLink>,
+  //     private readonly dataSource: DataSource,
+  // ) { }
 
+  constructor(
+    @InjectDataSource('primaryConnection') private primaryDb: DataSource,
+    @InjectDataSource('clientConnection') private clientDb: DataSource,
+  ) {}
 
-    constructor(
-        @InjectDataSource('primaryConnection') private primaryDb: DataSource,
-        @InjectDataSource('clientConnection') private clientDb: DataSource,
-    ) { }
+  async getPrimaryData() {
+    return await this.primaryDb.query('SELECT * FROM idmaster');
+  }
 
-    async getPrimaryData() {
-        return await this.primaryDb.query('SELECT * FROM idmaster');
-    }
+  async getClientData() {
+    return await this.clientDb.query('SELECT * FROM LNMASTER');
+  }
 
-    async getClientData() {
-        return await this.clientDb.query('SELECT * FROM LNMASTER');
-    }
+  // async getAllTableNames() {
+  //     try {
+  //         const result = await this.jointAccountRepository.query(`
+  //     SELECT table_name
+  //     FROM information_schema.tables
+  //     WHERE table_schema = 'public'
+  //     AND table_type = 'BASE TABLE';
+  //   `);
+  //         const tableArray: string[] = result.map((table: any) => table.table_name);
+  //         console.log('✅ Successfully fetched all table names');
+  //         return tableArray;
+  //     } catch (error) {
+  //         console.error(' Failed to fetch table names:', error);
+  //         throw new InternalServerErrorException(error.message);
+  //     }
+  // }
 
-
-
-    // async getAllTableNames() {
-    //     try {
-    //         const result = await this.jointAccountRepository.query(`
-    //     SELECT table_name
-    //     FROM information_schema.tables
-    //     WHERE table_schema = 'public'
-    //     AND table_type = 'BASE TABLE';
-    //   `);
-    //         const tableArray: string[] = result.map((table: any) => table.table_name);
-    //         console.log('✅ Successfully fetched all table names');
-    //         return tableArray;
-    //     } catch (error) {
-    //         console.error(' Failed to fetch table names:', error);
-    //         throw new InternalServerErrorException(error.message);
-    //     }
-    // }
-
-    // async getAllColumnsNames(tableName: string) {
-    //     try {
-    //         const result = await this.jointAccountRepository.query(`
-    //     SELECT column_name
-    //     FROM information_schema.columns
-    //     WHERE table_name = '${tableName}';
-    //   `);
-    //         const columnArray: string[] = result.map((col: any) => col.column_name);
-    //         console.log(` Successfully fetched columns for table: ${tableName}`);
-    //         return columnArray;
-    //     } catch (error) {
-    //         console.error(` Failed to fetch column names for ${tableName}:`, error);
-    //         throw new InternalServerErrorException(error.message);
-    //     }
-    // }
+  // async getAllColumnsNames(tableName: string) {
+  //     try {
+  //         const result = await this.jointAccountRepository.query(`
+  //     SELECT column_name
+  //     FROM information_schema.columns
+  //     WHERE table_name = '${tableName}';
+  //   `);
+  //         const columnArray: string[] = result.map((col: any) => col.column_name);
+  //         console.log(` Successfully fetched columns for table: ${tableName}`);
+  //         return columnArray;
+  //     } catch (error) {
+  //         console.error(` Failed to fetch column names for ${tableName}:`, error);
+  //         throw new InternalServerErrorException(error.message);
+  //     }
+  // }
 }

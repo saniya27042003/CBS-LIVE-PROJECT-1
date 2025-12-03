@@ -1,6 +1,14 @@
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { TERMINTRATE } from './rate-for term.entity';
 @Entity()
 export class INTRATETD {
@@ -8,31 +16,29 @@ export class INTRATETD {
   id: number;
 
   @Column()
-  EFFECT_DATE: string
+  EFFECT_DATE: string;
 
   @Column({ nullable: true })
   TYPE: string;
 
-  @OneToMany(() => TERMINTRATE, rate => rate.idRate, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => TERMINTRATE, (rate) => rate.idRate, {
+    cascade: ['insert', 'update'],
   })
   rate: TERMINTRATE[];
 
-  @Column({nullable:true})
-  ACNOTYPE: number
+  @Column({ nullable: true })
+  ACNOTYPE: number;
   @ManyToOne(() => SCHEMAST, (scheme) => scheme.irftd, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "ACNOTYPE" })
+  @JoinColumn({ name: 'ACNOTYPE' })
   scheme: SCHEMAST[];
 
-
-
   @Column()
-  INT_CATEGORY: number
+  INT_CATEGORY: number;
   @ManyToOne(() => INTCATEGORYMASTER, (category) => category.idftd, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "INT_CATEGORY" })
+  @JoinColumn({ name: 'INT_CATEGORY' })
   category: INTCATEGORYMASTER[];
 }

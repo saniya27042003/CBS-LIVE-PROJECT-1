@@ -1,9 +1,16 @@
 import { SHARECAPITALAMTDETAILS } from 'src/entity//SHARECAPITALANTDETAILS.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 @Entity()
 export class SYSPARA {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -68,13 +75,13 @@ export class SYSPARA {
   BONUS_GLACNO: string;
 
   @Column({ nullable: true, default: 0 })
-  CGST_GLACNO: number
+  CGST_GLACNO: number;
 
   @Column({ nullable: true })
-  SGST_GLACNO: number
+  SGST_GLACNO: number;
 
   @Column({ nullable: true })
-  IGST_GLACNO: number
+  IGST_GLACNO: number;
 
   @Column({ nullable: true })
   BILL_RECEIVABLE_ACNO: string;
@@ -217,10 +224,8 @@ export class SYSPARA {
   @Column({ nullable: true })
   IS_ALLOW_RECOVERY: string;
 
-
   @Column({ nullable: true })
-  RECOVERY_DR_ACNO: string
-
+  RECOVERY_DR_ACNO: string;
 
   @Column({ nullable: true })
   HO_GLACNO: string;
@@ -265,10 +270,10 @@ export class SYSPARA {
   MICR_CHARGES_ACNO: string;
 
   @Column({ nullable: true })
-  MICR_CHARGES_AMOUNT: string
+  MICR_CHARGES_AMOUNT: string;
 
   @Column({ nullable: true })
-  MICR_CHARGES_INWORD_CLG: string
+  MICR_CHARGES_INWORD_CLG: string;
 
   @Column({ nullable: true })
   GRACE_PERIOD: string;
@@ -345,7 +350,6 @@ export class SYSPARA {
   @Column({ nullable: true })
   BACK_DAY_OPTION: string;
 
-
   @Column({ nullable: true })
   CASH_IN_HAND_ACNO: string;
 
@@ -359,7 +363,7 @@ export class SYSPARA {
   PRODUCT_TYPE: string;
 
   @Column({ nullable: true })
-  NPA_BASE_DAYS: number
+  NPA_BASE_DAYS: number;
 
   @Column({ default: 0 })
   AUTO_INT_DEBIT_VOCHER: string;
@@ -379,7 +383,6 @@ export class SYSPARA {
   @Column({ nullable: true, default: 0 })
   PG_MACHINE_METHOD: string;
 
-
   @Column({ default: 0 })
   IS_MONTHLY_INTPOST_APPLY_TO_LN: string;
 
@@ -392,13 +395,12 @@ export class SYSPARA {
   // @Column({ nullable: true})
   // AUTO_INT_DEBIT_VOCHER: number;
 
-  @OneToMany(type => OWNBRANCHMASTER, branch => branch.id)
-  @JoinColumn({ name: "BRANCH_CODE" })
-  branch: OWNBRANCHMASTER[]
+  @OneToMany((type) => OWNBRANCHMASTER, (branch) => branch.id)
+  @JoinColumn({ name: 'BRANCH_CODE' })
+  branch: OWNBRANCHMASTER[];
 
-
-  @OneToMany(() => SHARECAPITALAMTDETAILS, SYSPARAID => SYSPARAID.SYSPARAID, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => SHARECAPITALAMTDETAILS, (SYSPARAID) => SYSPARAID.SYSPARAID, {
+    cascade: ['insert', 'update'],
   })
   SYSPARAID: SHARECAPITALAMTDETAILS[];
 }

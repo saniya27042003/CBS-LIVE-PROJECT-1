@@ -2,22 +2,19 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class PERCENTAGEMASTER {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column({ nullable: true })
+  REPORT_TYPE: string;
 
-    @Column({ nullable: true })
-    REPORT_TYPE: string
+  @Column()
+  @Generated('increment')
+  CODE: number;
 
-    @Column()
-    @Generated('increment')
-    CODE: number
+  @Column({ nullable: true })
+  EFFECT_DATE: string;
 
-    @Column({ nullable: true })
-    EFFECT_DATE: string
-
-    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
-    PERCENTAGE: number
-
-
+  @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
+  PERCENTAGE: number;
 }

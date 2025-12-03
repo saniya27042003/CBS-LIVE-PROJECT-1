@@ -1,6 +1,15 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 @Entity()
 export class STANDINSTRUCTION {
   @PrimaryGeneratedColumn()
@@ -8,61 +17,61 @@ export class STANDINSTRUCTION {
 
   @Column()
   @Generated('increment')
-  INSTRUCTION_NO: number
+  INSTRUCTION_NO: number;
 
   @Column({ nullable: true })
-  INSTRUCTION_DATE: string
+  INSTRUCTION_DATE: string;
 
   @Column({ nullable: true })
-  FROM_DATE: string
+  FROM_DATE: string;
 
   @Column({ nullable: true })
-  TO_DATE: string
+  TO_DATE: string;
 
   @Column({ nullable: true })
-  EXECUTION_DAY: string
+  EXECUTION_DAY: string;
 
   @Column({ nullable: true })
-  DR_ACTYPE: number
+  DR_ACTYPE: number;
 
   @Column({ length: 15 })
-  DR_AC_NO: string
+  DR_AC_NO: string;
 
   @Column({ nullable: true })
-  DAYS: number
+  DAYS: number;
 
   @Column({ nullable: true })
-  DR_PARTICULARS: string
+  DR_PARTICULARS: string;
 
   @Column({ nullable: true })
-  CR_ACTYPE: number
+  CR_ACTYPE: number;
 
   @Column({ length: 15 })
-  CR_AC_NO: string
+  CR_AC_NO: string;
 
   @Column({ nullable: true })
-  CR_PARTICULARS: string
+  CR_PARTICULARS: string;
 
   @Column({ nullable: true })
-  SI_FREQUENCY: string
+  SI_FREQUENCY: string;
 
   @Column({ nullable: true })
-  LAST_EXEC_DATE: string
+  LAST_EXEC_DATE: string;
 
   @Column({ nullable: true })
-  REVOKE_DATE: string
+  REVOKE_DATE: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  MIN_BAL: number
+  MIN_BAL: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  PAYINT_AMOUNT: number
+  PAYINT_AMOUNT: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  TRAN_AMOUNT: number
+  TRAN_AMOUNT: number;
 
   @Column({ default: false })
-  IS_AUTO_CUT_LNPGCOM: boolean
+  IS_AUTO_CUT_LNPGCOM: boolean;
 
   @CreateDateColumn()
   SYSADD_DATETIME: Date;
@@ -80,20 +89,20 @@ export class STANDINSTRUCTION {
   BRANCH_CODE: number;
 
   @ManyToOne(() => OWNBRANCHMASTER, (BranchCode) => BranchCode.branchCodeIns, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @JoinColumn({ name: 'BRANCH_CODE' })
   BranchCode: OWNBRANCHMASTER[];
 
   @ManyToOne(() => SCHEMAST, (standingInsDr) => standingInsDr.standingInsDr, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "DR_ACTYPE" })
+  @JoinColumn({ name: 'DR_ACTYPE' })
   standingInsDr: SCHEMAST[];
 
   @ManyToOne(() => SCHEMAST, (standingInsCr) => standingInsCr.standingInsCr, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "CR_ACTYPE" })
+  @JoinColumn({ name: 'CR_ACTYPE' })
   standingInsCr: SCHEMAST[];
 }

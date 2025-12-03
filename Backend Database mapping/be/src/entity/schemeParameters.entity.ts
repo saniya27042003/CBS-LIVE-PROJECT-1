@@ -4,7 +4,7 @@ import { AGENTCHANGEHISTORY } from 'src/entity//AGENTCHANGEHISTORY.entity';
 import { CHEQUEBOOKISSUED } from 'src/entity//CHEQUEBOOKISSUED.entity';
 import { HISTORYTRAN } from 'src/entity//HISTORYTRAN.entity';
 import { DPMASTER } from 'src/entity//dpmaster.entity';
-import { PGMASTER } from './pgmaster.entity'
+import { PGMASTER } from './pgmaster.entity';
 import { SHMASTER } from 'src/entity//share-master.entity';
 import { LNACINTRATE } from 'src/entity//lnacintrate.entity';
 import { LNMASTER } from './term-loan-master.entity';
@@ -17,8 +17,14 @@ import { INTRATESBPG } from 'src/entity//saving-and-pigmy-interest-rates.entity'
 import { COMPANYGROUPMASTER } from './company-group-master.entity';
 import { INTINSTRUCTION } from 'src/entity//interest-instruction.entity';
 import { SPECIALINSTRUCTION } from './special-instruction.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { PIGMYCHART } from './pigmy-chart.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PIGMYCHART } from './pigmy-chart.entity';
 import { STANDINSTRUCTION } from 'src/entity//standing-instruction.entity';
 import { MORATORIUMPERIOD } from 'src/entity//moratorium-peroid-master.entity';
 import { BOOKDEBTS } from './book-debts.entity';
@@ -185,155 +191,154 @@ export class SCHEMAST {
   @Column({ nullable: true, default: 0 })
   MIN_DUE_INSTALLMENTS: string;
 
-
   //current scheme check for required validation
   @Column({ length: 2, nullable: true, default: 0 })
-  S_PRODUCT_DAY_BASE: string
+  S_PRODUCT_DAY_BASE: string;
 
   @Column({ length: 2, nullable: true, default: 0 })
-  S_PRODUCT_DAY_BASE_END: string
+  S_PRODUCT_DAY_BASE_END: string;
 
   @Column({ nullable: true, default: 0 })
-  CHEQUEBOOK_MIN_BAL: string
+  CHEQUEBOOK_MIN_BAL: string;
 
   @Column({ nullable: true, default: 0 })
-  DORMANT_FLAG_APPLICABLE: string
+  DORMANT_FLAG_APPLICABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  OVERDRAFT_INTEREST_APPLICABLE: string
+  OVERDRAFT_INTEREST_APPLICABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  OVERDRAFT_INTEREST_RATE: string
+  OVERDRAFT_INTEREST_RATE: string;
 
   //general ledger
   // all are included
   @Column({ nullable: true, default: 0 })
-  GL_ACNO: string
+  GL_ACNO: string;
 
   //pigmy ac scheme
   @Column({ nullable: true, default: 0 })
-  S_PAYABLE_INT_ALLOW: string
+  S_PAYABLE_INT_ALLOW: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_AUTO_CUT_INSTRUCTION: string
+  IS_AUTO_CUT_INSTRUCTION: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_ALLOW_SI_MINBAL: string
+  IS_ALLOW_SI_MINBAL: string;
 
   @Column({ nullable: true, default: 0 })
-  WITHDRAWAL_APPLICABLE: string
+  WITHDRAWAL_APPLICABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  S_INTPAID_ON_CLOSING: string
+  S_INTPAID_ON_CLOSING: string;
 
   @Column({ nullable: true, default: 0 })
-  PREMATURE_COMPOUND_INT: string
+  PREMATURE_COMPOUND_INT: string;
 
   @Column({ length: 6, nullable: true, default: 0 })
-  PIGMY_MACHINE_SCHEME: string
+  PIGMY_MACHINE_SCHEME: string;
 
   @Column({ length: 6, nullable: true, default: 0 })
-  SVR_CHARGE_GLCODE: string
+  SVR_CHARGE_GLCODE: string;
 
   @Column({ nullable: true, default: 0 })
-  SVR_CHARGE_RATE: string
+  SVR_CHARGE_RATE: string;
 
   //other bank deposit
   @Column({ nullable: true, default: 0 })
-  S_CASH_INT_ACNO: string
+  S_CASH_INT_ACNO: string;
 
   @Column({ nullable: true, default: 0 })
-  INTEREST_RULE: string
+  INTEREST_RULE: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_RECURRING_TYPE: string
+  IS_RECURRING_TYPE: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_CALLDEPOSIT_TYPE: string
+  IS_CALLDEPOSIT_TYPE: string;
 
   @Column({ nullable: true, default: 0 })
-  REINVESTMENT: string
+  REINVESTMENT: string;
 
   @Column({ nullable: true, default: 0 })
-  S_INTCALC_METHOD: string
+  S_INTCALC_METHOD: string;
 
   @Column({ nullable: true, default: 0 })
-  FIX_QUARTER: string
+  FIX_QUARTER: string;
 
   @Column({ nullable: true, default: 0 })
-  QUARTER_PLUS_DAYS: string
+  QUARTER_PLUS_DAYS: string;
 
   @Column({ nullable: true, default: 0 })
-  COMPOUND_INT_BASIS: string
+  COMPOUND_INT_BASIS: string;
 
   @Column({ nullable: true, default: 0 })
-  COMPOUND_INT_DAYS: string
+  COMPOUND_INT_DAYS: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_DISCOUNTED_INT_RATE: string
+  IS_DISCOUNTED_INT_RATE: string;
 
   @Column({ nullable: true, default: 0 })
-  INSTALLMENT_BASIS: string
+  INSTALLMENT_BASIS: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_ASSUMED_INSTALLMENTS: string
+  IS_ASSUMED_INSTALLMENTS: string;
 
   @Column({ nullable: true, default: 0 })
-  INSTALLMENT_COMPULSORY_IN_PAT: string
+  INSTALLMENT_COMPULSORY_IN_PAT: string;
 
   @Column({ nullable: true, default: 0 })
-  DEPOSIT_PENAL_INT_CALC_DAY: string
+  DEPOSIT_PENAL_INT_CALC_DAY: string;
 
   @Column({ nullable: true, default: 0 })
-  S_MATUCALC: string
+  S_MATUCALC: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_CAL_MATURITY_AMT: string
+  IS_CAL_MATURITY_AMT: string;
 
   @Column({ nullable: true, default: 0 })
-  FIXED_MATURITY_AMT: string
+  FIXED_MATURITY_AMT: string;
 
   @Column({ nullable: true, default: 0 })
-  TRANSFER_TO_MATURE_DEPOSIT: string
+  TRANSFER_TO_MATURE_DEPOSIT: string;
 
   @Column({ nullable: true, default: 0 })
-  S_INTASON: string
+  S_INTASON: string;
 
   @Column({ nullable: true, default: 0 })
-  PERIOD_APPLICABLE: string
+  PERIOD_APPLICABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  IS_AUTO_PERIOD_CALCULATE: string
+  IS_AUTO_PERIOD_CALCULATE: string;
 
   @Column({ nullable: true, default: 0 })
-  UNIT_OF_PERIOD: string
+  UNIT_OF_PERIOD: string;
 
   @Column({ nullable: true, default: 0 })
-  MIN_DAYS: string
+  MIN_DAYS: string;
 
   @Column({ nullable: true, default: 0 })
-  MIN_MONTH: string
+  MIN_MONTH: string;
 
   @Column({ nullable: true, default: 0 })
-  MULTIPLE_OF_AMT: string
+  MULTIPLE_OF_AMT: string;
 
   @Column({ nullable: true, default: 0 })
-  MULTIPLE_OF_DAYS: string
+  MULTIPLE_OF_DAYS: string;
 
   @Column({ nullable: true, default: 0 })
-  MULTIPLE_OF_MONTH: string
+  MULTIPLE_OF_MONTH: string;
 
   @Column({ nullable: true, default: 0 })
-  S_INTPAID: string
+  S_INTPAID: string;
 
   @Column({ nullable: true, default: 0 })
-  INT_INSTRUCTION_ALLOW: string
+  INT_INSTRUCTION_ALLOW: string;
 
   @Column({ nullable: true, default: 0 })
-  RECEIPT_NO_INPUT: string
+  RECEIPT_NO_INPUT: string;
 
   @Column({ nullable: true, default: 0 })
-  LESS_PREMATURE_INT_RATE: string
+  LESS_PREMATURE_INT_RATE: string;
 
   @Column({ nullable: true, default: 0 })
   LOCKER_RENT_ACNO: string;
@@ -455,8 +460,7 @@ export class SCHEMAST {
   @Column({ nullable: true, default: 0 })
   IS_CAL_EXTRAPENAL_FOR_CC: string;
 
-
-  //  
+  //
 
   @Column({ nullable: true, default: 0 })
   IS_GOLD_LOAN: string;
@@ -477,7 +481,7 @@ export class SCHEMAST {
   S_LOCAL_CLEARING: string;
 
   @Column({ nullable: true, default: 0 })
-  S_CHEQUE_BOOK: string
+  S_CHEQUE_BOOK: string;
 
   @Column({ nullable: true, default: 0 })
   S_DEMAND_DRAFT: string;
@@ -501,7 +505,7 @@ export class SCHEMAST {
   S_FREEZE_APPLICABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  PROD_INTUPTODATE: string
+  PROD_INTUPTODATE: string;
 
   @Column({ nullable: true, default: 0 })
   S_INT_CR_ACNO: string;
@@ -517,7 +521,6 @@ export class SCHEMAST {
 
   @Column({ nullable: true, default: 0 })
   SHOW_OVERDUEINT_IF_RECINTBAL: string;
-
 
   @Column({ nullable: true })
   IS_RECOVERY_APPLICABLE: string;
@@ -535,7 +538,7 @@ export class SCHEMAST {
   RECOVERY_INST_FIELD: string;
 
   @Column({ nullable: true })
-  RECOVERY_INTINST_FIELD:  string;
+  RECOVERY_INTINST_FIELD: string;
 
   @Column({ nullable: true })
   RECOVERY_BALANCE_FIELD: string;
@@ -573,215 +576,253 @@ export class SCHEMAST {
   @Column({ default: 0 })
   ALLOW_SMS: number;
 
-  @OneToMany(() => DPMASTER, (DPschemecode) => DPschemecode.DPMaster, {
-  })
-  DPschemecode: DPMASTER[]
+  @OneToMany(() => DPMASTER, (DPschemecode) => DPschemecode.DPMaster, {})
+  DPschemecode: DPMASTER[];
 
-  @OneToMany(() => PGMASTER, (PGschemecode) => PGschemecode.PGMaster, {
-  })
-  PGschemecode: PGMASTER[]
+  @OneToMany(() => PGMASTER, (PGschemecode) => PGschemecode.PGMaster, {})
+  PGschemecode: PGMASTER[];
 
-  @OneToMany(() => DEPOCLOSETRANSAC, (depoCloseTranAc) => depoCloseTranAc.depoCloseTranAc, {
-  })
-  depoCloseTranAc: DEPOCLOSETRANSAC[]
+  @OneToMany(
+    () => DEPOCLOSETRANSAC,
+    (depoCloseTranAc) => depoCloseTranAc.depoCloseTranAc,
+    {},
+  )
+  depoCloseTranAc: DEPOCLOSETRANSAC[];
 
-  @OneToMany(() => LNMASTER, (lncccode) => lncccode.LNCCMaster, {
-  })
-  lncccode: LNMASTER[]
+  @OneToMany(() => LNMASTER, (lncccode) => lncccode.LNCCMaster, {})
+  lncccode: LNMASTER[];
 
-  @OneToMany(() => SHMASTER, (shareCode) => shareCode.shareMaster, {
-  })
-  shareCode: SHMASTER[]
+  @OneToMany(() => SHMASTER, (shareCode) => shareCode.shareMaster, {})
+  shareCode: SHMASTER[];
 
-  @OneToMany(() => RENEWALHISTORY, (renewalHistory) => renewalHistory.renewalHistory, {
-  })
-  renewalHistory: RENEWALHISTORY[]
+  @OneToMany(
+    () => RENEWALHISTORY,
+    (renewalHistory) => renewalHistory.renewalHistory,
+    {},
+  )
+  renewalHistory: RENEWALHISTORY[];
 
-  @OneToMany(() => PIGMYCHART, (pigmyChart) => pigmyChart.Scheme, {
-  })
-  pigmyChart: PIGMYCHART[]
+  @OneToMany(() => PIGMYCHART, (pigmyChart) => pigmyChart.Scheme, {})
+  pigmyChart: PIGMYCHART[];
 
-  @OneToMany(() => HISTORYTRAN, (historyTran) => historyTran.HistoryTran, {
-  })
-  historyTran: HISTORYTRAN[]
+  @OneToMany(() => HISTORYTRAN, (historyTran) => historyTran.HistoryTran, {})
+  historyTran: HISTORYTRAN[];
 
-  @OneToMany(() => HISTORYTRAN, (historyTranType) => historyTranType.HistoryTranType, {
-  })
-  historyTranType: HISTORYTRAN[]
+  @OneToMany(
+    () => HISTORYTRAN,
+    (historyTranType) => historyTranType.HistoryTranType,
+    {},
+  )
+  historyTranType: HISTORYTRAN[];
 
-  @OneToMany(() => ACDOCUMENTDETAILS, (acDocumentDetails) => acDocumentDetails.acDocument, {
-  })
-  acDocumentDetails: ACDOCUMENTDETAILS[]
+  @OneToMany(
+    () => ACDOCUMENTDETAILS,
+    (acDocumentDetails) => acDocumentDetails.acDocument,
+    {},
+  )
+  acDocumentDetails: ACDOCUMENTDETAILS[];
 
-  @OneToMany(() => AGENTCHANGEHISTORY, (agentChange) => agentChange.agentChange, {
-  })
-  agentChange: AGENTCHANGEHISTORY[]
+  @OneToMany(
+    () => AGENTCHANGEHISTORY,
+    (agentChange) => agentChange.agentChange,
+    {},
+  )
+  agentChange: AGENTCHANGEHISTORY[];
 
-  @OneToMany(() => AGENTCHANGEHISTORY, (agentACChange) => agentACChange.agentACChange, {
-  })
-  agentACChange: AGENTCHANGEHISTORY[]
+  @OneToMany(
+    () => AGENTCHANGEHISTORY,
+    (agentACChange) => agentACChange.agentACChange,
+    {},
+  )
+  agentACChange: AGENTCHANGEHISTORY[];
 
-  @OneToMany(() => CHEQUEBOOKISSUED, (chequeBook) => chequeBook.chequeBook, {
-  })
-  chequeBook: CHEQUEBOOKISSUED[]
+  @OneToMany(() => CHEQUEBOOKISSUED, (chequeBook) => chequeBook.chequeBook, {})
+  chequeBook: CHEQUEBOOKISSUED[];
 
-  @OneToMany(() => SPECIALINSTRUCTION, (specialIns) => specialIns.specialIns, {
-  })
-  specialIns: SPECIALINSTRUCTION[]
+  @OneToMany(
+    () => SPECIALINSTRUCTION,
+    (specialIns) => specialIns.specialIns,
+    {},
+  )
+  specialIns: SPECIALINSTRUCTION[];
 
-  @OneToMany(() => INTINSTRUCTION, (interestDr) => interestDr.interestDr, {
-  })
-  interestDr: INTINSTRUCTION[]
+  @OneToMany(() => INTINSTRUCTION, (interestDr) => interestDr.interestDr, {})
+  interestDr: INTINSTRUCTION[];
 
-  @OneToMany(() => INTINSTRUCTION, (interestCr) => interestCr.interestCr, {
-  })
-  interestCr: INTINSTRUCTION[]
+  @OneToMany(() => INTINSTRUCTION, (interestCr) => interestCr.interestCr, {})
+  interestCr: INTINSTRUCTION[];
 
-  @OneToMany(() => STANDINSTRUCTION, (standingInsDr) => standingInsDr.standingInsDr, {
-  })
-  standingInsDr: STANDINSTRUCTION[]
+  @OneToMany(
+    () => STANDINSTRUCTION,
+    (standingInsDr) => standingInsDr.standingInsDr,
+    {},
+  )
+  standingInsDr: STANDINSTRUCTION[];
 
-  @OneToMany(() => STANDINSTRUCTION, (standingInsCr) => standingInsCr.standingInsCr, {
-  })
-  standingInsCr: STANDINSTRUCTION[]
+  @OneToMany(
+    () => STANDINSTRUCTION,
+    (standingInsCr) => standingInsCr.standingInsCr,
+    {},
+  )
+  standingInsCr: STANDINSTRUCTION[];
 
-  @OneToMany(() => COMPANYGROUPMASTER, scheme => scheme.company, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => COMPANYGROUPMASTER, (scheme) => scheme.company, {
+    cascade: ['insert', 'update'],
   })
   scheme: COMPANYGROUPMASTER[];
 
-
-  @OneToMany(() => INTRATETD, irftd => irftd.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => INTRATETD, (irftd) => irftd.scheme, {
+    cascade: ['insert', 'update'],
   })
   irftd: INTRATETD[];
 
-  @OneToMany(() => INTRATEPATSCHEMES, patscheme => patscheme.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => INTRATEPATSCHEMES, (patscheme) => patscheme.scheme, {
+    cascade: ['insert', 'update'],
   })
   patscheme: INTRATEPATSCHEMES[];
 
-  @OneToMany(() => INTRATESBPG, sapint => sapint.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => INTRATESBPG, (sapint) => sapint.scheme, {
+    cascade: ['insert', 'update'],
   })
   sapint: INTRATESBPG[];
 
-  @OneToMany(() => INTRATELOAN, intloancc => intloancc.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => INTRATELOAN, (intloancc) => intloancc.scheme, {
+    cascade: ['insert', 'update'],
   })
   intloancc: INTRATELOAN[];
 
-  @OneToMany(() => INTRATETDMULTI, depoint => depoint.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => INTRATETDMULTI, (depoint) => depoint.scheme, {
+    cascade: ['insert', 'update'],
   })
   depoint: INTRATETDMULTI[];
 
-  @OneToMany(() => PREMATULESSRATE, prepigmy => prepigmy.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => PREMATULESSRATE, (prepigmy) => prepigmy.scheme, {
+    cascade: ['insert', 'update'],
   })
   prepigmy: PREMATULESSRATE[];
 
-  @OneToMany(() => MORATORIUMPERIOD, moratoriumScheme => moratoriumScheme.moratoriumScheme, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => MORATORIUMPERIOD,
+    (moratoriumScheme) => moratoriumScheme.moratoriumScheme,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   moratoriumScheme: MORATORIUMPERIOD[];
 
-  @OneToMany(() => CHARGESNOTING, chargesScheme => chargesScheme.chargesScheme, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => CHARGESNOTING,
+    (chargesScheme) => chargesScheme.chargesScheme,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   chargesScheme: CHARGESNOTING[];
-  @OneToMany(() => BOOKDEBTS, bookdebts => bookdebts.scheme, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => BOOKDEBTS, (bookdebts) => bookdebts.scheme, {
+    cascade: ['insert', 'update'],
   })
   bookdebts: BOOKDEBTS[];
 
-
-  @OneToMany(() => ACMASTER, glAcMaster => glAcMaster.glAcMaster, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => ACMASTER, (glAcMaster) => glAcMaster.glAcMaster, {
+    cascade: ['insert', 'update'],
   })
   glAcMaster: ACMASTER[];
 
-  @OneToMany(() => DPMASTER, PGDPMaster => PGDPMaster.PGDPMaster, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => DPMASTER, (PGDPMaster) => PGDPMaster.PGDPMaster, {
+    cascade: ['insert', 'update'],
   })
   PGDPMaster: DPMASTER[];
 
-  @OneToMany(() => OWNDEPOSIT, depoactype => depoactype.depoactype, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => OWNDEPOSIT, (depoactype) => depoactype.depoactype, {
+    cascade: ['insert', 'update'],
   })
   depoactype: OWNDEPOSIT[];
-  @OneToMany(() => DEPOCLOSETRAN, depocloseTran => depocloseTran.depocloseTran, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => DEPOCLOSETRAN,
+    (depocloseTran) => depocloseTran.depocloseTran,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   depocloseTran: DEPOCLOSETRAN[];
 
-  @OneToMany(() => OWNDEPOSIT, actypeowndepo => actypeowndepo.actypeowndepo, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => OWNDEPOSIT, (actypeowndepo) => actypeowndepo.actypeowndepo, {
+    cascade: ['insert', 'update'],
   })
   actypeowndepo: OWNDEPOSIT[];
 
-  @OneToMany(() => FIREPOLICY, fireactype => fireactype.fireactype, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => FIREPOLICY, (fireactype) => fireactype.fireactype, {
+    cascade: ['insert', 'update'],
   })
   fireactype: FIREPOLICY[];
 
-  @OneToMany(() => PLANTMACHINARY, plantmachinary => plantmachinary.plantmachinary, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => PLANTMACHINARY,
+    (plantmachinary) => plantmachinary.plantmachinary,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   plantmachinary: PLANTMACHINARY[];
 
-  @OneToMany(() => MARKETSHARE, marketshare => marketshare.marketshare, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => MARKETSHARE, (marketshare) => marketshare.marketshare, {
+    cascade: ['insert', 'update'],
   })
   marketshare: MARKETSHARE[];
 
-  @OneToMany(() => FURNITURE, furniture => furniture.furniture, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => FURNITURE, (furniture) => furniture.furniture, {
+    cascade: ['insert', 'update'],
   })
   furniture: FURNITURE[];
 
-  @OneToMany(() => VEHICLE, vehicle => vehicle.vehicle, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => VEHICLE, (vehicle) => vehicle.vehicle, {
+    cascade: ['insert', 'update'],
   })
   vehicle: VEHICLE[];
 
-  @OneToMany(() => PLEDGESTOCK, pledge => pledge.pledge, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => PLEDGESTOCK, (pledge) => pledge.pledge, {
+    cascade: ['insert', 'update'],
   })
   pledge: PLEDGESTOCK[];
 
-  @OneToMany(() => STOCKSTATEMENT, stockstatement => stockstatement.stockstatement, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => STOCKSTATEMENT,
+    (stockstatement) => stockstatement.stockstatement,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   stockstatement: STOCKSTATEMENT[];
 
-  @OneToMany(() => LANDBUILDING, land => land.land, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => LANDBUILDING, (land) => land.land, {
+    cascade: ['insert', 'update'],
   })
   land: LANDBUILDING[];
 
-  @OneToMany(() => OTHERSECURITY, othersec => othersec.othersec, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => OTHERSECURITY, (othersec) => othersec.othersec, {
+    cascade: ['insert', 'update'],
   })
   othersec: OTHERSECURITY[];
 
-  @OneToMany(() => GOVTSECULIC, govsec => govsec.govsec, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => GOVTSECULIC, (govsec) => govsec.govsec, {
+    cascade: ['insert', 'update'],
   })
   govsec: GOVTSECULIC[];
 
-  @OneToMany(() => GOLDSILVER, goldsilver => goldsilver.goldsilver, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => GOLDSILVER, (goldsilver) => goldsilver.goldsilver, {
+    cascade: ['insert', 'update'],
   })
   goldsilver: GOLDSILVER[];
 
-  @OneToMany(() => SECINSURANCE, custinsurace => custinsurace.custinsurace, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => SECINSURANCE, (custinsurace) => custinsurace.custinsurace, {
+    cascade: ['insert', 'update'],
   })
   custinsurace: SECINSURANCE[];
 
-  @OneToMany(() => DAILYTRAN, (dailytranscheme) => dailytranscheme.dailytranschemes, {
-  })
-  dailytranscheme: DAILYTRAN[]
-
+  @OneToMany(
+    () => DAILYTRAN,
+    (dailytranscheme) => dailytranscheme.dailytranschemes,
+    {},
+  )
+  dailytranscheme: DAILYTRAN[];
 }

@@ -17,14 +17,12 @@
 //   });
 // });
 
-
-
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { MigrateService } from './migration.service';
 
 @Controller('migrate')
 export class MigrateController {
-  constructor(private readonly migrateService: MigrateService) { }
+  constructor(private readonly migrateService: MigrateService) {}
 
   // ✅ Added endpoint for frontend connect
   @Post('connect')
@@ -52,7 +50,9 @@ export class MigrateController {
   @Post('getAllColumnsNames')
   async getAllColumnsName(@Body() body: any) {
     try {
-      const result = await this.migrateService.getAllColumnsNames(body.tableName);
+      const result = await this.migrateService.getAllColumnsNames(
+        body.tableName,
+      );
       return { success: true, message: result };
     } catch (error) {
       console.error('❌ Failed to fetch column names:', error);

@@ -12,11 +12,16 @@ import { PLANTMACHINARY } from 'src/entity//plant-and-machinery.entity';
 import { PLEDGESTOCK } from './pleadge-stock.entity';
 import { STOCKSTATEMENT } from 'src/entity//stock-statement.entity';
 import { VEHICLE } from 'src/entity//vehicle.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class SECURITYMASTER {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -49,7 +54,7 @@ export class SECURITYMASTER {
   GOVT_SECU_LIC: number;
 
   @Column({ default: 0 })
-  PLANT_MACHINARY: number
+  PLANT_MACHINARY: number;
 
   @Column({ default: 0 })
   FURNITURE_FIXTURE: number;
@@ -72,74 +77,77 @@ export class SECURITYMASTER {
   @Column({ default: 0 })
   CUST_INSURANCE: number;
 
-  @OneToMany(() => BOOKDEBTS, bookdebts => bookdebts.bookdebts, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => BOOKDEBTS, (bookdebts) => bookdebts.bookdebts, {
+    cascade: ['insert', 'update'],
   })
   bookdebts: BOOKDEBTS[];
 
-  @OneToMany(() => SECINSURANCE, custinsurance => custinsurance.custinsurance, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => SECINSURANCE,
+    (custinsurance) => custinsurance.custinsurance,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   custinsurance: SECINSURANCE[];
 
-  @OneToMany(() => FIREPOLICY, firepolicy => firepolicy.firepolicy, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => FIREPOLICY, (firepolicy) => firepolicy.firepolicy, {
+    cascade: ['insert', 'update'],
   })
   firepolicy: FIREPOLICY[];
 
-  @OneToMany(() => FURNITURE, furfixture => furfixture.furfixture, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => FURNITURE, (furfixture) => furfixture.furfixture, {
+    cascade: ['insert', 'update'],
   })
   furfixture: FURNITURE[];
 
-  @OneToMany(() => GOLDSILVER, silvergold => silvergold.silvergold, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => GOLDSILVER, (silvergold) => silvergold.silvergold, {
+    cascade: ['insert', 'update'],
   })
   silvergold: GOLDSILVER[];
 
-  @OneToMany(() => GOVTSECULIC, govtseclic => govtseclic.govtseclic, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => GOVTSECULIC, (govtseclic) => govtseclic.govtseclic, {
+    cascade: ['insert', 'update'],
   })
   govtseclic: GOVTSECULIC[];
 
-  @OneToMany(() => LANDBUILDING, landbuilding => landbuilding.landbuilding, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => LANDBUILDING, (landbuilding) => landbuilding.landbuilding, {
+    cascade: ['insert', 'update'],
   })
   landbuilding: LANDBUILDING[];
 
-  @OneToMany(() => MARKETSHARE, share => share.share, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => MARKETSHARE, (share) => share.share, {
+    cascade: ['insert', 'update'],
   })
   share: MARKETSHARE[];
 
-  @OneToMany(() => OTHERSECURITY, other => other.other, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => OTHERSECURITY, (other) => other.other, {
+    cascade: ['insert', 'update'],
   })
   other: OTHERSECURITY[];
 
-  @OneToMany(() => OWNDEPOSIT, deposit => deposit.deposit, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => OWNDEPOSIT, (deposit) => deposit.deposit, {
+    cascade: ['insert', 'update'],
   })
   deposit: OWNDEPOSIT[];
 
-  @OneToMany(() => PLANTMACHINARY, plant => plant.plant, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => PLANTMACHINARY, (plant) => plant.plant, {
+    cascade: ['insert', 'update'],
   })
   plant: PLANTMACHINARY[];
 
-  @OneToMany(() => PLEDGESTOCK, stock => stock.stock, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => PLEDGESTOCK, (stock) => stock.stock, {
+    cascade: ['insert', 'update'],
   })
   stock: PLEDGESTOCK[];
 
-  @OneToMany(() => STOCKSTATEMENT, stockstat => stockstat.stockstat, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => STOCKSTATEMENT, (stockstat) => stockstat.stockstat, {
+    cascade: ['insert', 'update'],
   })
   stockstat: STOCKSTATEMENT[];
 
-  @OneToMany(() => VEHICLE, vehiclesec => vehiclesec.vehiclesec, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => VEHICLE, (vehiclesec) => vehiclesec.vehiclesec, {
+    cascade: ['insert', 'update'],
   })
   vehiclesec: VEHICLE[];
-
 }

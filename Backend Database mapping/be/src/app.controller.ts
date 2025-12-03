@@ -3,11 +3,11 @@ import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly _service: AppService) { }
+  constructor(private readonly _service: AppService) {}
 
   @Post('/')
   getHello(): string {
-    return 'hello world'
+    return 'hello world';
   }
 
   @Get('/PRIMARY')
@@ -19,7 +19,4 @@ export class AppController {
   async getAllTableName2(@Body() data: any) {
     return this._service.getClientData();
   }
-
-
-
 }

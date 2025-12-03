@@ -1,5 +1,10 @@
-
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { COMPANYGROUPMASTER } from './company-group-master.entity';
 import { COMPANYGROUPLINKMASTER } from './company-group-link-master.entity';
 @Entity()
@@ -19,9 +24,8 @@ export class COMPANYGROUPLINKGRIDMASTER {
   @Column()
   COMP_LINK_CODE: number;
   @ManyToOne(() => COMPANYGROUPLINKMASTER, (comapny) => comapny.comapnylink, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "COMP_LINK_CODE" })
+  @JoinColumn({ name: 'COMP_LINK_CODE' })
   comapny: COMPANYGROUPMASTER[];
-
 }

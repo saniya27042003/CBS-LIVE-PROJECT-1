@@ -1,9 +1,15 @@
 import { DOCUMENTMASTER } from './document-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class SCHEMEDOCUMENTLINK {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -16,11 +22,13 @@ export class SCHEMEDOCUMENTLINK {
   @Column({ default: 1 })
   ISACTIVE: number;
 
-  @ManyToOne(() => DOCUMENTMASTER, (schemeDocumentMaster) => schemeDocumentMaster.custdocument, {
-    cascade: true
-  })
-  @JoinColumn({ name: "DOCUMENT_CODE" })
+  @ManyToOne(
+    () => DOCUMENTMASTER,
+    (schemeDocumentMaster) => schemeDocumentMaster.custdocument,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'DOCUMENT_CODE' })
   schemeDocumentMaster: DOCUMENTMASTER[];
 }
-
-

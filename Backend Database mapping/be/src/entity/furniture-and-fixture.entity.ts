@@ -1,12 +1,17 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class FURNITURE {
-
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -17,10 +22,9 @@ export class FURNITURE {
   AC_TYPE: number;
 
   @ManyToOne(() => SCHEMAST, (furniture) => furniture.furniture, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_TYPE" })
-
+  @JoinColumn({ name: 'AC_TYPE' })
   furniture: SCHEMAST[];
 
   @Column({ length: 15 })
@@ -29,9 +33,9 @@ export class FURNITURE {
   @Column({ nullable: true })
   SECU_CODE: number;
   @ManyToOne(() => SECURITYMASTER, (furfixture) => furfixture.furfixture, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "SECU_CODE" })
+  @JoinColumn({ name: 'SECU_CODE' })
   furfixture: SECURITYMASTER[];
 
   @Column({ nullable: true })
@@ -69,10 +73,13 @@ export class FURNITURE {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (furniturebranchcode) => furniturebranchcode.furniturebranchcode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (furniturebranchcode) => furniturebranchcode.furniturebranchcode,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   furniturebranchcode: OWNBRANCHMASTER[];
-
 }

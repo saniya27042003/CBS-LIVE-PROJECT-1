@@ -1,6 +1,15 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 @Entity()
 export class INTINSTRUCTION {
   @PrimaryGeneratedColumn()
@@ -8,58 +17,58 @@ export class INTINSTRUCTION {
 
   @Column()
   @Generated('increment')
-  INSTRUCTION_NO: number
+  INSTRUCTION_NO: number;
 
   @Column({ nullable: true })
-  INSTRUCTION_DATE: string
+  INSTRUCTION_DATE: string;
 
   @Column({ nullable: true })
-  FROM_DATE: string
+  FROM_DATE: string;
 
   @Column({ nullable: true })
-  NEXT_EXE_DATE: string
+  NEXT_EXE_DATE: string;
 
   @Column({ nullable: true })
-  EXECUTION_DAY: string
+  EXECUTION_DAY: string;
 
   @Column({ nullable: true })
-  DR_ACTYPE: number
+  DR_ACTYPE: number;
 
   @Column({ length: 15 })
-  DR_AC_NO: string
+  DR_AC_NO: string;
 
   @Column({ default: 0 })
-  DAYS: number
+  DAYS: number;
 
   @Column({ nullable: true })
-  DR_PARTICULARS: string
+  DR_PARTICULARS: string;
 
   @Column({ nullable: true })
-  CR_ACTYPE: number
+  CR_ACTYPE: number;
 
   @Column({ length: 15 })
-  CR_AC_NO: string
+  CR_AC_NO: string;
 
   @Column({ nullable: true })
-  CR_PARTICULARS: string
+  CR_PARTICULARS: string;
 
   @Column({ nullable: true })
-  SI_FREQUENCY: string
+  SI_FREQUENCY: string;
 
   @Column({ nullable: true })
-  LAST_EXEC_DATE: string
+  LAST_EXEC_DATE: string;
 
   @Column()
-  TRAN_TYPE: string
+  TRAN_TYPE: string;
 
   @Column({ nullable: true })
-  ADV_NARRATION: string
+  ADV_NARRATION: string;
 
   @Column({ default: '0' })
-  DEFAULT_INTEREST_APPLICABLE: string
+  DEFAULT_INTEREST_APPLICABLE: string;
 
   @Column({ nullable: true })
-  REVOKE_DATE: string
+  REVOKE_DATE: string;
 
   @CreateDateColumn()
   SYSADD_DATETIME: Date;
@@ -77,20 +86,20 @@ export class INTINSTRUCTION {
   BRANCH_CODE: number;
 
   @ManyToOne(() => OWNBRANCHMASTER, (BranchCode) => BranchCode.branchCodeIns, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @JoinColumn({ name: 'BRANCH_CODE' })
   BranchCode: OWNBRANCHMASTER[];
 
   @ManyToOne(() => SCHEMAST, (interestDr) => interestDr.interestDr, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "DR_ACTYPE" })
+  @JoinColumn({ name: 'DR_ACTYPE' })
   interestDr: SCHEMAST[];
 
   @ManyToOne(() => SCHEMAST, (interestCr) => interestCr.interestCr, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "CR_ACTYPE" })
+  @JoinColumn({ name: 'CR_ACTYPE' })
   interestCr: SCHEMAST[];
 }

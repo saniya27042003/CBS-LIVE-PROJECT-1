@@ -1,5 +1,12 @@
 import { ACMASTER } from './gl-account-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 @Entity()
 export class BRANCHMASTER {
   @PrimaryGeneratedColumn()
@@ -16,8 +23,8 @@ export class BRANCHMASTER {
   AC_NO: string;
 
   @ManyToOne(() => ACMASTER, (accountNo) => accountNo.clearingBranch, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_NO" })
+  @JoinColumn({ name: 'AC_NO' })
   accountNo: ACMASTER[];
 }

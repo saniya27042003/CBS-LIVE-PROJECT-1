@@ -1,4 +1,3 @@
-
 import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class ITEMCATEGORYMASTER {
@@ -9,9 +8,6 @@ export class ITEMCATEGORYMASTER {
   @Generated('increment')
   CODE: number;
 
-  @Column({ type: 'varchar', length: 100})
+  @Column({ type: 'varchar', length: 100 })
   NAME: string;
-
-
-  
 }

@@ -1,5 +1,11 @@
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { IDMASTER } from './customer-id.entity';
 @Entity()
 export class RISKCATEGORYMASTER {
   @PrimaryGeneratedColumn()
@@ -13,8 +19,7 @@ export class RISKCATEGORYMASTER {
   NAME: string;
 
   @OneToMany(() => IDMASTER, (riskMaster) => riskMaster.riskCategory, {
-    cascade: ["insert", "update"]
+    cascade: ['insert', 'update'],
   })
   riskMaster: IDMASTER[];
-
 }

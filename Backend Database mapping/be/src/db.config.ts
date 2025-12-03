@@ -15,7 +15,7 @@ export const dbConfig = {
 
   target: {
     type: 'postgres',
-    host: process.env.TARGET_HOST,      // remove || 'localhost'
+    host: process.env.TARGET_HOST, // remove || 'localhost'
     port: Number(process.env.TARGET_PORT),
     username: process.env.TARGET_USER,
     password: process.env.TARGET_PASS,

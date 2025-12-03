@@ -1,4 +1,3 @@
-
 import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class PRIORITYSECTORMASTER {
@@ -9,18 +8,15 @@ export class PRIORITYSECTORMASTER {
   @Generated('increment')
   CODE: number;
 
-  @Column({nullable:true})
+  @Column({ nullable: true })
   SUB1_CODE: string;
 
-  @Column({nullable:true})
+  @Column({ nullable: true })
   SUB2_CODE: string;
 
-  @Column({nullable:true})
+  @Column({ nullable: true })
   SUB3_CODE: string;
 
-  @Column({ type: 'varchar', length: 300})
+  @Column({ type: 'varchar', length: 300 })
   NAME: string;
-
-
-  
 }

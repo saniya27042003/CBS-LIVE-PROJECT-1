@@ -5,6 +5,5 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class DatabaseService {
-    private clientDB: DataSource | null = null;
-
+  private clientDB: DataSource | null = null;
 }

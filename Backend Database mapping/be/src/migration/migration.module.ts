@@ -4,7 +4,6 @@
 // import { TypeOrmModule } from '@nestjs/typeorm';
 // import { JointAcLink } from 'src/entity/joint-account.entity';
 
-
 // @Module({
 //   imports: [TypeOrmModule.forFeature([JointAcLink])],
 //   providers: [MigrateService],
@@ -24,5 +23,4 @@ import { JointAcLink } from 'src/entity/joint-account.entity';
   providers: [MigrateService],
   exports: [MigrateService],
 })
-export class MigrationModule { }
-
+export class MigrationModule {}

@@ -1,12 +1,17 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class GOVTSECULIC {
-
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -16,10 +21,9 @@ export class GOVTSECULIC {
   @Column()
   AC_TYPE: number;
   @ManyToOne(() => SCHEMAST, (govsec) => govsec.govsec, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_TYPE" })
-
+  @JoinColumn({ name: 'AC_TYPE' })
   govsec: SCHEMAST[];
 
   @Column({ length: 15 })
@@ -28,9 +32,9 @@ export class GOVTSECULIC {
   @Column({ nullable: true })
   SECU_CODE: number;
   @ManyToOne(() => SECURITYMASTER, (govtseclic) => govtseclic.govtseclic, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "SECU_CODE" })
+  @JoinColumn({ name: 'SECU_CODE' })
   govtseclic: SECURITYMASTER[];
 
   @Column({ nullable: true })
@@ -77,10 +81,13 @@ export class GOVTSECULIC {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   govtsecbranchcode: OWNBRANCHMASTER[];
-
 }

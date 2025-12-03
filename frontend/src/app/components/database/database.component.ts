@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { AppService } from '../../../service/app.service';
 
@@ -10,11 +15,9 @@ import { AppService } from '../../../service/app.service';
   standalone: true,
   templateUrl: './database.component.html',
   styleUrls: ['./database.component.css'],
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule]
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
 })
-
 export class DatabaseComponent implements OnInit {
-
   databases = [
     { name: 'MySQL', img: 'assets/images/mysql.png', type: 'mysql' },
     { name: 'MsSQL', img: 'assets/images/mssql.png', type: 'mssql' },
@@ -39,8 +42,8 @@ export class DatabaseComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private http: HttpClient,
-    private appService: AppService
-  ) { }
+    private appService: AppService,
+  ) {}
 
   ngOnInit(): void {
     this.databaseForm = this.fb.group({
@@ -50,18 +53,19 @@ export class DatabaseComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.minLength(4)    // temporary simple rule
-        ]
+          Validators.minLength(4), // temporary simple rule
+        ],
       ],
       port: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
       host: [
         '',
         [
           Validators.required,
-          Validators.pattern(/^(localhost|127\.0\.0\.1)$/)   // only localhost for now
-        ]
+          //Validators.pattern(/^(localhost|127\.0\.0\.1)$/)   // only localhost for now
+          Validators.pattern(/^192\.168\.\d{1,3}\.\d{1,3}$/),
+        ],
       ],
-      database: ['', Validators.required]
+      database: ['', Validators.required],
     });
   }
 
@@ -80,11 +84,11 @@ export class DatabaseComponent implements OnInit {
     this.clientClassMap[dbName] = 'ring-4 ring-green-400';
     this.clientDatabaseName = dbName;
 
-    const selected = this.databases.find(d => d.name === dbName);
+    const selected = this.databases.find((d) => d.name === dbName);
 
     // set ENGINE/driver type for backend
     this.databaseForm.patchValue({
-      type: selected?.type || ''
+      type: selected?.type || '',
     });
   }
   onOkClick() {
@@ -95,14 +99,13 @@ export class DatabaseComponent implements OnInit {
     }
 
     const clientConfig = {
-      type: this.databaseForm.value.type.toLowerCase(),  // 'Postgres' -> 'postgres'
+      type: this.databaseForm.value.type.toLowerCase(), // 'Postgres' -> 'postgres'
       host: this.databaseForm.value.host,
       port: this.databaseForm.value.port,
       username: this.databaseForm.value.username,
       password: this.databaseForm.value.password,
-      database: this.databaseForm.value.database
+      database: this.databaseForm.value.database,
     };
-
 
     this.appService.connectClient(clientConfig).subscribe({
       next: (res: any) => {
@@ -112,8 +115,8 @@ export class DatabaseComponent implements OnInit {
             queryParams: {
               primary: this.selectedPrimary,
               clientType: this.selectedClient,
-              client: this.databaseForm.value.database
-            }
+              client: this.databaseForm.value.database,
+            },
           });
         } else {
           alert('Client connection failed: ' + res.message);
@@ -122,10 +125,9 @@ export class DatabaseComponent implements OnInit {
       error: (err) => {
         console.error('Client Connection error:', err);
         alert('❌ Failed to connect Client database.');
-      }
+      },
     });
   }
-
 
   // CANCEL
   onCancelClick() {

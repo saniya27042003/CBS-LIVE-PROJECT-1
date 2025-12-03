@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { IDMASTER } from './entity/customer-id.entity';
 import { DAILYTRAN } from './entity/voucher.entity';
@@ -18,7 +20,6 @@ console.log('ENV CHECK', {
   name: process.env.DB_NAME,
 });
 
-
 export const primaryDBConfig: TypeOrmModuleOptions = {
   name: 'primaryDB',
   type: 'postgres',
@@ -32,6 +33,14 @@ export const primaryDBConfig: TypeOrmModuleOptions = {
   entities: [],
   migrations: ['dist/migration/*{.ts,.js}'],
 };
+
+console.log('PRIMARY DB ENV', {
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  pass: process.env.DB_PASS,
+  name: process.env.DB_NAME,
+});
 // clientDBConfig removed/commented
 
 // export let clientDBConfig: TypeOrmModuleOptions = {

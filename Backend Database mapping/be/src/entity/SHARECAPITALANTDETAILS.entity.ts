@@ -1,28 +1,33 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { SYSPARA } from './system-master-parameters.entity';
 
 @Entity()
 export class SHARECAPITALAMTDETAILS {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  FROM_DATE: string;
 
-    @Column()
-    FROM_DATE: string
+  @Column()
+  TO_DATE: string;
 
-    @Column()
-    TO_DATE: string
+  @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
+  AMOUNT: number;
 
-    @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    AMOUNT: number
+  @Column()
+  SYSID: number;
 
-    @Column()
-    SYSID: number
-
-    @ManyToOne(() => SYSPARA, (SYSPARAID) => SYSPARAID.SYSPARAID, {
-        cascade: true
-    })
-    @JoinColumn({ name: "SYSID" })
-    SYSPARAID: SYSPARA[];
-
+  @ManyToOne(() => SYSPARA, (SYSPARAID) => SYSPARAID.SYSPARAID, {
+    cascade: true,
+  })
+  @JoinColumn({ name: 'SYSID' })
+  SYSPARAID: SYSPARA[];
 }

@@ -1,4 +1,12 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SUBSALARYMASTER } from './sub-salary-division-master.entity';
 @Entity()
@@ -25,8 +33,6 @@ export class SALARYDIVISIONMASTER {
   @Column({ length: 50, nullable: true })
   DISTRICT_NAME: string;
 
-
-
   @Column({ length: 10, nullable: true })
   PHNO: string;
 
@@ -36,13 +42,13 @@ export class SALARYDIVISIONMASTER {
   @Column({ nullable: true })
   BRANCH_CODE: number;
   @ManyToOne(() => OWNBRANCHMASTER, (branch) => branch.salarydiv, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @JoinColumn({ name: 'BRANCH_CODE' })
   branch: OWNBRANCHMASTER[];
 
-  @OneToMany(() => SUBSALARYMASTER, subsalary => subsalary.sub, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => SUBSALARYMASTER, (subsalary) => subsalary.sub, {
+    cascade: ['insert', 'update'],
   })
   subsalary: SUBSALARYMASTER[];
 }

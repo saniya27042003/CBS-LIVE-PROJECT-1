@@ -16,4 +16,4 @@ import { DatabaseController } from './database.controller';
   providers: [DatabaseService],
   exports: [DatabaseService],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}
