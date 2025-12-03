@@ -10,7 +10,25 @@ export class DatabaseMappingService {
         @InjectDataSource('primaryDB') private primaryDB: DataSource, // fixed Postgres
     ) { }
 
-    // helper
+    // 🚀 SINGLE CONFIG MAP - handles ALL databases
+    private getQueryConfig(driver: string) {
+        const configs = {
+            postgres: {
+                tables: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
+                columns: `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position`,
+                sampleRows: `LIMIT 100`,
+                paramStyle: '$1'
+            },
+            mssql: {
+                tables: `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'`,
+                columns: `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @0 ORDER BY ORDINAL_POSITION`,
+                sampleRows: `TOP 100`,
+                paramStyle: '@0'
+            }
+        };
+        return configs[driver as keyof typeof configs] || configs.postgres;
+    }
+
     private getDriver(ds: DataSource) {
         return ds.options.type as string; // 'postgres' | 'mssql' | ...
     }
@@ -69,44 +87,21 @@ export class DatabaseMappingService {
     // PRIMARY (Postgres) tables
     async getPrimaryTableNames() {
         const result = await this.primaryDB.query(`
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_type = 'BASE TABLE';
-    `);
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+              AND table_type = 'BASE TABLE';
+        `);
         return result.map((t: any) => t.table_name);
     }
 
-    // CLIENT tables (Postgres + MSSQL)
+    // CLIENT tables (ALL DBs) - 5 lines!
     async getClientTableNames() {
         const client = this.ensureClient();
         const driver = this.getDriver(client);
+        const config = this.getQueryConfig(driver);
 
-        let sql: string;
-
-        if (driver === 'postgres') {
-            sql = `
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = 'public'
-          AND table_type = 'BASE TABLE';
-      `;
-        } else if (driver === 'mssql') {
-            sql = `
-        SELECT TABLE_NAME
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE'
-          AND TABLE_SCHEMA = 'dbo';
-      `;
-        } else {
-            sql = `
-        SELECT TABLE_NAME
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE TABLE_TYPE = 'BASE TABLE';
-      `;
-        }
-
-        const result = await client.query(sql);
+        const result = await client.query(config.tables);
         return result.map((t: any) => t.table_name || t.TABLE_NAME);
     }
 
@@ -122,12 +117,7 @@ export class DatabaseMappingService {
     async getAllColumnsNames(tableName: string) {
         try {
             const result = await this.primaryDB.query(
-                `
-        SELECT column_name
-        FROM information_schema.columns
-        WHERE table_schema = 'public'
-          AND table_name = $1;
-        `,
+                `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1`,
                 [tableName],
             );
             return result.map((c: any) => c.column_name);
@@ -136,68 +126,34 @@ export class DatabaseMappingService {
         }
     }
 
-    // CLIENT DB columns (Postgres + MSSQL)
+    // CLIENT DB columns (ALL DBs) - 6 lines!
     async getClientColumns(tableName: string) {
         try {
             const client = this.ensureClient();
             const driver = this.getDriver(client);
+            const config = this.getQueryConfig(driver);
 
-            let sql: string;
-            let params: any[];
-
-            if (driver === 'postgres') {
-                sql = `
-          SELECT column_name
-          FROM information_schema.columns
-          WHERE table_schema = 'public'
-            AND table_name = $1
-          ORDER BY ordinal_position;
-        `;
-                params = [tableName];
-            } else if (driver === 'mssql') {
-                sql = `
-          SELECT COLUMN_NAME
-          FROM INFORMATION_SCHEMA.COLUMNS
-          WHERE TABLE_SCHEMA = 'dbo'
-            AND TABLE_NAME = @0
-          ORDER BY ORDINAL_POSITION;
-        `;
-                params = [tableName];
-            } else {
-                sql = `
-          SELECT COLUMN_NAME
-          FROM INFORMATION_SCHEMA.COLUMNS
-          WHERE TABLE_NAME = ?
-          ORDER BY ORDINAL_POSITION;
-        `;
-                params = [tableName];
-            }
-
-            const result = await client.query(sql, params);
+            const result = await client.query(config.columns, [tableName]);
             return result.map((c: any) => c.column_name || c.COLUMN_NAME);
         } catch (error: any) {
             throw new InternalServerErrorException(error.message);
         }
     }
 
+    // Table structure (ALL DBs) - 8 lines!
     async getTableStructure(tableName: string) {
         try {
             const client = this.ensureClient();
             const driver = this.getDriver(client);
+            const config = this.getQueryConfig(driver);
 
-            // columns
             const columns = await this.getClientColumns(tableName);
 
-            // sample rows
-            let rowsSql: string;
-            if (driver === 'mssql') {
-                rowsSql = `SELECT TOP 100 * FROM [${tableName}]`;
-            } else {
-                rowsSql = `SELECT * FROM "${tableName}" LIMIT 100;`;
-            }
+            const rowsSql = driver === 'mssql'
+                ? `SELECT ${config.sampleRows} * FROM [${tableName}]`
+                : `SELECT * FROM "${tableName}" ${config.sampleRows}`;
 
             const rows = await client.query(rowsSql);
-
             return { columns, rows };
         } catch (error: any) {
             throw new InternalServerErrorException(error.message);
