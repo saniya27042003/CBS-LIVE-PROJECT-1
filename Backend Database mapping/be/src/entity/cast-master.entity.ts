@@ -1,6 +1,11 @@
-import { IDMASTER } from './customer-id.entity'
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-
+import { IDMASTER } from './customer-id.entity';
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class CASTMASTER {
@@ -15,8 +20,7 @@ export class CASTMASTER {
   NAME: string;
 
   @OneToMany(() => IDMASTER, (cast) => cast.castMaster, {
-    cascade: ["insert", "update"]
+    cascade: ['insert', 'update'],
   })
   cast: IDMASTER[];
-
 }

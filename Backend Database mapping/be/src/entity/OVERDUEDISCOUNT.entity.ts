@@ -2,25 +2,21 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class OVERDUEDISCOUNT {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  AC_ACNOTYPE: string;
 
+  @Column()
+  AC_TYPE: string;
 
-    @Column()
-    AC_ACNOTYPE: string
+  @Column()
+  AC_NO: number;
 
-    @Column()
-    AC_TYPE: string
+  @Column()
+  EFFECT_DATE: string;
 
-    @Column()
-    AC_NO: number
-
-    @Column()
-    EFFECT_DATE: string
-
-    @Column({ nullable: true })
-    DISCOUNT_MONTHS: number
-
-
+  @Column({ nullable: true })
+  DISCOUNT_MONTHS: number;
 }

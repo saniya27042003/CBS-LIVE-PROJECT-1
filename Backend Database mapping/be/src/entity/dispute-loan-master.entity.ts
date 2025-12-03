@@ -1,4 +1,15 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { SECURITYDETAILS } from './security.entity';
 import { IDMASTER } from './customer-id.entity';
 import { GUARANTERDETAILS } from './guarantor.entity';
@@ -10,7 +21,7 @@ export class LNDISPUTEDETAILS {
   id: number;
 
   // AC_ACNOTYPE:string;
-  // basic 
+  // basic
   // @Column({ nullable: true })
   // AC_ACNOTYPE:string;
 
@@ -338,31 +349,36 @@ export class LNDISPUTEDETAILS {
   @Column({ nullable: true })
   AC_REMARK: string;
 
-
-
-
   @Column({ nullable: true })
-  lnDisputemasterID: number
-  @ManyToOne(() => LNDISPUTEDETAILS, (disputeloan) => disputeloan.disputeloanmaster)
-  @JoinColumn({ name: "lnDisputemasterID" })
+  lnDisputemasterID: number;
+  @ManyToOne(
+    () => LNDISPUTEDETAILS,
+    (disputeloan) => disputeloan.disputeloanmaster,
+  )
+  @JoinColumn({ name: 'lnDisputemasterID' })
   disputeloanmaster: LNDISPUTEDETAILS[];
 
-
-  @OneToMany(() => LNMASTER, termloan => termloan.lnmaster, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => LNMASTER, (termloan) => termloan.lnmaster, {
+    cascade: ['insert', 'update'],
   })
   termloan: LNMASTER[];
 
-
-  @OneToMany(() => GUARANTERDETAILS, guaranterMaster => guaranterMaster.lnmaster, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => GUARANTERDETAILS,
+    (guaranterMaster) => guaranterMaster.lnmaster,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   guaranterMaster: GUARANTERDETAILS[];
 
-
-  @OneToMany(() => SECURITYDETAILS, securityMaster => securityMaster.lnmaster, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => SECURITYDETAILS,
+    (securityMaster) => securityMaster.lnmaster,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   securityMaster: SECURITYDETAILS[];
   // securityMaster: SECURITYDETAILS[];
   // AC_ADDFLAG: boolean;
@@ -376,6 +392,4 @@ export class LNDISPUTEDETAILS {
   // AC_CUSTID: any;
   // GuarantorData: any;
   // SecurityData: any;
-
-
 }

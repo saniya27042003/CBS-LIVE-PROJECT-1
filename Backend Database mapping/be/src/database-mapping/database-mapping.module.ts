@@ -5,7 +5,6 @@ import { DatabaseMappingService } from './database-mapping.service';
 @Module({
   controllers: [DatabaseMappingController],
   providers: [DatabaseMappingService],
-  exports: [DatabaseMappingService]
-
+  exports: [DatabaseMappingService],
 })
-export class DatabaseMappingModule { }
+export class DatabaseMappingModule {}

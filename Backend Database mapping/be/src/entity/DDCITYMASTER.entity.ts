@@ -2,22 +2,19 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class DDCITYMASTER {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  @Generated('increment')
+  CODE: number;
 
-    @Column()
-    @Generated('increment')
-    CODE: number
+  @Column()
+  NAME: string;
 
-    @Column()
-    NAME: string
+  @Column({ nullable: true })
+  USER_CODE: string;
 
-    @Column({ nullable: true })
-    USER_CODE: string
-
-    @Column({ nullable: true })
-    OFFICER_CODE: string
-
-
+  @Column({ nullable: true })
+  OFFICER_CODE: string;
 }

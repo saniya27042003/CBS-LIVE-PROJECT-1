@@ -1,5 +1,13 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 
 @Entity()
 @Unique(['ITEM_CODE'])
@@ -36,7 +44,7 @@ export class ITEMMASTER {
   PURCHASE_VALUE: number;
 
   @Column({ nullable: true })
-  OP_BAL_DATE: string; 
+  OP_BAL_DATE: string;
 
   @Column({ default: 0 })
   OP_QUANTITY: number;
@@ -59,16 +67,18 @@ export class ITEMMASTER {
   @Column({ nullable: true })
   SYSCHNG_LOGIN: string;
 
-
   @Column({ nullable: true, default: 1 })
-  status: number
+  status: number;
 
   @Column()
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.branchCodeds, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (BranchCodeMaster) => BranchCodeMaster.branchCodeds,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   BranchCodeMaster: OWNBRANCHMASTER[];
-
 }

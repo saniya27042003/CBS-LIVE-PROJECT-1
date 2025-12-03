@@ -10,7 +10,7 @@ export class AppService {
   // e.g. 'http://localhost:3000/database-mapping/'
   BASE_URL = env.apiBaseUrl;
 
-  constructor() { }
+  constructor() {}
 
   // CONNECT: used from database.component.ts
   connectClient(config: any) {
@@ -34,10 +34,9 @@ export class AppService {
   // PRIMARY COLUMNS (same as old service)
 
   getAllColumnsNames(tableName: string) {
-    return this.http.post<string[]>(
-      this.BASE_URL + 'getAllColumnsNames',
-      { tableName },
-    );
+    return this.http.post<string[]>(this.BASE_URL + 'getAllColumnsNames', {
+      tableName,
+    });
   }
 
   getPrimaryColumns(tableName: string) {

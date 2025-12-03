@@ -1,6 +1,12 @@
 import { SECINSURANCE } from './customer-insurance.entity';
 import { FIREPOLICY } from './fire-policy.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 @Entity()
 export class INSUARANCEMASTER {
   @PrimaryGeneratedColumn()
@@ -13,13 +19,21 @@ export class INSUARANCEMASTER {
   @Column({ length: 100 })
   NAME: string;
 
-  @OneToMany(() => FIREPOLICY, insurancemaster => insurancemaster.insurancemaster, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => FIREPOLICY,
+    (insurancemaster) => insurancemaster.insurancemaster,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   insurancemaster: FIREPOLICY[];
 
-  @OneToMany(() => SECINSURANCE, custinsurancemaster => custinsurancemaster.custinsurancemaster, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => SECINSURANCE,
+    (custinsurancemaster) => custinsurancemaster.custinsurancemaster,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   custinsurancemaster: SECINSURANCE[];
 }

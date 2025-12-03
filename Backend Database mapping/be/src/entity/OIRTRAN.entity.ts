@@ -2,52 +2,48 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class OIRTRAN {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  TRAN_DATE: string;
 
+  @Column()
+  SERIAL_NO: number;
 
-    @Column()
-    TRAN_DATE: string
+  @Column({ nullable: true })
+  TRAN_DRCR: string;
 
-    @Column()
-    SERIAL_NO: number
+  @Column()
+  TRAN_ACNOTYPE: string;
 
-    @Column({ nullable: true })
-    TRAN_DRCR: string
+  @Column()
+  TRAN_ACTYPE: number;
 
-    @Column()
-    TRAN_ACNOTYPE: string
+  @Column({ length: 15 })
+  TRAN_ACNO: string;
 
-    @Column()
-    TRAN_ACTYPE: number
+  @Column()
+  TRAN_GLACNO: number;
 
-    @Column({ length: 15 })
-    TRAN_ACNO: string
+  @Column()
+  TRAN_MODE: number;
 
-    @Column()
-    TRAN_GLACNO: number
+  @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
+  OIR_AMOUNT: number;
 
-    @Column()
-    TRAN_MODE: number
+  @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
+  OVERDUE_AMOUNT: number;
 
-    @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OIR_AMOUNT: number
+  @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
+  DUE_INSTALLMENT: number;
 
-    @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OVERDUE_AMOUNT: number
+  @Column({ nullable: true })
+  NPA_DATE: string;
 
-    @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    DUE_INSTALLMENT: number
+  @Column({ default: 0 })
+  TRAN_STATUS: number;
 
-    @Column({ nullable: true })
-    NPA_DATE: string
-
-    @Column({ default: 0 })
-    TRAN_STATUS: number
-
-    @Column({ nullable: true })
-    USER_CODE: string
-
-
+  @Column({ nullable: true })
+  USER_CODE: string;
 }

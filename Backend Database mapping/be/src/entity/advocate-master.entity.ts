@@ -2,7 +2,6 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ADVOCATEMASTER {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -12,5 +11,4 @@ export class ADVOCATEMASTER {
 
   @Column({ length: 100 })
   NAME: string;
-
 }

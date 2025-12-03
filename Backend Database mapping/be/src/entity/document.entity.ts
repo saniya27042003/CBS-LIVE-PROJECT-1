@@ -1,33 +1,42 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { IDMASTER } from "./customer-id.entity";
-import { DOCUMENTMASTER } from './document-master.entity'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { IDMASTER } from './customer-id.entity';
+import { DOCUMENTMASTER } from './document-master.entity';
 @Entity()
 export class CUSTDOCUMENT {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  PATH: string;
 
-    @Column()
-    PATH: string
+  // @Column()
+  // NAME: string
 
-    // @Column()
-    // NAME: string
+  @Column()
+  idmasterID: number;
 
-    @Column()
-    idmasterID: number
+  @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custdocument, {
+    cascade: true,
+  })
+  @JoinColumn({ name: 'idmasterID' })
+  idmaster: IDMASTER[];
 
-    @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custdocument, {
-        cascade: true
-    })
-    @JoinColumn({ name: "idmasterID" })
-    idmaster: IDMASTER[];
+  @Column()
+  DocumentMasterID: number;
 
-    @Column()
-    DocumentMasterID: number
-
-    @ManyToOne(() => DOCUMENTMASTER, (DocumentMaster) => DocumentMaster.custdocument, {
-        cascade: true
-    })
-    @JoinColumn({ name: "DocumentMasterID" })
-    DocumentMaster: DOCUMENTMASTER[];
+  @ManyToOne(
+    () => DOCUMENTMASTER,
+    (DocumentMaster) => DocumentMaster.custdocument,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'DocumentMasterID' })
+  DocumentMaster: DOCUMENTMASTER[];
 }

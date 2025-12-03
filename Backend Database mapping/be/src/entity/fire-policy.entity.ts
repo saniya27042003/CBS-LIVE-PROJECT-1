@@ -2,7 +2,14 @@ import { SECURITYMASTER } from './security-code.entity';
 import { INSUARANCEMASTER } from './insurance-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class FIREPOLICY {
@@ -15,10 +22,9 @@ export class FIREPOLICY {
   @Column()
   AC_TYPE: number;
   @ManyToOne(() => SCHEMAST, (fireactype) => fireactype.fireactype, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_TYPE" })
-
+  @JoinColumn({ name: 'AC_TYPE' })
   fireactype: SCHEMAST[];
 
   @Column({ length: 15 })
@@ -41,10 +47,14 @@ export class FIREPOLICY {
 
   @Column({ nullable: true })
   INSU_CO_CODE: number;
-  @ManyToOne(() => INSUARANCEMASTER, (insurancemaster) => insurancemaster.insurancemaster, {
-    cascade: true
-  })
-  @JoinColumn({ name: "INSU_CO_CODE" })
+  @ManyToOne(
+    () => INSUARANCEMASTER,
+    (insurancemaster) => insurancemaster.insurancemaster,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'INSU_CO_CODE' })
   insurancemaster: INSUARANCEMASTER[];
 
   @Column({ nullable: true })
@@ -62,17 +72,20 @@ export class FIREPOLICY {
   @Column({ nullable: true })
   SECU_CODE: number;
   @ManyToOne(() => SECURITYMASTER, (firepolicy) => firepolicy.firepolicy, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "SECU_CODE" })
+  @JoinColumn({ name: 'SECU_CODE' })
   firepolicy: SECURITYMASTER[];
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (firebranchcode) => firebranchcode.firebranchcode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (firebranchcode) => firebranchcode.firebranchcode,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   firebranchcode: OWNBRANCHMASTER[];
-
 }

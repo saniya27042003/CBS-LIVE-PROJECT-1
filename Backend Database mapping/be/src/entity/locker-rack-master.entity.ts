@@ -1,4 +1,11 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 @Entity()
 export class LOCKERRACKMASTER {
@@ -13,17 +20,21 @@ export class LOCKERRACKMASTER {
   RACK_DESC: string;
 
   @Column()
-  LOCKER_FROMNO: string
+  LOCKER_FROMNO: string;
 
   @Column()
-  LOCKER_TONO: string
+  LOCKER_TONO: string;
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.locker, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (BranchCodeMaster) => BranchCodeMaster.locker,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   BranchCodeMaster: OWNBRANCHMASTER[];
 }

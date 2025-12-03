@@ -2,15 +2,15 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class HOLIDAYSMASTER {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    T_DATE: string;
+  @Column()
+  T_DATE: string;
 
-    @Column()
-    T_DESC: string;
+  @Column()
+  T_DESC: string;
 
-    @Column()
-    BRANCH_CODE: number;
+  @Column()
+  BRANCH_CODE: number;
 }

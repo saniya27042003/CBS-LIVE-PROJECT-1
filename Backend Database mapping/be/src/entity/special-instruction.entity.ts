@@ -1,5 +1,14 @@
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 @Entity()
 export class SPECIALINSTRUCTION {
   @PrimaryGeneratedColumn()
@@ -7,34 +16,34 @@ export class SPECIALINSTRUCTION {
 
   @Column()
   @Generated('increment')
-  INSTRUCTION_NO: number
+  INSTRUCTION_NO: number;
 
   @Column()
-  INSTRUCTION_DATE: string
+  INSTRUCTION_DATE: string;
 
   @Column({ nullable: true })
-  TRAN_ACNO: string
+  TRAN_ACNO: string;
 
   @Column({ nullable: true })
-  TRAN_ACTYPE: number
+  TRAN_ACTYPE: number;
 
   @Column({ nullable: true })
-  DRCR_APPLY: string
+  DRCR_APPLY: string;
 
   @Column({ nullable: true })
-  DETAILS: string
+  DETAILS: string;
 
   @Column({ nullable: true })
-  FROM_DATE: string
+  FROM_DATE: string;
 
   @Column({ nullable: true })
-  TO_DATE: string
+  TO_DATE: string;
 
   @Column({ default: '0' })
-  IS_RESTRICT: string
+  IS_RESTRICT: string;
 
   @Column({ nullable: true })
-  REVOKE_DATE: string
+  REVOKE_DATE: string;
 
   @CreateDateColumn()
   SYSADD_DATETIME: Date;
@@ -49,8 +58,8 @@ export class SPECIALINSTRUCTION {
   SYSCHNG_LOGIN: string;
 
   @ManyToOne(() => SCHEMAST, (specialIns) => specialIns.specialIns, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "TRAN_ACTYPE" })
+  @JoinColumn({ name: 'TRAN_ACTYPE' })
   specialIns: SCHEMAST[];
 }

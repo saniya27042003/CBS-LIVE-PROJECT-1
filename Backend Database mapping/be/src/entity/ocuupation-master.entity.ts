@@ -1,6 +1,11 @@
-
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { IDMASTER } from './customer-id.entity';
 @Entity()
 export class OCCUPATIONMASTER {
   @PrimaryGeneratedColumn()
@@ -14,8 +19,7 @@ export class OCCUPATIONMASTER {
   NAME: string;
 
   @OneToMany(() => IDMASTER, (occupation) => occupation.occupMaster, {
-    cascade: ["insert", "update"]
+    cascade: ['insert', 'update'],
   })
   occupation: IDMASTER[];
-
 }

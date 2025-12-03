@@ -1,6 +1,11 @@
-
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { DPMASTER } from './dpmaster.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { DPMASTER } from './dpmaster.entity';
 @Entity()
 export class OPERATIONMASTER {
   @PrimaryGeneratedColumn()
@@ -14,8 +19,7 @@ export class OPERATIONMASTER {
   NAME: string;
 
   @OneToMany(() => DPMASTER, (operation) => operation.OperationMaster, {
-    cascade: ["insert", "update"]
+    cascade: ['insert', 'update'],
   })
   operation: DPMASTER[];
-
 }

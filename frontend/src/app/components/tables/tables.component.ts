@@ -11,11 +11,11 @@ export class FilterPipe implements PipeTransform {
     if (!searchText) return items;
     searchText = searchText.toLowerCase();
 
-    return items.filter(item => {
+    return items.filter((item) => {
       const value =
         typeof item === 'string'
           ? item
-          : item.label ?? (item.name ?? item.id ?? '');
+          : (item.label ?? item.name ?? item.id ?? '');
       return value?.toString().toLowerCase().includes(searchText);
     });
   }
@@ -55,10 +55,10 @@ export class TablesComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private appService: AppService,
-  ) { }
+  ) {}
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['primary']) this.primaryDatabaseName = params['primary'];
       if (params['clientType']) this.clientDatabaseName = params['clientType'];
       if (params['client']) this.actualClientDbName = params['client'];
@@ -95,11 +95,11 @@ export class TablesComponent implements OnInit {
     this.appService.getAllColumnsNames(tableName).subscribe((res: any) => {
       const rows = Array.isArray(res)
         ? res.map((col: any, idx: number) => ({
-          id: idx + 1, // row id / position
-          name: typeof col === 'string' ? col : col?.column_name,
-          source: tableName,
-          position: '',
-        }))
+            id: idx + 1, // row id / position
+            name: typeof col === 'string' ? col : col?.column_name,
+            source: tableName,
+            position: '',
+          }))
         : [];
 
       this.primaryTableRowsByName[tableName] = rows;
@@ -132,9 +132,9 @@ export class TablesComponent implements OnInit {
     this.appService.getClientColumns(tableName).subscribe((res: any) => {
       const rows = Array.isArray(res)
         ? res.map((colName: any, idx: number) => ({
-          id: idx + 1,
-          name: typeof colName === 'string' ? colName : colName?.column_name,
-        }))
+            id: idx + 1,
+            name: typeof colName === 'string' ? colName : colName?.column_name,
+          }))
         : [];
 
       this.clientTableRowsByName[tableName] = rows;
@@ -156,12 +156,11 @@ export class TablesComponent implements OnInit {
   onOkClick() {
     this.mappingDataByTable = {};
 
-    this.selectedPrimaryTable.forEach(tableName => {
+    this.selectedPrimaryTable.forEach((tableName) => {
       const primaryRows = this.primaryTableRowsByName[tableName] || [];
-      const clientRows =
-        this.activeClientTable
-          ? this.clientTableRowsByName[this.activeClientTable] || []
-          : [];
+      const clientRows = this.activeClientTable
+        ? this.clientTableRowsByName[this.activeClientTable] || []
+        : [];
 
       const mappings = primaryRows.map((primaryRow, index) => {
         const enteredClientIndex = primaryRow.position;
@@ -179,7 +178,9 @@ export class TablesComponent implements OnInit {
           clientId: clientMatch ? clientMatch.id : null,
           // shown columns
           serverColumn: primaryRow.name,
-          clientColumn: clientMatch ? (clientMatch.name ?? clientMatch.id ?? '-') : '-',
+          clientColumn: clientMatch
+            ? (clientMatch.name ?? clientMatch.id ?? '-')
+            : '-',
           clientDisplayName: clientMatch
             ? clientMatch.name || clientMatch.id || 'Unknown'
             : enteredClientIndex
@@ -195,16 +196,18 @@ export class TablesComponent implements OnInit {
   // ===== UI HELPERS =====
 
   removePrimaryTable(table: string) {
-    this.selectedPrimaryTable =
-      this.selectedPrimaryTable.filter(t => t !== table);
+    this.selectedPrimaryTable = this.selectedPrimaryTable.filter(
+      (t) => t !== table,
+    );
     if (this.activePrimaryTable === table) {
       this.activePrimaryTable = this.selectedPrimaryTable[0] || null;
     }
   }
 
   removeClientTable(table: string) {
-    this.selectedClientTable =
-      this.selectedClientTable.filter(t => t !== table);
+    this.selectedClientTable = this.selectedClientTable.filter(
+      (t) => t !== table,
+    );
     if (this.activeClientTable === table) {
       this.activeClientTable = this.selectedClientTable[0] || null;
     }

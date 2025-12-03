@@ -1,9 +1,15 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CHARGES } from './scheme-type-charges.entity';
 
 @Entity()
 export class CHARGESAMT {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,10 +27,10 @@ export class CHARGESAMT {
   CHARGES_AMT: number;
 
   @Column({ unique: false })
-  idRateID: number
+  idRateID: number;
   @ManyToOne(() => CHARGES, (idRate) => idRate.rate, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "idRateID" })
+  @JoinColumn({ name: 'idRateID' })
   idRate: CHARGES[];
 }

@@ -9,7 +9,9 @@ describe('DatabaseMappingController', () => {
       controllers: [DatabaseMappingController],
     }).compile();
 
-    controller = module.get<DatabaseMappingController>(DatabaseMappingController);
+    controller = module.get<DatabaseMappingController>(
+      DatabaseMappingController,
+    );
   });
 
   it('should be defined', () => {

@@ -1,9 +1,15 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { PREMATULESSRATE } from './premature-pigmy-less-int-rate.entity';
 
 @Entity()
 export class PREMATULESS {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,10 +27,10 @@ export class PREMATULESS {
   LESS_INT_RATE: number;
 
   @Column({ unique: false })
-  idRateID: number
+  idRateID: number;
   @ManyToOne(() => PREMATULESSRATE, (idRate) => idRate.rate, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "idRateID" })
+  @JoinColumn({ name: 'idRateID' })
   idRate: PREMATULESSRATE[];
 }

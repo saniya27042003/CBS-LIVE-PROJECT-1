@@ -11,49 +11,48 @@ export class TRANINPUTHEAD {
   @Column({ default: 0 })
   SCHEME_TYPE: string;
 
+  @Column({ default: 0 })
+  FIELD_AMOUNT: string;
 
   @Column({ default: 0 })
-  FIELD_AMOUNT: string
-
-  @Column({ default: 0 })
-  FIELD_GL: string
+  FIELD_GL: string;
 
   @Column({ nullable: true, default: 0 })
-  FIELD_INTEREST_DATE: string
+  FIELD_INTEREST_DATE: string;
 
   @Column({ default: 0 })
-  FIELD_TRAN_TABLE: string
+  FIELD_TRAN_TABLE: string;
 
   @Column({ nullable: true, default: 0 })
-  GL_CODE: number
+  GL_CODE: number;
 
   @Column({ nullable: true, default: 0 })
-  GL_CODE_FROM_SCHEME_FIELD: string
+  GL_CODE_FROM_SCHEME_FIELD: string;
 
   @Column({ nullable: true, default: 0 })
-  DESCRIPTION: string
+  DESCRIPTION: string;
 
   @Column({ nullable: true, default: 0 })
-  SHORT_NAME: string
+  SHORT_NAME: string;
 
   @Column({ default: 0 })
-  CHECK_REQUIRE: string
+  CHECK_REQUIRE: string;
 
   @Column({ default: 0 })
-  CHECK_BALANCE: string
+  CHECK_BALANCE: string;
 
   @Column({ nullable: true, default: 0 })
-  DRCR_APPLICABLE: string
+  DRCR_APPLICABLE: string;
 
   @Column({ default: 0 })
-  INTEREST_DATE_INPUT: string
+  INTEREST_DATE_INPUT: string;
 
   @Column({ nullable: true, default: 0 })
-  HEAD_TYPE: string
+  HEAD_TYPE: string;
 
   @Column({ default: 0 })
-  IS_NOTING_REQUIRED: string
+  IS_NOTING_REQUIRED: string;
 
   @Column({ default: 0 })
-  IS_GLBAL_MAINTAIN: string
+  IS_GLBAL_MAINTAIN: string;
 }

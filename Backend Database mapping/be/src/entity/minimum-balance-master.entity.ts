@@ -1,5 +1,11 @@
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { DPMASTER } from './dpmaster.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { DPMASTER } from './dpmaster.entity';
 @Entity()
 export class BALACATA {
   @PrimaryGeneratedColumn()
@@ -15,8 +21,12 @@ export class BALACATA {
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
   BC_MINBAL: number;
 
-  @OneToMany(() => DPMASTER, (minimumBalance) => minimumBalance.MinimumBalanceMaster, {
-    cascade: ["insert", "update"]
-  })
+  @OneToMany(
+    () => DPMASTER,
+    (minimumBalance) => minimumBalance.MinimumBalanceMaster,
+    {
+      cascade: ['insert', 'update'],
+    },
+  )
   minimumBalance: DPMASTER[];
 }

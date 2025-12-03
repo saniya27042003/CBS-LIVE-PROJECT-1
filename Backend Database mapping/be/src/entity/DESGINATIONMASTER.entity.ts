@@ -2,15 +2,13 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class DESGINATIONMASTER {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @Column()
+  @Generated('increment')
+  CODE: number;
 
-    @Column()
-    @Generated('increment')
-    CODE: number
-
-    @Column()
-    NAME: string
-
+  @Column()
+  NAME: string;
 }

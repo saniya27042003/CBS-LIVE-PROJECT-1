@@ -1,20 +1,18 @@
 import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
+export class Gl_STATEMENT_CODE {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-export class Gl_STATEMENT_CODE{
-    @PrimaryGeneratedColumn()
-    id : number;
+  @Column()
+  head_name: string;
 
-    @Column()
-    head_name : string;
+  @Column()
+  parent_node: number;
 
-    @Column()
-    parent_node : number;
+  @Column()
+  status: string;
 
-    @Column()
-    status : string;
-
-    @Column()
-    created_by : number;
-
-} 
+  @Column()
+  created_by: number;
+}

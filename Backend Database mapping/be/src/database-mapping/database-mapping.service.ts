@@ -1,24 +1,26 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 @Injectable()
 export class DatabaseMappingService {
-    private clientDB: DataSource | null = null;   // hold dynamic connection
+    private clientDB: DataSource | null = null; // hold dynamic connection
 
     constructor(
         @InjectDataSource('primaryDB') private primaryDB: DataSource, // demo
     ) { }
 
     // connect to any client DB from config
-    // connect to any client DB from config
     async connect(config: any) {
         try {
             if (this.clientDB && this.clientDB.isInitialized) {
                 await this.clientDB.destroy();
             }
-
-            const isMssql = config.type === 'mssql';
 
             const ds = new DataSource({
                 type: config.type,
@@ -29,11 +31,7 @@ export class DatabaseMappingService {
                 database: config.database,
                 entities: [],
                 synchronize: false,
-                options: isMssql
-                    ? { encrypt: false, trustServerCertificate: true }
-                    : undefined,
             });
-
 
             await ds.initialize();
             this.clientDB = ds;
@@ -48,7 +46,6 @@ export class DatabaseMappingService {
             };
         }
     }
-
 
     private ensureClient() {
         if (!this.clientDB || !this.clientDB.isInitialized) {

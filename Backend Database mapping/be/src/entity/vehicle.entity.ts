@@ -1,12 +1,17 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class VEHICLE {
-
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -16,23 +21,20 @@ export class VEHICLE {
   @Column({ nullable: true })
   AC_TYPE: number;
   @ManyToOne(() => SCHEMAST, (vehicle) => vehicle.vehicle, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_TYPE" })
-
+  @JoinColumn({ name: 'AC_TYPE' })
   vehicle: SCHEMAST[];
 
   @Column({ length: 15, default: 0 })
   AC_NO: string;
 
-
-
   @Column({ nullable: true })
   SECU_CODE: number;
   @ManyToOne(() => SECURITYMASTER, (vehiclesec) => vehiclesec.vehiclesec, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "SECU_CODE" })
+  @JoinColumn({ name: 'SECU_CODE' })
   vehiclesec: SECURITYMASTER[];
 
   @Column({ nullable: true })
@@ -42,7 +44,7 @@ export class VEHICLE {
   RTO_REG_DATE: string;
 
   @Column({ nullable: true })
-  VEHICLE_MAKE: string
+  VEHICLE_MAKE: string;
 
   @Column({ nullable: true })
   MANUFACTURE_YEAR: string;
@@ -79,10 +81,13 @@ export class VEHICLE {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   vehiclebranchcode: OWNBRANCHMASTER[];
-
 }

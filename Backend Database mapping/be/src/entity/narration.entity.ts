@@ -6,6 +6,4 @@ export class NARRATIONMASTER {
 
   @Column({ length: 2000, nullable: false })
   NARRATION: string;
-
 }
-

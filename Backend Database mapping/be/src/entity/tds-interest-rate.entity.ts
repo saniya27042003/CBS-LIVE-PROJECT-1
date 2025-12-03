@@ -2,7 +2,6 @@ import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class TDSRATE {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -20,12 +19,4 @@ export class TDSRATE {
 
   @Column()
   EFFECT_DATE: string;
-
 }
-
-
-
-
-
-
-

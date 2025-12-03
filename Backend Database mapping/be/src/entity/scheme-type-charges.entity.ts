@@ -1,9 +1,14 @@
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CHARGESAMT } from './charges.entity';
 
 @Entity()
 export class CHARGES {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,8 +24,8 @@ export class CHARGES {
   @Column({ nullable: true })
   CHARGES_GL_ACNO: string;
 
-  @OneToMany(() => CHARGESAMT, rate => rate.idRate, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => CHARGESAMT, (rate) => rate.idRate, {
+    cascade: ['insert', 'update'],
   })
   rate: CHARGESAMT[];
 }

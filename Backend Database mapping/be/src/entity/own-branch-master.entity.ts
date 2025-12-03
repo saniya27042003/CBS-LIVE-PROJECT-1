@@ -29,8 +29,16 @@ import { VEHICLE } from './vehicle.entity';
 import { PIGMYCHART } from './pigmy-chart.entity';
 import { SYSPARA } from './system-master-parameters.entity';
 // import { USERDEFINATION } from 'src/utility/user-defination/entity/user-defination.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { INTINSTRUCTION } from './interest-instruction.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { INTINSTRUCTION } from './interest-instruction.entity';
 import { COMPANYGROUPLINKMASTER } from './company-group-link-master.entity';
 import { COMPANYGROUPMASTER } from './company-group-master.entity';
 import { DEPRCATEGORY } from './depriciation-category-master.entity';
@@ -55,142 +63,197 @@ export class OWNBRANCHMASTER {
   // @Column({ nullable: true, length: 15 })
   // AC_NO: string;
 
-  @OneToMany(type => USERDEFINATION, user => user.branch)
-  user: USERDEFINATION
+  @OneToMany((type) => USERDEFINATION, (user) => user.branch)
+  user: USERDEFINATION;
 
   @Column({ nullable: true })
   sysparaId: number;
-  @ManyToOne(type => SYSPARA, syspara => syspara.branch)
-  syspara: SYSPARA
+  @ManyToOne((type) => SYSPARA, (syspara) => syspara.branch)
+  syspara: SYSPARA;
 
-  @OneToMany(type => DPMASTER, branchcode => branchcode.BranchCodeMaster)
-  branchcode: DPMASTER
+  @OneToMany((type) => DPMASTER, (branchcode) => branchcode.BranchCodeMaster)
+  branchcode: DPMASTER;
 
-  @OneToMany(() => DPMASTER, (branch) => branch.BranchMaster) BranchMaster
-  branch: DPMASTER
+  @OneToMany(() => DPMASTER, (branch) => branch.BranchMaster) BranchMaster;
+  branch: DPMASTER;
 
   @OneToMany(() => PGMASTER, (branchCodePG) => branchCodePG.BranchCodeMaster)
-  branchCodePG: PGMASTER
+  branchCodePG: PGMASTER;
 
   @OneToMany(() => SHMASTER, (branchCodesh) => branchCodesh.BranchCodeMaster)
-  branchCodesh: SHMASTER
+  branchCodesh: SHMASTER;
 
   @OneToMany(() => ITEMMASTER, (branchCodeds) => branchCodeds.BranchCodeMaster)
-  branchCodeds: ITEMMASTER
+  branchCodeds: ITEMMASTER;
 
   @OneToMany(() => LNMASTER, (branchCodeLN) => branchCodeLN.BranchCodeMaster)
-  branchCodeLN: LNMASTER
+  branchCodeLN: LNMASTER;
 
   @OneToMany(() => SHMASTER, (divBranch) => divBranch.divBranchMaster)
-  divBranch: SHMASTER
+  divBranch: SHMASTER;
 
-  @OneToMany(() => PIGMYCHART, (branchCodePigmyChart) => branchCodePigmyChart.BranchCode)
-  branchCodePigmyChart: PIGMYCHART
+  @OneToMany(
+    () => PIGMYCHART,
+    (branchCodePigmyChart) => branchCodePigmyChart.BranchCode,
+  )
+  branchCodePigmyChart: PIGMYCHART;
 
   @Column({ nullable: true })
   AC_NO: string;
 
   @ManyToOne(() => ACMASTER, (accNo) => accNo.ownBranch, {
-    cascade: true
+    cascade: true,
   })
-
-  @JoinColumn({ name: "AC_NO" })
+  @JoinColumn({ name: 'AC_NO' })
   accNo: ACMASTER[];
 
   @OneToMany(() => INTINSTRUCTION, (branchCodeIns) => branchCodeIns.BranchCode)
-  branchCodeIns: INTINSTRUCTION
+  branchCodeIns: INTINSTRUCTION;
 
-  @OneToMany(() => SALARYDIVISIONMASTER, salarydiv => salarydiv.branch, {
-    cascade: ["insert", "update"]
+  @OneToMany(() => SALARYDIVISIONMASTER, (salarydiv) => salarydiv.branch, {
+    cascade: ['insert', 'update'],
   })
   salarydiv: SALARYDIVISIONMASTER[];
-  @OneToMany(() => BANKBRANCHMASTER, (BBranchMaster) => BBranchMaster.BBranchMaster)
-  BBranchMaster: BANKBRANCHMASTER
+  @OneToMany(
+    () => BANKBRANCHMASTER,
+    (BBranchMaster) => BBranchMaster.BBranchMaster,
+  )
+  BBranchMaster: BANKBRANCHMASTER;
 
-  @OneToMany(() => BATCHVOUCHERTRAN, (voucherBranch) => voucherBranch.voucherBranch)
-  voucherBranch: BATCHVOUCHERTRAN
+  @OneToMany(
+    () => BATCHVOUCHERTRAN,
+    (voucherBranch) => voucherBranch.voucherBranch,
+  )
+  voucherBranch: BATCHVOUCHERTRAN;
 
-  @OneToMany(() => BRANCHWISEDIVIDEND, (branchDividend) => branchDividend.branchDividend)
-  branchDividend: BRANCHWISEDIVIDEND
+  @OneToMany(
+    () => BRANCHWISEDIVIDEND,
+    (branchDividend) => branchDividend.branchDividend,
+  )
+  branchDividend: BRANCHWISEDIVIDEND;
 
   @OneToMany(() => CASHREMITRAN, (cashTran) => cashTran.cashTran)
-  cashTran: CASHREMITRAN
+  cashTran: CASHREMITRAN;
 
   @OneToMany(() => CHEQUEBOOKISSUED, (chequebook) => chequebook.chequebook)
-  chequebook: CHEQUEBOOKISSUED
+  chequebook: CHEQUEBOOKISSUED;
 
-  @OneToMany(() => CHEQUECOLLECTTRAN, (chequeCollection) => chequeCollection.chequeCollection)
-  chequeCollection: CHEQUECOLLECTTRAN
+  @OneToMany(
+    () => CHEQUECOLLECTTRAN,
+    (chequeCollection) => chequeCollection.chequeCollection,
+  )
+  chequeCollection: CHEQUECOLLECTTRAN;
 
-  @OneToMany(() => MORATORIUMPERIOD, (moratoriumBranch) => moratoriumBranch.moratoriumBranch)
-  moratoriumBranch: MORATORIUMPERIOD
+  @OneToMany(
+    () => MORATORIUMPERIOD,
+    (moratoriumBranch) => moratoriumBranch.moratoriumBranch,
+  )
+  moratoriumBranch: MORATORIUMPERIOD;
 
-  @OneToMany(() => CHARGESNOTING, (notingChargeBranch) => notingChargeBranch.notingChargeBranch)
-  notingChargeBranch: CHARGESNOTING
+  @OneToMany(
+    () => CHARGESNOTING,
+    (notingChargeBranch) => notingChargeBranch.notingChargeBranch,
+  )
+  notingChargeBranch: CHARGESNOTING;
   @OneToMany(() => DIRECTORMASTER, (director) => director.BranchCodeMaster)
-  director: DIRECTORMASTER
+  director: DIRECTORMASTER;
 
   @OneToMany(() => LOCKERRACKMASTER, (locker) => locker.BranchCodeMaster)
-  locker: LOCKERRACKMASTER
+  locker: LOCKERRACKMASTER;
 
   @OneToMany(() => LOCKERSIZE, (lockersize) => lockersize.BranchCodeMaster)
-  lockersize: LOCKERSIZE
+  lockersize: LOCKERSIZE;
 
   @OneToMany(() => LOCKERMASTER, (lockerwise) => lockerwise.BranchCodeMaster)
-  lockerwise: LOCKERMASTER
+  lockerwise: LOCKERMASTER;
 
   @OneToMany(() => DEPRCATEGORY, (depre) => depre.BranchCodeMaster)
-  depre: DEPRCATEGORY
+  depre: DEPRCATEGORY;
 
   @OneToMany(() => SUBSALARYMASTER, (subsal) => subsal.BranchCodeMaster)
-  subsal: SUBSALARYMASTER
+  subsal: SUBSALARYMASTER;
 
   @OneToMany(() => COMPANYGROUPMASTER, (comapny) => comapny.BranchCodeMaster)
-  comapny: COMPANYGROUPMASTER
+  comapny: COMPANYGROUPMASTER;
 
-  @OneToMany(() => COMPANYGROUPLINKMASTER, (comapnylink) => comapnylink.BranchCodeMaster)
-  comapnylink: COMPANYGROUPLINKMASTER
+  @OneToMany(
+    () => COMPANYGROUPLINKMASTER,
+    (comapnylink) => comapnylink.BranchCodeMaster,
+  )
+  comapnylink: COMPANYGROUPLINKMASTER;
 
   @OneToMany(() => OWNDEPOSIT, (owndeposit) => owndeposit.owndeposit)
-  owndeposit: OWNDEPOSIT
+  owndeposit: OWNDEPOSIT;
 
-  @OneToMany(() => FIREPOLICY, (firebranchcode) => firebranchcode.firebranchcode)
-  firebranchcode: FIREPOLICY
+  @OneToMany(
+    () => FIREPOLICY,
+    (firebranchcode) => firebranchcode.firebranchcode,
+  )
+  firebranchcode: FIREPOLICY;
 
   @OneToMany(() => BOOKDEBTS, (bookbrach) => bookbrach.bookbrach)
-  bookbrach: BOOKDEBTS
+  bookbrach: BOOKDEBTS;
 
   @OneToMany(() => SECINSURANCE, (secinsubranch) => secinsubranch.secinsubranch)
-  secinsubranch: SECINSURANCE
+  secinsubranch: SECINSURANCE;
 
-  @OneToMany(() => FURNITURE, (furniturebranchcode) => furniturebranchcode.furniturebranchcode)
-  furniturebranchcode: FURNITURE
+  @OneToMany(
+    () => FURNITURE,
+    (furniturebranchcode) => furniturebranchcode.furniturebranchcode,
+  )
+  furniturebranchcode: FURNITURE;
 
-  @OneToMany(() => GOLDSILVER, (goldsilverbranchcode) => goldsilverbranchcode.goldsilverbranchcode)
-  goldsilverbranchcode: GOLDSILVER
+  @OneToMany(
+    () => GOLDSILVER,
+    (goldsilverbranchcode) => goldsilverbranchcode.goldsilverbranchcode,
+  )
+  goldsilverbranchcode: GOLDSILVER;
 
-  @OneToMany(() => GOVTSECULIC, (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode)
-  govtsecbranchcode: GOVTSECULIC
+  @OneToMany(
+    () => GOVTSECULIC,
+    (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode,
+  )
+  govtsecbranchcode: GOVTSECULIC;
 
-  @OneToMany(() => LANDBUILDING, (landbranchcode) => landbranchcode.landbranchcode)
-  landbranchcode: LANDBUILDING
+  @OneToMany(
+    () => LANDBUILDING,
+    (landbranchcode) => landbranchcode.landbranchcode,
+  )
+  landbranchcode: LANDBUILDING;
 
-  @OneToMany(() => MARKETSHARE, (marketbranchcode) => marketbranchcode.marketbranchcode)
-  marketbranchcode: MARKETSHARE
+  @OneToMany(
+    () => MARKETSHARE,
+    (marketbranchcode) => marketbranchcode.marketbranchcode,
+  )
+  marketbranchcode: MARKETSHARE;
 
-  @OneToMany(() => OTHERSECURITY, (othersecbranchcode) => othersecbranchcode.othersecbranchcode)
-  othersecbranchcode: OTHERSECURITY
+  @OneToMany(
+    () => OTHERSECURITY,
+    (othersecbranchcode) => othersecbranchcode.othersecbranchcode,
+  )
+  othersecbranchcode: OTHERSECURITY;
 
-  @OneToMany(() => PLANTMACHINARY, (plantbranchcode) => plantbranchcode.plantbranchcode)
-  plantbranchcode: PLANTMACHINARY
+  @OneToMany(
+    () => PLANTMACHINARY,
+    (plantbranchcode) => plantbranchcode.plantbranchcode,
+  )
+  plantbranchcode: PLANTMACHINARY;
 
-  @OneToMany(() => PLEDGESTOCK, (pleadgebranchcode) => pleadgebranchcode.pleadgebranchcode)
-  pleadgebranchcode: PLEDGESTOCK
+  @OneToMany(
+    () => PLEDGESTOCK,
+    (pleadgebranchcode) => pleadgebranchcode.pleadgebranchcode,
+  )
+  pleadgebranchcode: PLEDGESTOCK;
 
-  @OneToMany(() => STOCKSTATEMENT, (stockbranchcode) => stockbranchcode.stockbranchcode)
-  stockbranchcode: STOCKSTATEMENT
+  @OneToMany(
+    () => STOCKSTATEMENT,
+    (stockbranchcode) => stockbranchcode.stockbranchcode,
+  )
+  stockbranchcode: STOCKSTATEMENT;
 
-  @OneToMany(() => VEHICLE, (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode)
-  vehiclebranchcode: VEHICLE
-
+  @OneToMany(
+    () => VEHICLE,
+    (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode,
+  )
+  vehiclebranchcode: VEHICLE;
 }

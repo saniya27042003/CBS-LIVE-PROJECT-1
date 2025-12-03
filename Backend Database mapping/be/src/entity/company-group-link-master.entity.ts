@@ -1,5 +1,11 @@
-
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { COMPANYGROUPMASTER } from './company-group-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { COMPANYGROUPLINKGRIDMASTER } from './company-link-grid.entity';
@@ -19,20 +25,27 @@ export class COMPANYGROUPLINKMASTER {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.comapnylink, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (BranchCodeMaster) => BranchCodeMaster.comapnylink,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   BranchCodeMaster: OWNBRANCHMASTER[];
 
   @Column()
   COMP_CODE: number;
   @ManyToOne(() => COMPANYGROUPMASTER, (comapny) => comapny.comapnylink, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "COMP_CODE" })
+  @JoinColumn({ name: 'COMP_CODE' })
   comapny: COMPANYGROUPMASTER[];
 
-  @OneToMany(() => COMPANYGROUPLINKGRIDMASTER, (comapnylink) => comapnylink.comapny)
-  comapnylink: COMPANYGROUPLINKGRIDMASTER
+  @OneToMany(
+    () => COMPANYGROUPLINKGRIDMASTER,
+    (comapnylink) => comapnylink.comapny,
+  )
+  comapnylink: COMPANYGROUPLINKGRIDMASTER;
 }

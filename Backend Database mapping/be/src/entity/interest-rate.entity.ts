@@ -1,30 +1,36 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { INTRATEPATSCHEMES } from '../entity/pat-scheme-interest-rates.entity'
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { INTRATEPATSCHEMES } from '../entity/pat-scheme-interest-rates.entity';
 
 @Entity()
 export class INTRATE {
-
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   @Generated('increment')
-  SERIAL_NO :number;
+  SERIAL_NO: number;
 
   @Column({ default: 0 })
-  MONTHS: string
+  MONTHS: string;
 
   @Column({ default: 0 })
-  DAYS: number
+  DAYS: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  INT_RATE: number
+  INT_RATE: number;
 
   @Column({ unique: false })
-  idRateID: number
+  idRateID: number;
   @ManyToOne(() => INTRATEPATSCHEMES, (idRate) => idRate.rate, {
-      cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "idRateID" })
-  idRate: INTRATEPATSCHEMES[]; 
+  @JoinColumn({ name: 'idRateID' })
+  idRate: INTRATEPATSCHEMES[];
 }

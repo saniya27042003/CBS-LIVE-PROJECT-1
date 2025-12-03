@@ -1,20 +1,30 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class OTHERSECURITY {
-
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (othersecbranchcode) => othersecbranchcode.othersecbranchcode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
+  @ManyToOne(
+    () => OWNBRANCHMASTER,
+    (othersecbranchcode) => othersecbranchcode.othersecbranchcode,
+    {
+      cascade: true,
+    },
+  )
+  @JoinColumn({ name: 'BRANCH_CODE' })
   othersecbranchcode: OWNBRANCHMASTER[];
 
   @Column({ nullable: true })
@@ -23,10 +33,9 @@ export class OTHERSECURITY {
   @Column()
   AC_TYPE: number;
   @ManyToOne(() => SCHEMAST, (othersec) => othersec.othersec, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "AC_TYPE" })
-
+  @JoinColumn({ name: 'AC_TYPE' })
   othersec: SCHEMAST[];
 
   @Column({ default: 0, length: 15 })
@@ -35,9 +44,9 @@ export class OTHERSECURITY {
   @Column({ nullable: true })
   SECU_CODE: number;
   @ManyToOne(() => SECURITYMASTER, (other) => other.other, {
-    cascade: true
+    cascade: true,
   })
-  @JoinColumn({ name: "SECU_CODE" })
+  @JoinColumn({ name: 'SECU_CODE' })
   other: SECURITYMASTER[];
 
   @Column({ nullable: true })

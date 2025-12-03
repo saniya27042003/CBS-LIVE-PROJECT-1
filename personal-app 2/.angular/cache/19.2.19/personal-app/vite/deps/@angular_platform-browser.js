@@ -33,12 +33,10 @@ import {
   withHttpTransferCacheOptions,
   withI18nSupport,
   withIncrementalHydration,
-  withNoHttpTransferCache
+  withNoHttpTransferCache,
 } from "./chunk-TQ3GO5DT.js";
 import "./chunk-54I3FKKW.js";
-import {
-  getDOM
-} from "./chunk-IQJIJCHL.js";
+import { getDOM } from "./chunk-IQJIJCHL.js";
 import "./chunk-ICGDZWGP.js";
 import "./chunk-HV2XDMDG.js";
 export {
@@ -77,5 +75,5 @@ export {
   HammerGesturesPlugin as ɵHammerGesturesPlugin,
   KeyEventsPlugin as ɵKeyEventsPlugin,
   SharedStylesHost as ɵSharedStylesHost,
-  getDOM as ɵgetDOM
+  getDOM as ɵgetDOM,
 };
