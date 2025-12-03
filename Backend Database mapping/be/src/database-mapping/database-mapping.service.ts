@@ -11,11 +11,14 @@ export class DatabaseMappingService {
     ) { }
 
     // connect to any client DB from config
+    // connect to any client DB from config
     async connect(config: any) {
         try {
             if (this.clientDB && this.clientDB.isInitialized) {
                 await this.clientDB.destroy();
             }
+
+            const isMssql = config.type === 'mssql';
 
             const ds = new DataSource({
                 type: config.type,
@@ -26,7 +29,11 @@ export class DatabaseMappingService {
                 database: config.database,
                 entities: [],
                 synchronize: false,
+                options: isMssql
+                    ? { encrypt: false, trustServerCertificate: true }
+                    : undefined,
             });
+
 
             await ds.initialize();
             this.clientDB = ds;
@@ -41,6 +48,7 @@ export class DatabaseMappingService {
             };
         }
     }
+
 
     private ensureClient() {
         if (!this.clientDB || !this.clientDB.isInitialized) {

@@ -58,7 +58,10 @@ export class DatabaseComponent implements OnInit {
         '',
         [
           Validators.required,
-          Validators.pattern(/^192\.168\.\d{1,3}\.\d{1,3}$/)  // only localhost for now
+          // allow localhost / 127.0.0.1 / typical LAN IPs
+          Validators.pattern(
+            /^(localhost|127.0.0.1|192.168.\d{1,3}.\d{1,3})$/
+          )
         ]
       ],
       database: ['', Validators.required]
@@ -87,6 +90,30 @@ export class DatabaseComponent implements OnInit {
       type: selected?.type || ''
     });
   }
+  private normalizeConfig(formValue: any) {
+    const type = (formValue.type || '').toLowerCase();  // from selectClient()
+
+    const defaultPorts: Record<string, number> = {
+      postgres: 5432,
+      mssql: 1433,
+      mysql: 3306,
+      mariadb: 3306,
+      mongodb: 27017,
+      oracle: 1521,
+    };
+
+    return {
+      type,
+      host: formValue.host,
+      port: formValue.port || defaultPorts[type],
+      username: formValue.username,
+      password: formValue.password,
+      database: formValue.database,
+    };
+  }
+
+
+
   onOkClick() {
     if (this.databaseForm.invalid) {
       this.databaseForm.markAllAsTouched();
@@ -94,15 +121,8 @@ export class DatabaseComponent implements OnInit {
       return;
     }
 
-    const clientConfig = {
-      type: this.databaseForm.value.type.toLowerCase(),  // 'Postgres' -> 'postgres'
-      host: this.databaseForm.value.host,
-      port: this.databaseForm.value.port,
-      username: this.databaseForm.value.username,
-      password: this.databaseForm.value.password,
-      database: this.databaseForm.value.database
-    };
-
+    const clientConfig = this.normalizeConfig(this.databaseForm.value);
+    console.log('clientConfig being sent:', clientConfig);
 
     this.appService.connectClient(clientConfig).subscribe({
       next: (res: any) => {
@@ -140,3 +160,6 @@ export class DatabaseComponent implements OnInit {
     this.clientDatabaseName = '';
   }
 }
+
+
+

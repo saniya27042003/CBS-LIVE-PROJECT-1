@@ -22,22 +22,23 @@ export const primaryDBConfig: TypeOrmModuleOptions = {
   // entities: [],
   // migrations: ['dist/migration/*{.ts,.js}'],
 };
-// clientDBConfig removed/commented
 
-// export let clientDBConfig: TypeOrmModuleOptions = {
-//   name: 'clientConnection',
-//   type: 'postgres',
-//   host: 'localhost',
-//   port: 5432,
-//   username: 'postgres',
-//   password: '20102003',
-//   database: 'postgres',
-//   synchronize: false,
-//   logging: false,
-//   entities: ['dist/**/*.entity{.ts,.js}'],
-//   migrations: ['dist/migration/*{.ts,.js}'],
-// };
 
+export const mssqlDBConfig: TypeOrmModuleOptions = {
+  name: 'MSSQL_CONN',
+  type: 'mssql',
+  host: process.env.MSSQL_HOST || 'localhost',
+  port: Number(process.env.MSSQL_PORT) || 1433,
+  username: process.env.MSSQL_USER || 'sa',
+  password: process.env.MSSQL_PASS || 'QAZWSX@009',
+  database: process.env.MSSQL_DB || 'DB_MAIN_SERVER',
+  synchronize: false,
+  logging: false,
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  },
+};
 
 console.log('ENV CHECK', {
   host: process.env.DB_HOST,

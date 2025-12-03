@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 
 import { DatabaseModule } from './database/database.module';
 import { DatabaseMappingModule } from './database-mapping/database-mapping.module';
-import { primaryDBConfig } from './orm.config';
+import { mssqlDBConfig, primaryDBConfig } from './orm.config';
 
 @Module({
   imports: [
@@ -12,6 +12,7 @@ import { primaryDBConfig } from './orm.config';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(primaryDBConfig),
+    TypeOrmModule.forRoot(mssqlDBConfig),
     DatabaseModule,
     DatabaseMappingModule,
   ],
