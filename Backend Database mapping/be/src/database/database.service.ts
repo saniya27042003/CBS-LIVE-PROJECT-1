@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { DataSource, DataSourceOptions } from 'typeorm';
 
@@ -41,14 +41,3 @@ export class DatabaseService {
 
     }
 }
-=======
-// import { Injectable } from '@angular/core';
-import { DataSource } from 'typeorm';
-import { Injectable } from '@nestjs/common';
-// import { DataSource, DataSourceOptions } from 'typeorm';
-
-@Injectable()
-export class DatabaseService {
-  private clientDB: DataSource | null = null;
-}
->>>>>>> 816466214fa6a78049d535ff3cc3f6364b84cffe
