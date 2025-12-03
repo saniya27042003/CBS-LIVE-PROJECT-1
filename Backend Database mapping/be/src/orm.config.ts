@@ -7,7 +7,7 @@ import { PIGMYTRAN } from './entity/pigmytran.entity';
 import { SCHEMAST } from './entity/schemeParameters.entity';
 import { SHARETRAN } from './entity/sharetran.entity';
 import { SYSPARA } from './entity/system-master-parameters.entity';
-
+import 'dotenv/config'
 export const primaryDBConfig: TypeOrmModuleOptions = {
   name: 'primaryDB',
   type: 'postgres',
