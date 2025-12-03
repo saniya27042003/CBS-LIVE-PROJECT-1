@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 // // const oracledb = require('oracledb');
 // // import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 // // import { InjectRepository } from '@nestjs/typeorm';
@@ -391,8 +392,8 @@
 // }
 
 import { Injectable } from '@nestjs/common';
-import { Repository, DataSource } from 'typeorm';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Injectable()
 export class MigrateService {
