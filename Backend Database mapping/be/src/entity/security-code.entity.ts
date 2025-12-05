@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { BOOKDEBTS } from './book-debts.entity';
 import { SECINSURANCE } from './customer-insurance.entity';
 import { FIREPOLICY } from './fire-policy.entity';
@@ -9,10 +10,12 @@ import { MARKETSHARE } from './market-shares.entity';
 import { OTHERSECURITY } from './other-security.entity';
 import { OWNDEPOSIT } from './own-deposits.entity';
 import { PLANTMACHINARY } from './plant-and-machinery.entity';
+
 import { PLEDGESTOCK } from './pleadge-stock.entity';
+
+import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { STOCKSTATEMENT } from './stock-statement.entity';
 import { VEHICLE } from './vehicle.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class SECURITYMASTER {

@@ -22,7 +22,6 @@ import { RouterLink } from '@angular/router';
   standalone: true, // ✅ Add this for standalone component
   imports: [CommonModule, RouterOutlet], // ✅ Removed RouterLink (not used in template)
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'] // ✅ Correct key: "styleUrls" (plural)
+  styleUrls: ['./app.component.css'], // ✅ Correct key: "styleUrls" (plural)
 })
-export class AppComponent { }
-
+export class AppComponent {}

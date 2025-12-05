@@ -1,25 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { AppService } from '../../../service/app.service';
 
 @Component({
   selector: 'app-database',
   standalone: true,
   templateUrl: './database.component.html',
   styleUrls: ['./database.component.css'],
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule]
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
 })
 export class DatabaseComponent implements OnInit {
-
   databases = [
-    { name: 'MySQL', img: 'assets/images/mysql.png' },
-    { name: 'MsSQL', img: 'assets/images/mssql.png' },
-    { name: 'Postgres', img: 'assets/images/postgres.png' },
-    { name: 'MariaDB', img: 'assets/images/mariadb2(2).png' },
-    { name: 'MongoDB', img: 'assets/images/mongodb.png' },
-    { name: 'Oracle', img: 'assets/images/oracle.png' },
+    { name: 'MySQL', img: 'assets/images/mysql.png', type: 'mysql' },
+    { name: 'MsSQL', img: 'assets/images/mssql.png', type: 'mssql' },
+    { name: 'PostgreSQL', img: 'assets/images/postgres.png', type: 'postgres' },
+    { name: 'MariaDB', img: 'assets/images/mariadb2(2).png', type: 'mariadb' },
+    { name: 'MongoDB', img: 'assets/images/mongodb.png', type: 'mongodb' },
+    { name: 'Oracle', img: 'assets/images/oracle.png', type: 'oracle' },
   ];
 
   selectedPrimary: string | null = null;
@@ -28,106 +33,138 @@ export class DatabaseComponent implements OnInit {
   primaryClassMap: { [key: string]: string } = {};
   clientClassMap: { [key: string]: string } = {};
 
+  primaryDatabaseName = '';
+  clientDatabaseName = '';
+
   databaseForm!: FormGroup;
-
-  // ✅ MESSAGE BOX STATE
-  messageBox = {
-    visible: false,
-    text: '',
-    type: 'success' as 'success' | 'error'
-  };
-
-  // ✅ STORE NAVIGATION UNTIL USER CLICKS OK
-  navigateAfterSuccess = false;
 
   constructor(
     private router: Router,
     private fb: FormBuilder,
-    private http: HttpClient
-  ) {}
+    private http: HttpClient,
+    private appService: AppService,
+  ) { }
 
   ngOnInit(): void {
     this.databaseForm = this.fb.group({
       type: ['', Validators.required],
       username: ['', Validators.required],
-      password: ['', Validators.required],
-      port: ['', Validators.required],
-      host: ['', Validators.required],
-      database: ['', Validators.required]
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(4), // temporary simple rule
+        ],
+      ],
+      port: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
+      host: [
+        '',
+        [
+          Validators.required,
+          // allow localhost / 127.0.0.1 / typical LAN IPs
+          Validators.pattern(
+            /^(localhost|127.0.0.1|192.168.\d{1,3}.\d{1,3})$/
+          )
+        ]
+      ],
+      database: ['', Validators.required],
     });
   }
 
+  // SELECT PRIMARY DATABASE
   selectPrimary(dbName: string) {
+    this.selectedPrimary = dbName;
     this.primaryClassMap = {};
     this.primaryClassMap[dbName] = 'ring-4 ring-green-400';
+    this.primaryDatabaseName = dbName;
   }
 
+  // SELECT CLIENT DATABASE – only sets engine type
   selectClient(dbName: string) {
+    this.selectedClient = dbName;
     this.clientClassMap = {};
     this.clientClassMap[dbName] = 'ring-4 ring-green-400';
-    this.databaseForm.patchValue({ type: dbName });
+    this.clientDatabaseName = dbName;
+
+    const selected = this.databases.find((d) => d.name === dbName);
+
+    // set ENGINE/driver type for backend
+    this.databaseForm.patchValue({
+      type: selected?.type || '',
+    });
   }
+  private normalizeConfig(formValue: any) {
+    const type = (formValue.type || '').toLowerCase();  // from selectClient()
+
+    const defaultPorts: Record<string, number> = {
+      postgres: 5432,
+      mssql: 1433,
+      mysql: 3306,
+      mariadb: 3306,
+      mongodb: 27017,
+      oracle: 1521,
+    };
+
+    return {
+      type,
+      host: formValue.host,
+      port: formValue.port || defaultPorts[type],
+      username: formValue.username,
+      password: formValue.password,
+      database: formValue.database,
+    };
+  }
+
+
 
   onOkClick() {
     if (this.databaseForm.invalid) {
-      this.showMessage('Please fill all required fields correctly.', 'error');
+      this.databaseForm.markAllAsTouched();
+      alert('Please fill all required fields correctly.');
       return;
     }
 
     const clientConfig = {
-      type: 'postgres',
+      type: this.databaseForm.value.type.toLowerCase(), // 'Postgres' -> 'postgres'
       host: this.databaseForm.value.host,
       port: this.databaseForm.value.port,
       username: this.databaseForm.value.username,
       password: this.databaseForm.value.password,
-      database: this.databaseForm.value.database
+      database: this.databaseForm.value.database,
     };
 
-    this.http.post('http://localhost:3000/database-mapping/connect-client', clientConfig)
-      .subscribe({
-        next: (res: any) => {
-          if (res.success) {
-
-            // ✅ SHOW MESSAGE FIRST
-            this.navigateAfterSuccess = true;
-            this.showMessage('Client Database Connected Successfully!', 'success');
-
-          } else {
-            this.showMessage('Client connection failed: ' + res.message, 'error');
-          }
-        },
-        error: () => {
-          this.showMessage('Failed to connect Client database.', 'error');
+    this.appService.connectClient(clientConfig).subscribe({
+      next: (res: any) => {
+        if (res.success) {
+          alert('✅ Client Database Connected Successfully!');
+          this.router.navigate(['/table'], {
+            queryParams: {
+              primary: this.selectedPrimary,
+              clientType: this.selectedClient,
+              client: this.databaseForm.value.database,
+            },
+          });
+        } else {
+          alert('Client connection failed: ' + res.message);
         }
-      });
+      },
+      error: (err) => {
+        console.error('Client Connection error:', err);
+        alert('❌ Failed to connect Client database.');
+      },
+    });
   }
 
+  // CANCEL
   onCancelClick() {
     this.databaseForm.reset();
+
+    this.selectedPrimary = null;
     this.primaryClassMap = {};
+    this.primaryDatabaseName = '';
+
+    this.selectedClient = null;
     this.clientClassMap = {};
-  }
-
-  // ✅ MESSAGE BOX FUNCTIONS
-  showMessage(text: string, type: 'success' | 'error') {
-    this.messageBox.text = text;
-    this.messageBox.type = type;
-    this.messageBox.visible = true;
-  }
-
-  closeMessageBox() {
-    this.messageBox.visible = false;
-
-    // ✅ ✅ NAVIGATE ONLY AFTER USER CLICKS OK
-    if (this.navigateAfterSuccess) {
-      this.navigateAfterSuccess = false;
-
-      this.router.navigate(['/table'], {
-        queryParams: {
-          primary: 'testdb',
-          client: this.databaseForm.value.database
-        }
-      });
-    }
+    this.clientDatabaseName = '';
   }
 }

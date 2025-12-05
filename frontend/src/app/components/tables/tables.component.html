@@ -1,214 +1,274 @@
 <div class="flex w-full gap-4 items-start">
-    <!-- ===== Primary Database Table ===== -->
-    <div class="flex flex-col w-1/2 pr-4">
-        <div class="flex space-x-4 p-4 h-40">
-            <div>
-                <details #primaryDropdown class="dropdown">
-                    <summary class="btn border border-gray-600 w-40 m-1" (click)="getPrimaryTables()">
-                        Select Table
-                    </summary>
+  <!-- ===== Primary Database Table ===== -->
+  <div class="flex flex-col w-1/2 pr-4">
+    <div class="flex space-x-4 p-4 h-40">
+      <div>
+        <details #primaryDropdown class="dropdown">
+          <summary
+            class="btn border border-gray-600 w-40 m-1"
+            (click)="getPrimaryTables()"
+          >
+            Select Table
+          </summary>
 
-                    <ul
-                        class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
-                        <li class="mb-2">
-                            <input type="text" placeholder="Type here" class="input input-bordered w-full"
-                                [(ngModel)]="primaryTableSearch" />
-                        </li>
+          <ul
+            class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2"
+          >
+            <li class="mb-2">
+              <input
+                type="text"
+                placeholder="Type here"
+                class="input input-bordered w-full"
+                [(ngModel)]="primaryTableSearch"
+              />
+            </li>
 
-                        <div class="max-h-35 overflow-y-auto">
-                            <li *ngFor="let item of dropdownItemsPrimary | filter: primaryTableSearch">
-                                <a (click)="onSelectPrimaryTable(item); primaryDropdown.removeAttribute('open')">
-                                    {{ item }}
-                                </a>
-                            </li>
-                        </div>
-                    </ul>
-                </details>
+            <div class="max-h-35 overflow-y-auto">
+              <li
+                *ngFor="
+                  let item of dropdownItemsPrimary | filter: primaryTableSearch
+                "
+              >
+                <a
+                  (click)="
+                    onSelectPrimaryTable(item);
+                    primaryDropdown.removeAttribute('open')
+                  "
+                >
+                  {{ item }}
+                </a>
+              </li>
             </div>
+          </ul>
+        </details>
+      </div>
 
-            <div
-                class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
-                <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
-                    {{
-                    selectedPrimaryTable.length
-                    ? selectedPrimaryTable.join(', ')
-                    : 'No table selected'
-                    }}
-                </div>
-            </div>
+      <div
+        class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start"
+      >
+        <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
+          {{
+            selectedPrimaryTable.length
+              ? selectedPrimaryTable.join(", ")
+              : "No table selected"
+          }}
         </div>
+      </div>
+    </div>
 
-        <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4">
-            <div class="card-body p-0 font-bold font-roboto">
-                <h3>{{ primaryDatabaseName }}</h3>
-            </div>
-        </div>
+    <div
+      class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4"
+    >
+      <div class="card-body p-0 font-bold font-roboto">
+        <h3>{{ primaryDatabaseName }}</h3>
+      </div>
+    </div>
 
-        <!-- ===== Selected primary tables + main view ===== -->
-        <div class="border border-gray-200 mt-4 ml-4 bg-gray-600 p-4 rounded-lg">
-            <div class="mb-4 bg-gray-800 text-white p-2 rounded-md">
-                <h3 class="font-bold mb-1">Selected Primary Tables:</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button *ngFor="let table of selectedPrimaryTable" type="button"
-                        (click)="setActivePrimaryTable(table)" class="px-3 py-1 rounded-full text-sm" [ngClass]="
+    <!-- ===== Selected primary tables + main view ===== -->
+    <div class="border border-gray-200 mt-4 ml-4 bg-gray-600 p-4 rounded-lg">
+      <div class="mb-4 bg-gray-800 text-white p-2 rounded-md">
+        <h3 class="font-bold mb-1">Selected Primary Tables:</h3>
+        <div class="flex flex-wrap gap-2">
+          <button
+            *ngFor="let table of selectedPrimaryTable"
+            type="button"
+            (click)="setActivePrimaryTable(table)"
+            class="px-3 py-1 rounded-full text-sm"
+            [ngClass]="
               activePrimaryTable === table
                 ? 'bg-blue-500 text-white'
                 : 'bg-blue-900 text-gray-200'
-            ">
-                        {{ table }}
-                    </button>
-                </div>
-            </div>
-
-            <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
-                <table class="table min-w-full">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Position</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let row of activePrimaryRows">
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.name }}</td>
-                            <td>
-                                <input type="text" class="input input-bordered input-sm w-full"
-                                    [(ngModel)]="row.position" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            "
+          >
+            {{ table }}
+          </button>
         </div>
+      </div>
 
-        <!-- ===== Mapping section Table ===== -->
-        <div class="border border-gray-200 mt-4 ml-4 bg-gray-600 p-4 rounded-lg">
-            <div *ngFor="let tableName of selectedPrimaryTable">
-                <h4 class="bg-gray-300 text-black font-semibold">
-                    Table: {{ tableName }}
-                </h4>
-                <div class="overflow-x-auto border border-base-content/5 bg-base-100">
-                    <div *ngIf="getMappingRows(tableName).length > 0; else noMapping">
-                        <table class="table w-full text-center">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Server ID</th>
-                                    <th>Server Column</th>
-                                    <th>Client ID</th>
-                                    <th>Client Column</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngFor="let map of getMappingRows(tableName)">
-                                    <td>{{ map.no }}</td>
-                                    <td>{{ map.rowId }}</td>
-                                    <td>{{ map.serverColumn }}</td>
-                                    <td>{{ map.clientId }}</td>
-                                    <td>{{ map.clientColumn }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <ng-template #noMapping>
-                    <p class="text-gray-400 italic">
-                        No mapping data found for {{ tableName }}
-                    </p>
-                </ng-template>
-            </div>
-        </div>
+      <div
+        class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100"
+      >
+        <table class="table min-w-full">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of activePrimaryRows">
+              <td>{{ row.id }}</td>
+              <td>{{ row.name }}</td>
+              <td>
+                <input
+                  type="text"
+                  class="input input-bordered input-sm w-full"
+                  [(ngModel)]="row.position"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- ===== Client Database Table ===== -->
-    <div class="flex flex-col w-1/2 pl-4">
-        <div class="flex space-x-4 p-4 h-40 ml-4">
-            <div>
-                <details #clientDropdown class="dropdown">
-                    <summary class="btn border border-gray-600 w-40 m-1" (click)="getClientTables()">
-                        Select Table
-                    </summary>
-                    <ul
-                        class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
-                        <li class="mb-2">
-                            <input type="text" placeholder="Type here" class="input input-bordered w-full"
-                                [(ngModel)]="clientTableSearch" />
-                        </li>
-
-                        <div class="max-h-35 overflow-y-auto">
-                            <li *ngFor="let item of dropdownItemsClient | filter: clientTableSearch">
-                                <a (click)="onSelectClientTable(item); clientDropdown.removeAttribute('open')">
-                                    {{ item }}
-                                </a>
-                            </li>
-                        </div>
-                    </ul>
-                </details>
-            </div>
-
-            <div class="card bg-base-200 text-base-content h-10 w-65 m-1 border border-gray-600 rounded-lg shadow-sm">
-                <div class="card-body bg-base-600 p-2 flex items-center justify-start">
-                    {{
-                    selectedClientTable.length
-                    ? selectedClientTable.join(', ')
-                    : 'No table selected'
-                    }}
-                </div>
-            </div>
+    <!-- ===== Mapping section Table ===== -->
+    <div class="border border-gray-200 mt-4 ml-4 bg-gray-600 p-4 rounded-lg">
+      <div *ngFor="let tableName of selectedPrimaryTable">
+        <h4 class="bg-gray-300 text-black font-semibold">
+          Table: {{ tableName }}
+        </h4>
+        <div class="overflow-x-auto border border-base-content/5 bg-base-100">
+          <div *ngIf="getMappingRows(tableName).length > 0; else noMapping">
+            <table class="table w-full text-center">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Server ID</th>
+                  <th>Server Column</th>
+                  <th>Client ID</th>
+                  <th>Client Column</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let map of getMappingRows(tableName)">
+                  <td>{{ map.no }}</td>
+                  <td>{{ map.rowId }}</td>
+                  <td>{{ map.serverColumn }}</td>
+                  <td>{{ map.clientId }}</td>
+                  <td>{{ map.clientColumn }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div
-            class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-8 p-4 font-bold font-roboto">
-            <div class="card-body p-0">
-                <h3>{{ clientDatabaseName }}</h3>
-            </div>
-        </div>
+        <ng-template #noMapping>
+          <p class="text-gray-400 italic">
+            No mapping data found for {{ tableName }}
+          </p>
+        </ng-template>
+      </div>
+    </div>
+  </div>
 
-        <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
-            <div class="mb-4 bg-gray-800 text-white p-2 rounded-md h-18">
-                <h3 class="font-bold mb-1">Client side Tables:</h3>
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <button *ngFor="let table of selectedClientTable" type="button"
-                        (click)="setActiveClientTable(table)" class="px-3 py-1 rounded-full text-sm" [ngClass]="
+  <!-- ===== Client Database Table ===== -->
+  <div class="flex flex-col w-1/2 pl-4">
+    <div class="flex space-x-4 p-4 h-40 ml-4">
+      <div>
+        <details #clientDropdown class="dropdown">
+          <summary
+            class="btn border border-gray-600 w-40 m-1"
+            (click)="getClientTables()"
+          >
+            Select Table
+          </summary>
+          <ul
+            class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2"
+          >
+            <li class="mb-2">
+              <input
+                type="text"
+                placeholder="Type here"
+                class="input input-bordered w-full"
+                [(ngModel)]="clientTableSearch"
+              />
+            </li>
+
+            <div class="max-h-35 overflow-y-auto">
+              <li
+                *ngFor="
+                  let item of dropdownItemsClient | filter: clientTableSearch
+                "
+              >
+                <a
+                  (click)="
+                    onSelectClientTable(item);
+                    clientDropdown.removeAttribute('open')
+                  "
+                >
+                  {{ item }}
+                </a>
+              </li>
+            </div>
+          </ul>
+        </details>
+      </div>
+
+      <div
+        class="card bg-base-200 text-base-content h-10 w-65 m-1 border border-gray-600 rounded-lg shadow-sm"
+      >
+        <div class="card-body bg-base-600 p-2 flex items-center justify-start">
+          {{
+            selectedClientTable.length
+              ? selectedClientTable.join(", ")
+              : "No table selected"
+          }}
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-8 p-4 font-bold font-roboto"
+    >
+      <div class="card-body p-0">
+        <h3>{{ clientDatabaseName }}</h3>
+      </div>
+    </div>
+
+    <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
+      <div class="mb-4 bg-gray-800 text-white p-2 rounded-md h-18">
+        <h3 class="font-bold mb-1">Client side Tables:</h3>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button
+            *ngFor="let table of selectedClientTable"
+            type="button"
+            (click)="setActiveClientTable(table)"
+            class="px-3 py-1 rounded-full text-sm"
+            [ngClass]="
               activeClientTable === table
                 ? 'bg-blue-500 text-white'
                 : 'bg-blue-900 text-gray-200'
-            ">
-                        {{ table }}
-                    </button>
-                </div>
-            </div>
-
-            <div class="border border-gray-200 mt-4">
-                <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
-                    <table class="table min-w-full">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let row of activeClientRows">
-                                <td>{{ row.id }}</td>
-                                <td>{{ row.name }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            "
+          >
+            {{ table }}
+          </button>
         </div>
+      </div>
 
-        <div class="ml-8 mt-4 flex space-x-4">
-            <button class="btn btn-wide border border-gray-600" (click)="goToDatabase()">
-                Go back to Select Database
-            </button>
-            <button class="btn btn-wide border-gray-600 w-44" (click)="onOkClick()">
-                OK
-            </button>
+      <div class="border border-gray-200 mt-4">
+        <div
+          class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100"
+        >
+          <table class="table min-w-full">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of activeClientRows">
+                <td>{{ row.id }}</td>
+                <td>{{ row.name }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
+
+    <div class="ml-8 mt-4 flex space-x-4">
+      <button
+        class="btn btn-wide border border-gray-600"
+        (click)="goToDatabase()"
+      >
+        Go back to Select Database
+      </button>
+      <button class="btn btn-wide border-gray-600 w-44" (click)="onOkClick()">
+        OK
+      </button>
+    </div>
+  </div>
 </div>
