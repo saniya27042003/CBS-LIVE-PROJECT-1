@@ -25,6 +25,7 @@ export class DatabaseMappingService {
                 sampleRows: `TOP 100`,
                 paramStyle: '@0'
             }
+
         };
         return configs[driver as keyof typeof configs] || configs.postgres;
     }
