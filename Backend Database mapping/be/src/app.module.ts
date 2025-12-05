@@ -1,19 +1,20 @@
+// app.module.ts
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-
-import { DatabaseModule } from './database/database.module';
+// import { primaryDBConfig } from './orm.config';
 import { DatabaseMappingModule } from './database-mapping/database-mapping.module';
-import { primaryDBConfig } from './orm.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRoot(primaryDBConfig),
-    DatabaseModule,
+    // Load ONLY primary DB here
+    // TypeOrmModule.forRoot({
+    //   ...primaryDBConfig,
+    //   name: 'primaryDB',    // IMPORTANT
+    // }),
+
+    // Feature module
     DatabaseMappingModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
