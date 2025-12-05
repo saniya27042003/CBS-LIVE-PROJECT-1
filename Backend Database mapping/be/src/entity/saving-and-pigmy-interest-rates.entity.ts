@@ -1,6 +1,7 @@
-import { INTCATEGORYMASTER } from 'src/entity//interest-category-master.entity';
-import { SCHEMAST } from 'src/entity//schemeParameters.entity';
+/* eslint-disable prettier/prettier */
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { SCHEMAST } from './schemeParameters.entity';
+import { INTCATEGORYMASTER } from './interest-category-master.entity';
 @Entity()
 export class INTRATESBPG {
   @PrimaryGeneratedColumn()

@@ -1,6 +1,8 @@
-import { SHARECAPITALAMTDETAILS } from 'src/entity//SHARECAPITALANTDETAILS.entity';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prettier/prettier */
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn,  OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { SHARECAPITALAMTDETAILS } from './SHARECAPITALANTDETAILS.entity';
 @Entity()
 export class SYSPARA {
 

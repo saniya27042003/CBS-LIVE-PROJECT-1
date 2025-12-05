@@ -1,18 +1,21 @@
+/* eslint-disable prettier/prettier */
 import { BOOKDEBTS } from './book-debts.entity';
-import { SECINSURANCE } from 'src/entity//customer-insurance.entity';
-import { FIREPOLICY } from 'src/entity//fire-policy.entity';
-import { FURNITURE } from 'src/entity//furniture-and-fixture.entity';
-import { GOLDSILVER } from 'src/entity//gold-and-silver.entity';
-import { GOVTSECULIC } from 'src/entity//govt-security-and-lic.entity';
-import { LANDBUILDING } from 'src/entity//land-and-buildings.entity';
-import { MARKETSHARE } from 'src/entity//market-shares.entity';
-import { OTHERSECURITY } from 'src/entity//other-security.entity';
-import { OWNDEPOSIT } from 'src/entity//own-deposits.entity';
-import { PLANTMACHINARY } from 'src/entity//plant-and-machinery.entity';
+import { SECINSURANCE } from './customer-insurance.entity';
+import { FIREPOLICY } from './fire-policy.entity';
+import { FURNITURE } from './furniture-and-fixture.entity';
+import { GOLDSILVER } from './gold-and-silver.entity';
+import { GOVTSECULIC } from './govt-security-and-lic.entity';
+import { LANDBUILDING } from './land-and-buildings.entity';
+import { MARKETSHARE } from './market-shares.entity';
+import { OTHERSECURITY } from './other-security.entity';
+import { OWNDEPOSIT } from './own-deposits.entity';
+import { PLANTMACHINARY } from './plant-and-machinery.entity';
+
 import { PLEDGESTOCK } from './pleadge-stock.entity';
-import { STOCKSTATEMENT } from 'src/entity//stock-statement.entity';
-import { VEHICLE } from 'src/entity//vehicle.entity';
+
 import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { STOCKSTATEMENT } from './stock-statement.entity';
+import { VEHICLE } from './vehicle.entity';
 
 @Entity()
 export class SECURITYMASTER {

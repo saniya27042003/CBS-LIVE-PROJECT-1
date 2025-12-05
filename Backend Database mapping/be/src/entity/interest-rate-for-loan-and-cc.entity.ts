@@ -1,7 +1,7 @@
+/* eslint-disable prettier/prettier */
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
 // import { SCHEMDATA } from 'src/entity//SCHEMDATA.entity';
-import { SCHEMDATA } from 'src/entity/SCHEMDATA.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { LNCCLOAN } from './loan-and-cc.entity';
 @Entity()

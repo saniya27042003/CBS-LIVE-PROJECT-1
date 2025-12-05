@@ -1,47 +1,49 @@
-import { StringifyOptions } from 'querystring';
-import { ACDOCUMENTDETAILS } from 'src/entity//ACDOCUMENTDETAILS.entity';
-import { AGENTCHANGEHISTORY } from 'src/entity//AGENTCHANGEHISTORY.entity';
-import { CHEQUEBOOKISSUED } from 'src/entity//CHEQUEBOOKISSUED.entity';
-import { HISTORYTRAN } from 'src/entity//HISTORYTRAN.entity';
-import { DPMASTER } from 'src/entity//dpmaster.entity';
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable prettier/prettier */
+
 import { PGMASTER } from './pgmaster.entity'
-import { SHMASTER } from 'src/entity//share-master.entity';
-import { LNACINTRATE } from 'src/entity//lnacintrate.entity';
 import { LNMASTER } from './term-loan-master.entity';
 import { INTRATETDMULTI } from './deposit-intrest-rate.entity';
 import { INTRATELOAN } from './interest-rate-for-loan-and-cc.entity';
 import { INTRATETD } from './interest-rate-for-term-deposit.entity';
 import { INTRATEPATSCHEMES } from './pat-scheme-interest-rates.entity';
-import { PREMATULESSRATE } from 'src/entity//premature-pigmy-less-int-rate.entity';
-import { INTRATESBPG } from 'src/entity//saving-and-pigmy-interest-rates.entity';
 import { COMPANYGROUPMASTER } from './company-group-master.entity';
-import { INTINSTRUCTION } from 'src/entity//interest-instruction.entity';
 import { SPECIALINSTRUCTION } from './special-instruction.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PIGMYCHART } from './pigmy-chart.entity'
-import { STANDINSTRUCTION } from 'src/entity//standing-instruction.entity';
-import { MORATORIUMPERIOD } from 'src/entity//moratorium-peroid-master.entity';
 import { BOOKDEBTS } from './book-debts.entity';
-import { COMPANYGROUPLINKMASTER } from 'src/entity//company-group-link-master.entity';
 import { CHARGESNOTING } from './CHARGESNOTING.entity';
-import { ACMASTER } from 'src/entity//gl-account-master.entity';
-import { RENEWALHISTORY } from 'src/entity//RENEWALHISTORY.entity';
-import { OWNDEPOSIT } from 'src/entity//own-deposits.entity';
-import { DEPOCLOSETRAN } from 'src/entity//DEPOCLOSETRAN.entity';
 import { DEPOCLOSETRANSAC } from './DEPOCLOSETRANSAC.entity';
-import { FIREPOLICY } from 'src/entity//fire-policy.entity';
-import { PLANTMACHINARY } from 'src/entity//plant-and-machinery.entity';
-import { MARKETSHARE } from 'src/entity//market-shares.entity';
-import { FURNITURE } from 'src/entity//furniture-and-fixture.entity';
-import { VEHICLE } from 'src/entity//vehicle.entity';
+
 import { PLEDGESTOCK } from './pleadge-stock.entity';
-import { STOCKSTATEMENT } from 'src/entity//stock-statement.entity';
-import { LANDBUILDING } from 'src/entity//land-and-buildings.entity';
-import { OTHERSECURITY } from 'src/entity//other-security.entity';
-import { GOVTSECULIC } from 'src/entity//govt-security-and-lic.entity';
-import { GOLDSILVER } from 'src/entity//gold-and-silver.entity';
-import { SECINSURANCE } from 'src/entity//customer-insurance.entity';
-import { DAILYTRAN } from 'src/entity//voucher.entity';
+import { DPMASTER } from './dpmaster.entity';
+import { SHMASTER } from './share-master.entity';
+import { RENEWALHISTORY } from './RENEWALHISTORY.entity';
+import { HISTORYTRAN } from './HISTORYTRAN.entity';
+import { ACDOCUMENTDETAILS } from './ACDOCUMENTDETAILS.entity';
+import { AGENTCHANGEHISTORY } from './AGENTCHANGEHISTORY.entity';
+import { CHEQUEBOOKISSUED } from './CHEQUEBOOKISSUED.entity';
+import { INTINSTRUCTION } from './interest-instruction.entity';
+import { STANDINSTRUCTION } from './standing-instruction.entity';
+import { INTRATESBPG } from './saving-and-pigmy-interest-rates.entity';
+import { PREMATULESSRATE } from './premature-pigmy-less-int-rate.entity';
+import { MORATORIUMPERIOD } from './moratorium-peroid-master.entity';
+import { ACMASTER } from './gl-account-master.entity';
+import { OWNDEPOSIT } from './own-deposits.entity';
+import { DEPOCLOSETRAN } from './DEPOCLOSETRAN.entity';
+import { FIREPOLICY } from './fire-policy.entity';
+import { PLANTMACHINARY } from './plant-and-machinery.entity';
+import { MARKETSHARE } from './market-shares.entity';
+import { FURNITURE } from './furniture-and-fixture.entity';
+import { VEHICLE } from './vehicle.entity';
+import { STOCKSTATEMENT } from './stock-statement.entity';
+import { LANDBUILDING } from './land-and-buildings.entity';
+import { OTHERSECURITY } from './other-security.entity';
+import { GOVTSECULIC } from './govt-security-and-lic.entity';
+import { GOLDSILVER } from './gold-and-silver.entity';
+import { SECINSURANCE } from './customer-insurance.entity';
+import { DAILYTRAN } from './voucher.entity';
+
 @Entity()
 export class SCHEMAST {
   @PrimaryGeneratedColumn()

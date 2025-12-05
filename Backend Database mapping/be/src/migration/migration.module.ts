@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // import { Module } from '@nestjs/common';
 // import { MigrateController } from './migration.controller';
 // import { MigrateService } from './migration.service';
@@ -13,10 +14,8 @@
 // export class MigrationModule { }
 
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MigrateController } from './migration.controller';
 import { MigrateService } from './migration.service';
-import { JointAcLink } from 'src/entity/joint-account.entity';
 
 @Module({
   imports: [],

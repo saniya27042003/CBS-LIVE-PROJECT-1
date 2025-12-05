@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { DPMASTER } from './dpmaster.entity';
 import { PGMASTER } from './pgmaster.entity';

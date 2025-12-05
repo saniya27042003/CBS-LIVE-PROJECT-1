@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable prettier/prettier */
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn, Unique, Index } from 'typeorm';
 import { IDMASTER } from './customer-id.entity';
 import { NOMINEELINK } from './nominee.entity';
 import { HISTORYDIVIDEND } from './shares-dividend.entity';
 import { CATEGORYMASTER } from './category-master.entity'
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { SCHEMAST } from 'src/entity//schemeParameters.entity';
+import { SCHEMAST } from './schemeParameters.entity';
 @Entity()
 @Unique(['BANKACNO'])
 @Index("NDXSHMASTER", ["BRANCH_CODE", "AC_ACNOTYPE", "AC_TYPE", "BANKACNO"])
