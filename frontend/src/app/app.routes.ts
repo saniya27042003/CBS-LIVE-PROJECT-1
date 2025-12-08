@@ -6,6 +6,9 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { TablesComponent } from './components/tables/tables.component';
 import { MappingTableComponent } from './components/mapping-table/mapping-table.component';
 
+
+
+
 export const routes: Routes = [
 
   // ✅ Login Route
