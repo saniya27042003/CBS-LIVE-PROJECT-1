@@ -115,6 +115,7 @@ export class DatabaseMappingService {
         database: config.database,
         synchronize: false,
       });
+      
 
       await ds.initialize();
       this.serverDB = ds;
