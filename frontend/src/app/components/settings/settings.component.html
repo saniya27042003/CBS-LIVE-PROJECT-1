@@ -1,13 +1,13 @@
-<div class="dropdown ml-12 mt-8">
-  <div tabindex="0" role="button" class="btn m-1">SELECT THEME</div>
-  <ul
-    tabindex="0"
-    class="dropdown-content menu bg-base-100 border border-white mt-12 z-1 w-60 p-2 shadow-sm max-h-100 overflow-y-auto"
-  >
-    <li *ngFor="let item of themeListArray" (click)="selectTheme(item)">
-      <a class="block py-1 px-2 hover:bg-gray-200">{{ item }}</a>
-    </li>
-  </ul>
+<div class="dropdown ml-12 mt-8 ">
+    <div tabindex="0" role="button" class="btn m-1">SELECT THEME</div>
+    <ul tabindex="0"
+        class="dropdown-content menu bg-base-100 border border-white mt-12 z-1 w-60 p-2 shadow-sm max-h-100 overflow-y-auto">
+        <li *ngFor="let item of themeListArray" (click)="selectTheme(item)">
+            <a class="block py-1 px-2 hover:bg-gray-200">{{ item }}</a>
+        </li>
+    </ul>
 </div>
 
-<div class="ml-11 mt-3">Current Theme: {{ currentTheme }}</div>
+<div class="ml-11 mt-3">
+    Current Theme: {{ currentTheme }}
+</div>

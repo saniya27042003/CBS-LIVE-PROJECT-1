@@ -1,0 +1,9 @@
+.dropdown-end .dropdown-content {
+  right: 0;
+  left: auto;
+  background-image: url('https://img.freepik.com/premium-photo/photo-abstract-linear-black-backgroundabstract-dark-wave-background-ai-generated_1145931-40303.jpg');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
