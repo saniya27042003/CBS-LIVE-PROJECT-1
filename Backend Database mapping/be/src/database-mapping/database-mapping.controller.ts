@@ -3,55 +3,54 @@ import { DatabaseMappingService } from "./database-mapping.service";
 
 @Controller('database-mapping')
 export class DatabaseMappingController {
-    constructor(private readonly dbService: DatabaseMappingService) { }
+  constructor(private readonly dbService: DatabaseMappingService) {}
 
-    @Get('idmaster')
-    async getIdMaster() {
-        const conn = this.dbService.getConnection();
-        if (!conn) {
-            return { success: false, message: 'Client DB is not connected!' };
-        }
-        const result = await conn.query('SELECT * FROM idmaster ORDER BY id');
-        return { success: true, data: result };
-    }
-    //for different databse connection 
-    @Post('connect-client')
-    async connectClient(@Body() config: any) {
-        console.log('Received config:', config);
-        return this.dbService.connect(config);
-    }
+  // ================================
+  // SERVER DB (Postgres)
+  // ================================
+  @Post('connect-server')
+  connectServer(@Body() config: any) {
+    return this.dbService.connectServer(config);
+  }
 
-    @Get('getAllTableName')
-    async getAllTableName() {
-        return this.dbService.getAllTableNames();
-    }
+  @Get('server/tables')
+  getServerTables() {
+    return this.dbService.getPrimaryTableNames();
+  }
 
-    @Post('getAllColumnsNames')          // primary side
-    async getAllColumnsName(@Body() data: any) {
-        return this.dbService.getAllColumnsNames(data.tableName);
-    }
+  @Post('server/columns')
+  getServerColumns(@Body('tableName') tableName: string) {
+    return this.dbService.getAllColumnsNames(tableName);
+  }
 
-    @Post('client/getAllColumnsNames')  // client side
-    async getClientColumns(@Body() data: any) {
-        return this.dbService.getClientColumns(data.tableName);
-    }
+  // ================================
+  // CLIENT DB (Any: PG / MSSQL / MySQL)
+  // ================================
+  @Post('connect-client')
+  connectClient(@Body() config: any) {
+    return this.dbService.connect(config);
+  }
 
+  @Get('client/tables')
+  getClientTables() {
+    return this.dbService.getClientTableNames();
+  }
 
-    @Get('primary-tables')
-    getPrimaryTables() {
-        return this.dbService.getPrimaryTableNames();
-    }
+  @Post('client/columns')
+  getClientColumns(@Body('tableName') tableName: string) {
+    return this.dbService.getClientColumns(tableName);
+  }
 
-    @Get('client-tables')
-    getClientTables() {
-        return this.dbService.getClientTableNames();
-    }
+  @Post('client/table-structure')
+  getTableStructure(@Body('tableName') tableName: string) {
+    return this.dbService.getTableStructure(tableName);
+  }
 
-    @Post('getTableStructure')
-    async getTableStructure(@Body('tableName') tableName: string) {
-        return this.dbService.getTableStructure(tableName);
-    }
-
-
-
+  // ================================
+  // INSERT / MIGRATION
+  // ================================
+  @Post('insert-data')
+  insertData(@Body() data: any) {
+    return this.dbService.insertMappedData(data);
+  }
 }
