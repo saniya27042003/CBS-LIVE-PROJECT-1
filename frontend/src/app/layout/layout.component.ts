@@ -3,9 +3,10 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { RouterLink } from "@angular/router";
 import { Router } from '@angular/router';
+import { ProfileComponent } from '../components/profile/profile.component';
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, CommonModule, RouterLink],
+  imports: [RouterOutlet, CommonModule, RouterLink,ProfileComponent ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })

@@ -13,25 +13,7 @@
 
         </div>
       </div>
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full">
-            <img alt="Tailwind CSS Navbar component"
-              src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-          </div>
-        </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-          <li>
-            <a class="justify-between">
-              Profile
-              <span class="badge">New</span>
-            </a>
-          </li>
-
-          <li><a (click)="logout()">Logout</a></li>
-
-        </ul>
-      </div>
+      <app-profile></app-profile>
     </div>
   </div>
 </div>
@@ -44,9 +26,8 @@
   <div [ngClass]="expanded ? 'w-64' : 'w-20'" class="bg-base-200 transition-all duration-300 flex flex-col">
 
     <ul class=" p-2 gap-2 flex flex-col">
-      <li *ngFor="let item of menuItems" class="rounded-lg hover:bg-base-300 relative group"
-        [routerLink]="`${item.path}`">
-        <a class="flex items-center gap-4 p-3">
+      <li *ngFor="let item of menuItems" class="rounded-lg hover:bg-base-300 relative group">
+        <a [routerLink]="item.path" class="flex items-center gap-4 p-3">
           <i class="fa fa-{{item.icon}} text-lg w-6 text-center"></i>
 
           <span class="transition-all duration-300 whitespace-nowrap"
@@ -54,10 +35,6 @@
             {{ item.label }}
           </span>
         </a>
-        <!-- <span *ngIf="!expanded"
-          class=" px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {{ item.label }}
-        </span> -->
       </li>
     </ul>
 

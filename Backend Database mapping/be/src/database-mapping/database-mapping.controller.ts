@@ -13,6 +13,13 @@ export class DatabaseMappingController {
     return this.dbService.connectServer(config);
   }
 
+  @Post('server/databases')
+getServerDatabases(@Body() config: any) {
+  return this.dbService.getServerDatabases(config);
+}
+
+
+
   @Get('server/tables')
   getServerTables() {
     return this.dbService.getPrimaryTableNames();

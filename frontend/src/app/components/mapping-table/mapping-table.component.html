@@ -1,0 +1,60 @@
+<!-- ✅ FULL PAGE SCROLL WRAPPER -->
+<div class="p-3 w-full h-screen overflow-y-auto ">
+
+  <div class="flex justify-between items-center mb-4 sticky top-0 z-20 bg-[#1a1a1a] p-2">
+    <h2 class="text-xl font-bold text-white">Mapping Table</h2>
+
+    <button class="btn border border-gray-600" (click)="goBack()">
+      ← Back
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="border border-gray-200 bg-gray-600 p-4 rounded-lg w-350 mb-10">
+
+    <div *ngIf="!selectedPrimaryTable.length">
+      <p class="text-gray-200 italic">
+        No mapping data received. Please generate mapping from the table page.
+      </p>
+    </div>
+
+    <div *ngFor="let tableName of selectedPrimaryTable" class="mb-3">
+      <h4 class="bg-gray-300 text-black font-semibold px-2 py-1 mt-4 mb-2">
+        Table: {{ tableName }}
+      </h4>
+
+      <!-- ✅ Only horizontal scroll for table + BOTTOM MARGIN ADDED -->
+      <div class="overflow-x-auto border border-base-content/5 bg-base-100 mt-2 mb-6">
+        <div *ngIf="getMappingRows(tableName).length > 0; else noMapping">
+          <table class="table w-full text-center">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Row ID</th>
+                <th>Client ID</th>
+                <th>Client Name</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let map of getMappingRows(tableName); let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ map.rowId }}</td>
+                <td>{{ map.clientId }}</td>
+                <td>{{ map.clientName }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noMapping>
+          <p class="text-gray-300 italic p-2">
+            No mapping data found for {{ tableName }}
+          </p>
+        </ng-template>
+
+      </div>
+    </div>
+
+  </div>
+</div>

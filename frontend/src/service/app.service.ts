@@ -1,66 +1,67 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { env } from '../envinonment/env';
+// import { env } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppService {
-  http = inject(HttpClient);
-  // e.g. 'http://localhost:3000/database-mapping/'
-  BASE_URL = env.apiBaseUrl;
+  private http = inject(HttpClient);
 
-  constructor() { }
+  // ✅ MUST END WITH /
+  // private BASE_URL = env.apiBaseUrl; 
+  //  Example: http://localhost:3000/database-mapping/
+private BASE_URL = 'http://localhost:3000/database-mapping/';
+  constructor() {}
 
-  // CONNECT: used from database.component.ts
+  // =====================================
+  // ✅ SERVER (PRIMARY DB - POSTGRES)
+  // =====================================
+
+  connectServer(config: any) {
+    return this.http.post(this.BASE_URL + 'connect-server', config);
+  }
+
+  getServerTables() {
+    return this.http.get<string[]>(this.BASE_URL + 'server/tables');
+  }
+
+  getServerColumns(tableName: string) {
+    return this.http.post<string[]>(this.BASE_URL + 'server/columns', {
+      tableName,
+    });
+  }
+
+  // =====================================
+  // ✅ CLIENT (PG / MSSQL / MYSQL)
+  // =====================================
+
   connectClient(config: any) {
     return this.http.post(this.BASE_URL + 'connect-client', config);
   }
 
-  // TABLE NAMES
-
-  getAllTableNames() {
-    return this.http.get(this.BASE_URL + 'getAllTableName');
+  getClientTables() {
+    return this.http.get<string[]>(this.BASE_URL + 'client/tables');
   }
-
-  getPrimaryTableNames() {
-    return this.http.get<string[]>(this.BASE_URL + 'primary-tables');
-  }
-
-  getClientTableNames() {
-    return this.http.get<string[]>(this.BASE_URL + 'client-tables');
-  }
-
-  // PRIMARY COLUMNS (same as old service)
-
-  getAllColumnsNames(tableName: string) {
-    return this.http.post<string[]>(
-      this.BASE_URL + 'getAllColumnsNames',
-      { tableName },
-    );
-  }
-
-  getPrimaryColumns(tableName: string) {
-    // if you want a dedicated primary endpoint later, change here;
-    // for now this just reuses getAllColumnsNames (primary side)
-    return this.getAllColumnsNames(tableName);
-  }
-
-  // CLIENT COLUMNS – FIXED to use existing Nest route
 
   getClientColumns(tableName: string) {
-    return this.http.post<string[]>(
-      this.BASE_URL + 'client/getAllColumnsNames',
+    return this.http.post<string[]>(this.BASE_URL + 'client/columns', {
+      tableName,
+    });
+  }
+
+  getClientTableStructure(tableName: string) {
+    return this.http.post<{ columns: string[]; rows: any[] }>(
+      this.BASE_URL + 'client/table-structure',
       { tableName },
     );
   }
 
-  // TABLE STRUCTURE
+  // =====================================
+  // ✅ DATA MIGRATION
+  // =====================================
 
-  getTableStructure(tableName: string) {
-    return this.http.post<{ columns: string[]; rows: any[] }>(
-      this.BASE_URL + 'getTableStructure',
-      { tableName },
-    );
+  insertData(mappingPayload: any) {
+    return this.http.post(this.BASE_URL + 'insert-data', mappingPayload);
   }
 }

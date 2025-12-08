@@ -96,6 +96,29 @@ export class DatabaseMappingService {
     }
   }
 
+
+  async getServerDatabases(config: any) {
+  const ds = new DataSource({
+    type: 'postgres',
+    host: config.host,
+    port: Number(config.port),
+    username: config.username,
+    password: config.password,
+    database: 'postgres',
+  });
+
+  await ds.initialize();
+
+  const result = await ds.query(`
+    SELECT datname FROM pg_database WHERE datistemplate = false;
+  `);
+
+  await ds.destroy();
+
+  return result.map((r: any) => r.datname);
+}
+
+
   // =========================================================
   // SERVER DATABASE (Always PostgreSQL)
   // =========================================================
