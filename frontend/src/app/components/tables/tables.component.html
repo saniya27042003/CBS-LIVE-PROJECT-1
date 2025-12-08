@@ -102,8 +102,10 @@
                             <td>{{ i + 1 }}</td>
                             <td>{{ row.id }}</td>
                             <td>
-                                <input type="text" class="input input-bordered input-sm w-full"
-                                    [(ngModel)]="row.position" />
+                                <input type="text" 
+               class="input input-bordered input-sm w-full"
+               [(ngModel)]="row.position" 
+               (input)="onMappingChange(row)" />
                             </td>
                         </tr>
                     </tbody>
