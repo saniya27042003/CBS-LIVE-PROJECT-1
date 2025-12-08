@@ -230,8 +230,22 @@ export class TablesComponent implements OnInit {
   }
 
   removeClientTable(table: string) {
-    this.selectedClientTable =
-      this.selectedClientTable.filter(t => t !== table);
+    // 1. Remove table from the list
+    this.selectedClientTable = this.selectedClientTable.filter(t => t !== table);
+
+    // 2. Check if the removed table was the currently active one
+    if (this.activeClientTable === table) {
+      // Switch to the first available table, or set to null if list is empty
+      this.activeClientTable = this.selectedClientTable.length > 0 
+        ? this.selectedClientTable[0] 
+        : null;
+    }
+
+    // 3. Optional: Clean up data to free memory (optional)
+    if (this.clientTableDataMap[table]) {
+        delete this.clientTableDataMap[table];
+    }
+
     this.saveStateToStorage();
   }
 
