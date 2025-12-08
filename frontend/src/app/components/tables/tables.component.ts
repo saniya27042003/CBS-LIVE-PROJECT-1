@@ -230,48 +230,84 @@ export class TablesComponent implements OnInit {
   }
 
   removeClientTable(table: string) {
-    this.selectedClientTable =
-      this.selectedClientTable.filter(t => t !== table);
+    // 1. Remove table from the list
+    this.selectedClientTable = this.selectedClientTable.filter(t => t !== table);
+
+    // 2. Check if the removed table was the currently active one
+    if (this.activeClientTable === table) {
+      // Switch to the first available table, or set to null if list is empty
+      this.activeClientTable = this.selectedClientTable.length > 0 
+        ? this.selectedClientTable[0] 
+        : null;
+    }
+
+    // 3. Optional: Clean up data to free memory (optional)
+    if (this.clientTableDataMap[table]) {
+        delete this.clientTableDataMap[table];
+    }
+
     this.saveStateToStorage();
   }
 
   // ================= MAPPING =================
 
-  onOkClick() {
-    this.mappingDataByTable = {};
+  // tables.component.ts
 
-    this.selectedPrimaryTable.forEach(tableName => {
-      this.mappingDataByTable[tableName] = [];
+// 1. Add this function to your class
+onMappingChange(row: any) {
+  // When the user types a number, we permanently attach the
+  // currently visible client table to this specific row.
+  if (this.activeClientTable) {
+    row.mappedTable = this.activeClientTable;
+  }
+}
 
-      const relatedPrimaryData =
-        this.primaryTableData.filter(row => row.source === tableName);
+// 2. Replace your onOkClick with this updated version
+onOkClick() {
+  this.mappingDataByTable = {};
 
-      relatedPrimaryData.forEach(primaryRow => {
-        const enteredClientId = (primaryRow as any).position;
-        let clientMatch;
+  this.selectedPrimaryTable.forEach(tableName => {
+    this.mappingDataByTable[tableName] = [];
 
-        if (enteredClientId && this.activeClientTable) {
-          clientMatch = this.getClientRowsForTable(this.activeClientTable)
-            .find((_, i) => i + 1 == enteredClientId);
-        }
+    const relatedPrimaryData =
+      this.primaryTableData.filter(row => row.source === tableName);
 
+    relatedPrimaryData.forEach(primaryRow => {
+      const enteredClientId = (primaryRow as any).position;
+      
+      // ✅ FIX: Use the table saved on the row, OR fall back to active if missing
+      const targetClientTable = (primaryRow as any).mappedTable || this.activeClientTable;
+
+      let clientMatch;
+
+      // ✅ FIX: Use targetClientTable instead of this.activeClientTable
+      if (enteredClientId && targetClientTable) {
+        clientMatch = this.getClientRowsForTable(targetClientTable)
+          .find((_, i) => i + 1 == enteredClientId);
+      }
+
+      // Only push if we actually have a mapping entered
+      if (enteredClientId) {
         this.mappingDataByTable[tableName].push({
           rowId: primaryRow.id,
           clientId: enteredClientId || '-',
+          // Add the table name so you know which table mapped to which
+          clientTableName: targetClientTable, 
           clientName: clientMatch
             ? (clientMatch.name || clientMatch.id || 'Unknown')
-            : (enteredClientId ? 'Not Found' : 'No Mapping')
+            : 'Not Found' // Simplified logic
         });
-      });
-    });
-
-    this.router.navigate(['/mapping-table'], {
-      state: {
-        mappingDataByTable: this.mappingDataByTable,
-        selectedPrimaryTable: this.selectedPrimaryTable
       }
     });
-  }
+  });
+
+  this.router.navigate(['/mapping-table'], {
+    state: {
+      mappingDataByTable: this.mappingDataByTable,
+      selectedPrimaryTable: this.selectedPrimaryTable
+    }
+  });
+}
 
   getMappingRows(tableName: string): any[] {
     return this.mappingDataByTable[tableName] ?? [];

@@ -6,6 +6,8 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {  DataSource } from 'typeorm';
+import { transliterate } from "transliteration";
+
 
 @Injectable()
 export class DatabaseMappingService {
@@ -17,7 +19,7 @@ export class DatabaseMappingService {
   }
 
   // =========================================================
-  // CONFIG — SQL DICTIONARY FOR ALL SUPPORTED DATABASES
+  // SQL Dictionary for all Supported DB Drivers
   // =========================================================
   private getQueryConfig(driver: string) {
     const configs = {
@@ -184,7 +186,7 @@ export class DatabaseMappingService {
   }
 
   // =========================================================
-  // SERVER TABLE LIST (Postgres only)
+  // SERVER TABLE LIST
   // =========================================================
   async getPrimaryTableNames() {
     const server = this.ensureServer();
@@ -244,7 +246,36 @@ export class DatabaseMappingService {
   }
 
   // =========================================================
-  // INSERT / MIGRATION LOGIC (Supports Merge)
+  // DATE CLEANER (Fixes gmt+0530 errors)
+  // =========================================================
+  private cleanDate(value: any) {
+  if (!value) return value;
+
+  const str = String(value).trim();
+
+  // Already in correct YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  // Remove timezone parts
+  const cleaned = str
+    .replace(/\(.*?\)/g, "") // remove (India Standard Time)
+    .replace(/GMT.*$/g, "")  // remove timezone
+    .trim();
+
+  // Try parsing
+  const parsed = new Date(cleaned);
+
+  if (!isNaN(parsed.getTime())) {
+    // Format to YYYY-MM-DD
+    return parsed.toISOString().split("T")[0];
+  }
+
+  return null; // invalid date becomes NULL
+}
+
+
+  // =========================================================
+  // INSERT / MIGRATION LOGIC (With Transliteration + Merge + Date Fix)
   // =========================================================
   async insertMappedData(body: any) {
     const { serverTable, clientTable, mappings } = body;
@@ -271,9 +302,30 @@ export class DatabaseMappingService {
 
     try {
       for (const row of clientRows) {
-        const values = mappings.map(m =>
-          m.merge ? m.client.map(col => row[col]).join(" ") : row[m.client]
-        );
+
+        const values = mappings.map(m => {
+          let rawValue = "";
+
+          // MERGE logic
+          if (m.merge) {
+            rawValue = m.client
+              .map(col => transliterate(String(row[col] ?? "")))
+              .join(" ")
+              .trim();
+          } else {
+            rawValue = transliterate(String(row[m.client] ?? ""));
+          }
+
+          // DATE FIX
+          if (
+            m.server.toLowerCase().includes("dob") ||
+            m.server.toLowerCase().includes("date")
+          ) {
+            rawValue = this.cleanDate(rawValue);
+          }
+
+          return rawValue;
+        });
 
         const placeholders = values.map((_, i) => `$${i + 1}`).join(",");
 
@@ -288,13 +340,12 @@ export class DatabaseMappingService {
       return {
         success: true,
         inserted: clientRows.length,
-        message: "Data migrated successfully",
+        message: "Data migrated successfully"
       };
 
     } catch (err: any) {
       await qr.rollbackTransaction();
       throw new InternalServerErrorException("Insert failed: " + err.message);
-
     } finally {
       await qr.release();
     }

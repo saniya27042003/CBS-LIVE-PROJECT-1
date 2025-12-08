@@ -6,7 +6,6 @@ import { inject, Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class AppService {
-
   private http = inject(HttpClient);
 
   // ✅ MUST END WITH /
@@ -17,7 +16,6 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
 
   // =====================================
   // ✅ SERVER (PRIMARY DB - POSTGRES)
-
   // =====================================
 
   connectServer(config: any) {
@@ -35,9 +33,8 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
   }
 
   // =====================================
-
   // ✅ CLIENT (PG / MSSQL / MYSQL)
-
+  // =====================================
 
   connectClient(config: any) {
     return this.http.post(this.BASE_URL + 'connect-client', config);
@@ -61,9 +58,7 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
   }
 
   // =====================================
-
   // ✅ DATA MIGRATION
-
   // =====================================
 
   insertData(mappingPayload: any) {
