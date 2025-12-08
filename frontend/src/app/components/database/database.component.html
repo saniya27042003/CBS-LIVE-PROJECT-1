@@ -2,7 +2,8 @@
   <div class="flex flex-row items-center justify-center gap-8 -mt-24">
 
     <!-- ================= SOURCE DATABASE (SERVER) ================= -->
-    <div class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[350px] w-[370px]">
+    <div
+      class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[350px] w-[370px]">
 
       <h2 class="text-lg font-bold text-gray-200 mb-6 tracking-wide">SOURCE DATABASE</h2>
 
@@ -22,12 +23,8 @@
       <!-- ✅ PRIMARY FORM -->
       <form [formGroup]="primaryForm" class="w-full flex flex-col items-center gap-3">
 
-        <select
-  class="select select-primary select-outline w-1/2"
-  [(ngModel)]="selectedDatabase"
-  [ngModelOptions]="{ standalone: true }"
-  (click)="onOpenDatabaseDropdown()"
->
+        <select class="select select-primary select-outline w-1/2" [(ngModel)]="selectedDatabase"
+          [ngModelOptions]="{ standalone: true }" (click)="onOpenDatabaseDropdown()">
 
 
           <option value="" disabled selected *ngIf="!selectedDatabase">
@@ -40,25 +37,17 @@
         </select>
 
         <!-- ✅ SERVER HOST -->
-        <input class="input input-bordered input-xs w-1/2"
-               placeholder="Host"
-               formControlName="host">
+        <input class="input input-bordered input-xs w-1/2" placeholder="Host" formControlName="host">
 
         <!-- ✅ SERVER PORT -->
-        <input class="input input-bordered input-xs w-1/2"
-               placeholder="Port"
-               formControlName="port">
+        <input class="input input-bordered input-xs w-1/2" placeholder="Port" formControlName="port">
 
         <!-- ✅ SERVER USERNAME -->
-        <input class="input input-bordered input-xs w-1/2"
-               placeholder="Username"
-               formControlName="username">
+        <input class="input input-bordered input-xs w-1/2" placeholder="Username" formControlName="username">
 
         <!-- ✅ SERVER PASSWORD -->
-        <input class="input input-bordered input-xs w-1/2"
-               placeholder="Password"
-               type="password"
-               formControlName="password">
+        <input class="input input-bordered input-xs w-1/2" placeholder="Password" type="password"
+          formControlName="password">
 
       </form>
 
@@ -66,17 +55,17 @@
 
     <!-- ================= ARROW ================= -->
     <div class="text-gray-500 flex-shrink-0">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-        stroke="currentColor" class="w-10 h-10">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+        class="w-10 h-10">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
       </svg>
     </div>
 
     <!-- ================= TARGET DATABASE (CLIENT) ================= -->
     <div class="flex flex-col">
 
-      <div class="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[500px] w-[500px]">
+      <div
+        class="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[500px] w-[500px]">
 
         <h2 class="text-lg font-bold text-gray-200 mb-4 tracking-wide">TARGET CONFIGURATION</h2>
 
@@ -84,8 +73,7 @@
         <div class="grid grid-cols-3 gap-6 mb-4 w-full justify-items-center">
           <div *ngFor="let db of databases" class="flex flex-col items-center">
             <div class="card bg-gray border border-gray-200 w-20 h-20 shadow rounded-lg"
-              [ngClass]="clientClassMap[db.name]"
-              (click)="selectClient(db.name)">
+              [ngClass]="clientClassMap[db.name]" (click)="selectClient(db.name)">
               <figure class="p-3 h-full w-full">
                 <img [src]="db.img" class="object-contain w-full h-full" />
               </figure>
@@ -97,31 +85,18 @@
         <!-- ✅ CLIENT FORM -->
         <form [formGroup]="clientForm" class="w-full p-2 grid grid-cols-2 gap-4">
 
-          <input class="input input-bordered input-xs"
-                 formControlName="type"
-                 placeholder="Type"
-                 readonly>
+          <input class="input input-bordered input-xs" formControlName="type" placeholder="Type" readonly>
 
-          <input class="input input-bordered input-xs"
-                 formControlName="database"
-                 placeholder="Database Name">
+          <input class="input input-bordered input-xs" formControlName="database" placeholder="Database Name">
 
-          <input class="input input-bordered input-xs"
-                 formControlName="host"
-                 placeholder="Host">
+          <input class="input input-bordered input-xs" formControlName="host" placeholder="Host">
 
-          <input class="input input-bordered input-xs"
-                 formControlName="port"
-                 placeholder="Port">
+          <input class="input input-bordered input-xs" formControlName="port" placeholder="Port">
 
-          <input class="input input-bordered input-xs"
-                 formControlName="username"
-                 placeholder="Username">
+          <input class="input input-bordered input-xs" formControlName="username" placeholder="Username">
 
-          <input class="input input-bordered input-xs"
-                 formControlName="password"
-                 placeholder="Password"
-                 type="password">
+          <input class="input input-bordered input-xs" formControlName="password" placeholder="Password"
+            type="password">
 
         </form>
       </div>
@@ -142,8 +117,7 @@
 
   <div class="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl p-6 w-[350px] text-center">
 
-    <h3 class="text-lg font-bold mb-3"
-      [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
+    <h3 class="text-lg font-bold mb-3" [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
       {{ messageBox.type === 'success' ? 'Success' : 'Error' }}
     </h3>
 

@@ -1,5 +1,5 @@
 import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { INTRATEPATSCHEMES } from '../entity/pat-scheme-interest-rates.entity'
+import { INTRATEPATSCHEMES } from './pat-scheme-interest-rates.entity'
 
 @Entity()
 export class INTRATE {
@@ -9,7 +9,7 @@ export class INTRATE {
 
   @Column()
   @Generated('increment')
-  SERIAL_NO :number;
+  SERIAL_NO: number;
 
   @Column({ default: 0 })
   MONTHS: string
@@ -23,8 +23,8 @@ export class INTRATE {
   @Column({ unique: false })
   idRateID: number
   @ManyToOne(() => INTRATEPATSCHEMES, (idRate) => idRate.rate, {
-      cascade: true
+    cascade: true
   })
   @JoinColumn({ name: "idRateID" })
-  idRate: INTRATEPATSCHEMES[]; 
+  idRate: INTRATEPATSCHEMES[];
 }

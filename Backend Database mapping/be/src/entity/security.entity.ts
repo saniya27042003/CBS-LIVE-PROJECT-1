@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { IDMASTER } from './customer-id.entity';
-import { LNMASTER } from '../entity/term-loan-master.entity';
+import { LNMASTER } from './term-loan-master.entity';
 
 @Entity()
 export class SECURITYDETAILS {
