@@ -29,7 +29,7 @@ export class FilterPipe implements PipeTransform {
   imports: [CommonModule, FormsModule, FilterPipe],
 })
 export class TablesComponent implements OnInit {
-  // ===== PRIMARY SIDE =====
+  // ===== PRIMARY (SERVER) SIDE =====
   dropdownItemsPrimary: string[] = [];
   selectedPrimaryTable: string[] = [];
   primaryDatabaseName = '';
@@ -38,7 +38,6 @@ export class TablesComponent implements OnInit {
   primaryTableRowsByName: Record<string, any[]> = {};
   activePrimaryTable: string | null = null;
 
-  // mapping per primary table
   mappingDataByTable: Record<string, any[]> = {};
 
   // ===== CLIENT SIDE =====
@@ -69,22 +68,27 @@ export class TablesComponent implements OnInit {
     this.router.navigate(['/database']);
   }
 
-  // ===== LOAD TABLE NAMES =====
-
+  // ========================
+  // LOAD SERVER TABLES
+  // ========================
   getPrimaryTables() {
-    this.appService.getPrimaryTableNames().subscribe((res: string[]) => {
+    this.appService.getServerTables().subscribe((res: string[]) => {
       this.dropdownItemsPrimary = res || [];
     });
   }
 
+  // ========================
+  // LOAD CLIENT TABLES
+  // ========================
   getClientTables() {
-    this.appService.getClientTableNames().subscribe((res: string[]) => {
+    this.appService.getClientTables().subscribe((res: string[]) => {
       this.dropdownItemsClient = res || [];
     });
   }
 
-  // ===== PRIMARY: LOAD COLUMNS & TOGGLE =====
-
+  // ========================
+  // SERVER: LOAD COLUMNS
+  // ========================
   onSelectPrimaryTable(tableName: string) {
     if (!this.selectedPrimaryTable.includes(tableName)) {
       this.selectedPrimaryTable.push(tableName);
@@ -92,10 +96,10 @@ export class TablesComponent implements OnInit {
 
     this.activePrimaryTable = tableName;
 
-    this.appService.getAllColumnsNames(tableName).subscribe((res: any) => {
+    this.appService.getServerColumns(tableName).subscribe((res: any) => {
       const rows = Array.isArray(res)
         ? res.map((col: any, idx: number) => ({
-            id: idx + 1, // row id / position
+            id: idx + 1,
             name: typeof col === 'string' ? col : col?.column_name,
             source: tableName,
             position: '',
@@ -120,8 +124,9 @@ export class TablesComponent implements OnInit {
     return this.mappingDataByTable[tableName] ?? [];
   }
 
-  // ===== CLIENT: LOAD COLUMNS & TOGGLE =====
-
+  // ========================
+  // CLIENT: LOAD COLUMNS
+  // ========================
   onSelectClientTable(tableName: string) {
     if (!this.selectedClientTable.includes(tableName)) {
       this.selectedClientTable.push(tableName);
@@ -151,8 +156,9 @@ export class TablesComponent implements OnInit {
       : [];
   }
 
-  // ===== MAPPING =====
-
+  // ========================
+  // MAPPING LOGIC
+  // ========================
   onOkClick() {
     this.mappingDataByTable = {};
 
@@ -171,12 +177,9 @@ export class TablesComponent implements OnInit {
         }
 
         return {
-          // for “No” column
           no: index + 1,
-          // ids for debugging / later use
           rowId: primaryRow.id,
           clientId: clientMatch ? clientMatch.id : null,
-          // shown columns
           serverColumn: primaryRow.name,
           clientColumn: clientMatch
             ? (clientMatch.name ?? clientMatch.id ?? '-')
@@ -193,8 +196,9 @@ export class TablesComponent implements OnInit {
     });
   }
 
-  // ===== UI HELPERS =====
-
+  // ========================
+  // UI HELPERS
+  // ========================
   removePrimaryTable(table: string) {
     this.selectedPrimaryTable = this.selectedPrimaryTable.filter(
       (t) => t !== table,
