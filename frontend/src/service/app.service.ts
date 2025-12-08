@@ -1,18 +1,23 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { env } from '../envinonment/env';
+// import { env } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AppService {
-  http = inject(HttpClient);
-  BASE_URL = env.apiBaseUrl; // e.g. http://localhost:3000/database-mapping/
 
+  private http = inject(HttpClient);
+
+  // ✅ MUST END WITH /
+  // private BASE_URL = env.apiBaseUrl; 
+  //  Example: http://localhost:3000/database-mapping/
+private BASE_URL = 'http://localhost:3000/database-mapping/';
   constructor() {}
 
   // =====================================
-  // SERVER (Postgres)
+  // ✅ SERVER (PRIMARY DB - POSTGRES)
+
   // =====================================
 
   connectServer(config: any) {
@@ -30,8 +35,9 @@ export class AppService {
   }
 
   // =====================================
-  // CLIENT (PG / MSSQL / MySQL)
-  // =====================================
+
+  // ✅ CLIENT (PG / MSSQL / MYSQL)
+
 
   connectClient(config: any) {
     return this.http.post(this.BASE_URL + 'connect-client', config);
@@ -55,7 +61,9 @@ export class AppService {
   }
 
   // =====================================
-  // DATA MIGRATION
+
+  // ✅ DATA MIGRATION
+
   // =====================================
 
   insertData(mappingPayload: any) {

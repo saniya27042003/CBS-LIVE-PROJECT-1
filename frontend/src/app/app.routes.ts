@@ -5,6 +5,9 @@ import { LayoutComponent } from './layout/layout.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { TablesComponent } from './components/tables/tables.component';
 
+import { MappingTableComponent } from './components/mapping-table/mapping-table.component';
+
+
 export const routes: Routes = [
   {
     path: '',
@@ -34,9 +37,30 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '', redirectTo: '/database', pathMatch: 'full' },
-  { path: 'database', component: DatabaseComponent },
-  // { path: 'tables', component: TablesComponent },
 
-  { path: 'layout', component: LayoutComponent },
+  // ✅ Login Route
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'login'
+  },
+  {
+    path: 'login',
+    component: LoginComponent
+  },
+
+  // ✅ Main Layout Routes
+  {
+    path: '',
+    component: LayoutComponent,
+    children: [
+      { path: 'database', component: DatabaseComponent },
+      { path: 'setting', component: SettingsComponent },
+      { path: 'table', component: TablesComponent },
+
+      // ✅ mapping-table is also inside the layout
+      { path: 'mapping-table', component: MappingTableComponent }
+    ]
+  }
+
 ];

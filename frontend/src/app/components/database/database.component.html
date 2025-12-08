@@ -1,193 +1,131 @@
 <div class="w-full h-full flex items-center justify-center p-4">
   <div class="flex flex-row items-center justify-center gap-8 -mt-24">
-    <div
-      class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[400px] w-[400px]"
-    >
-      <h2 class="text-lg font-bold text-gray-200 mb-6 tracking-wide">
-        SOURCE DATABASE
-      </h2>
 
-      <div
-        class="card bg-gray-700 w-28 h-28 shadow-[4px_4px_0px_#3b82f6] hover:shadow-[6px_6px_0px_#60a5fa] border border-blue-200 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col items-center justify-center"
-        (click)="selectPrimary('PostgreSQL')"
-        [ngClass]="primaryClassMap['PostgreSQL']"
-      >
+    <!-- ================= SOURCE DATABASE (SERVER) ================= -->
+    <div
+      class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[350px] w-[370px]">
+
+      <h2 class="text-lg font-bold text-gray-200 mb-6 tracking-wide">SOURCE DATABASE</h2>
+
+      <!-- Postgres Card -->
+      <div class="card bg-gray-700 w-28 h-28 ring-4 ring-green-400 shadow-[4px_4px_0px_#3b82f6]
+        border border-blue-200 rounded-xl overflow-hidden flex items-center justify-center"
+        (click)="selectPrimary('PostgreSQL')" [ngClass]="primaryClassMap['PostgreSQL']">
+
         <figure class="w-full h-full p-4">
-          <img
-            src="assets/images/postgres.png"
-            alt="PostgreSQL"
-            class="object-contain w-full h-full"
-          />
+          <img src="assets/images/postgres.png" class="object-contain w-full h-full" />
         </figure>
       </div>
 
       <span class="mt-4 text-base font-medium text-gray-200">PostgreSQL</span>
+      <br>
 
-      <p class="text-gray-400 text-center text-xs mt-12 px-4 leading-relaxed">
-        Selected primary source for data migration or synchronization.
-      </p>
+      <!-- ✅ PRIMARY FORM -->
+      <form [formGroup]="primaryForm" class="w-full flex flex-col items-center gap-3">
+
+        <select class="select select-primary select-outline w-1/2" [(ngModel)]="selectedDatabase"
+          [ngModelOptions]="{ standalone: true }" (click)="onOpenDatabaseDropdown()">
+
+
+          <option value="" disabled selected *ngIf="!selectedDatabase">
+            {{ loadingDatabases ? 'Loading databases...' : 'Select Database' }}
+          </option>
+
+          <option *ngFor="let db of databaseList" [value]="db">
+            {{ db }}
+          </option>
+        </select>
+
+        <!-- ✅ SERVER HOST -->
+        <input class="input input-bordered input-xs w-1/2" placeholder="Host" formControlName="host">
+
+        <!-- ✅ SERVER PORT -->
+        <input class="input input-bordered input-xs w-1/2" placeholder="Port" formControlName="port">
+
+        <!-- ✅ SERVER USERNAME -->
+        <input class="input input-bordered input-xs w-1/2" placeholder="Username" formControlName="username">
+
+        <!-- ✅ SERVER PASSWORD -->
+        <input class="input input-bordered input-xs w-1/2" placeholder="Password" type="password"
+          formControlName="password">
+
+      </form>
+
     </div>
 
+    <!-- ================= ARROW ================= -->
     <div class="text-gray-500 flex-shrink-0">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="w-10 h-10"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-        />
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+        class="w-10 h-10">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
       </svg>
     </div>
 
+    <!-- ================= TARGET DATABASE (CLIENT) ================= -->
     <div class="flex flex-col">
-      <div
-        class="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[500px] w-[500px]"
-      >
-        <h2 class="text-lg font-bold text-gray-200 mb-4 tracking-wide">
-          TARGET CONFIGURATION
-        </h2>
 
-        <div
-          class="grid grid-cols-3 gap-6 mb-4 w-full justify-items-center"
-          id="databases"
-        >
+      <div
+        class="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[500px] w-[500px]">
+
+        <h2 class="text-lg font-bold text-gray-200 mb-4 tracking-wide">TARGET CONFIGURATION</h2>
+
+        <!-- ✅ DB TYPE SELECTION -->
+        <div class="grid grid-cols-3 gap-6 mb-4 w-full justify-items-center">
           <div *ngFor="let db of databases" class="flex flex-col items-center">
-            <div
-              class="card bg-gray border border-gray-200 w-20 h-20 shadow-[3px_3px_0px_#3b82f6] hover:shadow-[5px_5px_0px_#60a5fa] rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-              [ngClass]="clientClassMap[db.name]"
-              (click)="selectClient(db.name)"
-            >
+            <div class="card bg-gray border border-gray-200 w-20 h-20 shadow rounded-lg"
+              [ngClass]="clientClassMap[db.name]" (click)="selectClient(db.name)">
               <figure class="p-3 h-full w-full">
-                <img
-                  [src]="db.img"
-                  [alt]="db.name"
-                  class="object-contain w-full h-full"
-                />
+                <img [src]="db.img" class="object-contain w-full h-full" />
               </figure>
             </div>
-            <span class="mt-2 text-xs font-medium text-gray-300">{{
-              db.name
-            }}</span>
+            <span class="mt-2 text-xs font-medium text-gray-300">{{ db.name }}</span>
           </div>
         </div>
 
-        <!-- <div class="divider border-t border-gray-600 w-full mb-3 opacity-50"></div> -->
+        <!-- ✅ CLIENT FORM -->
+        <form [formGroup]="clientForm" class="w-full p-2 grid grid-cols-2 gap-4">
 
-        <form
-          [formGroup]="databaseForm"
-          class="w-full flex-1 overflow-y-auto no-scrollbar pr-1"
-        >
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="label py-0 mb-1"
-                ><span class="label-text text-xs text-gray-400"
-                  >Type</span
-                ></label
-              >
-              <input
-                type="text"
-                formControlName="type"
-                placeholder="eg :postgres"
-                class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-                readonly
-              />
-            </div>
+          <input class="input input-bordered input-xs" formControlName="type" placeholder="Type" readonly>
 
-            <div>
-              <label class="label py-0 mb-1"
-                ><span class="label-text text-xs text-gray-400"
-                  >Database Name</span
-                ></label
-              >
-              <input
-                type="text"
-                formControlName="database"
-                placeholder="db_production"
-                class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-              />
-            </div>
+          <input class="input input-bordered input-xs" formControlName="database" placeholder="Database Name">
 
-            <div class="grid grid-cols-1 gap-2">
-              <div>
-                <label class="label py-0 mb-1"
-                  ><span class="label-text text-xs text-gray-400"
-                    >Host</span
-                  ></label
-                >
-                <input
-                  type="text"
-                  formControlName="host"
-                  placeholder="127.0.0.1"
-                  class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-                />
-              </div>
-              <div>
-                <label class="label py-0 mb-1"
-                  ><span class="label-text text-xs text-gray-400"
-                    >Port</span
-                  ></label
-                >
-                <input
-                  type="text"
-                  formControlName="port"
-                  placeholder="5432"
-                  class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-                />
-              </div>
-            </div>
+          <input class="input input-bordered input-xs" formControlName="host" placeholder="Host">
 
-            <div class="grid grid-cols-1 gap-2">
-              <div>
-                <label class="label py-0 mb-1"
-                  ><span class="label-text text-xs text-gray-400"
-                    >Username</span
-                  ></label
-                >
-                <input
-                  type="text"
-                  formControlName="username"
-                  placeholder="User"
-                  class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-                />
-              </div>
-              <div>
-                <label class="label py-0 mb-1"
-                  ><span class="label-text text-xs text-gray-400"
-                    >Password</span
-                  ></label
-                >
-                <input
-                  type="password"
-                  formControlName="password"
-                  placeholder="Password"
-                  class="input input-bordered input-xs w-full h-8 text-white rounded border-gray-600"
-                />
-              </div>
-            </div>
-          </div>
+          <input class="input input-bordered input-xs" formControlName="port" placeholder="Port">
+
+          <input class="input input-bordered input-xs" formControlName="username" placeholder="Username">
+
+          <input class="input input-bordered input-xs" formControlName="password" placeholder="Password"
+            type="password">
+
         </form>
       </div>
 
-      <div class="flex flex-row space-x-4 w-[500px] mt-4">
-        <button
-          class="btn btn-outline btn-info flex-1 h-10 shadow-lg text-sm font-bold tracking-wide uppercase"
-          (click)="onOkClick()"
-        >
-          Connect
-        </button>
-        <button
-          class="btn btn-outline btn-error flex-1 h-10 shadow-lg text-sm font-bold tracking-wide uppercase"
-          (click)="onCancelClick()"
-        >
-          Cancel
-        </button>
+      <!-- ✅ BUTTONS -->
+      <div class="flex space-x-4 w-[500px] mt-4">
+        <button class="btn btn-outline btn-info flex-1" (click)="onOkClick()">Connect</button>
+        <button class="btn btn-outline btn-error flex-1" (click)="onCancelClick()">Cancel</button>
       </div>
+
     </div>
+
+  </div>
+</div>
+
+<!-- ✅ CUSTOM MESSAGE BOX -->
+<div *ngIf="messageBox.visible" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+  <div class="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl p-6 w-[350px] text-center">
+
+    <h3 class="text-lg font-bold mb-3" [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
+      {{ messageBox.type === 'success' ? 'Success' : 'Error' }}
+    </h3>
+
+    <p class="text-gray-300 text-sm mb-6">
+      {{ messageBox.text }}
+    </p>
+
+    <button class="btn btn-success" (click)="closeMessageBox()">OK</button>
+
   </div>
 </div>

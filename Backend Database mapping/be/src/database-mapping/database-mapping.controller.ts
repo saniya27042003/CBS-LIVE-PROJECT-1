@@ -1,3 +1,4 @@
+
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { DatabaseMappingService } from "./database-mapping.service";
 
@@ -12,6 +13,13 @@ export class DatabaseMappingController {
   connectServer(@Body() config: any) {
     return this.dbService.connectServer(config);
   }
+
+  @Post('server/databases')
+getServerDatabases(@Body() config: any) {
+  return this.dbService.getServerDatabases(config);
+}
+
+
 
   @Get('server/tables')
   getServerTables() {

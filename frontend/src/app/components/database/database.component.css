@@ -24,3 +24,6 @@ label {
 button {
   color: white;
 }
+#primarydb{
+    cursor:not-allowed;
+}

@@ -44,7 +44,7 @@ export class DatabaseMappingService {
           WHERE TABLE_NAME = @0
           ORDER BY ORDINAL_POSITION
         `,
-        sampleRows: (table: string) => `SELECT * FROM [${table}]`,
+        sampleRows: (table: string) => `SELECT TOP 100 * FROM [${table}]`,
       },
 
       mysql: {
@@ -54,15 +54,15 @@ export class DatabaseMappingService {
       }
     };
 
-    return configs[driver] ?? configs.postgres;
+    return configs[driver] ?? configs.postgres;  // fallback prevents null errors
   }
 
   private getDriver(ds: DataSource) {
-    return ds.options.type as string;
+    return ds.options.type as string; // postgres | mssql | mysql...
   }
 
   // =========================================================
-  // CLIENT DB Connection (MSSQL / PG / MySQL)
+  // CLIENT DATABASE CONNECTION (Dynamic: PG / MSSQL / MySQL)
   // =========================================================
   async connect(config: any) {
     try {
@@ -80,10 +80,7 @@ export class DatabaseMappingService {
         entities: [],
         synchronize: false,
         options: isMssql
-          ? {
-              encrypt: true,
-              trustServerCertificate: true,
-            }
+          ? { encrypt: true, trustServerCertificate: true }
           : undefined,
       });
 
@@ -101,8 +98,31 @@ export class DatabaseMappingService {
     }
   }
 
+
+  async getServerDatabases(config: any) {
+  const ds = new DataSource({
+    type: 'postgres',
+    host: config.host,
+    port: Number(config.port),
+    username: config.username,
+    password: config.password,
+    database: 'postgres',
+  });
+
+  await ds.initialize();
+
+  const result = await ds.query(`
+    SELECT datname FROM pg_database WHERE datistemplate = false;
+  `);
+
+  await ds.destroy();
+
+  return result.map((r: any) => r.datname);
+}
+
+
   // =========================================================
-  // SERVER DB (Always PostgreSQL)
+  // SERVER DATABASE (Always PostgreSQL)
   // =========================================================
   async connectServer(config: any) {
     try {
@@ -175,7 +195,7 @@ export class DatabaseMappingService {
   }
 
   // =========================================================
-  // SERVER COLUMNS
+  // SERVER COLUMNS (Postgres)
   // =========================================================
   async getAllColumnsNames(tableName: string) {
     const server = this.ensureServer();
@@ -191,7 +211,7 @@ export class DatabaseMappingService {
   }
 
   // =========================================================
-  // CLIENT COLUMNS
+  // CLIENT COLUMNS (PG / MSSQL / MySQL)
   // =========================================================
   async getClientColumns(tableName: string) {
     const client = this.ensureClient();
@@ -257,6 +277,7 @@ export class DatabaseMappingService {
     const client = this.ensureClient();
     const server = this.ensureServer();
 
+    // Build SELECT fields dynamically
     const clientCols = mappings
       .map(m => (m.merge ? m.client.map(c => `"${c}"`).join(",") : `"${m.client}"`))
       .join(",");
