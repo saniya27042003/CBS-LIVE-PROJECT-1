@@ -100,25 +100,25 @@ export class DatabaseMappingService {
 
 
   async getServerDatabases(config: any) {
-  const ds = new DataSource({
-    type: 'postgres',
-    host: config.host,
-    port: Number(config.port),
-    username: config.username,
-    password: config.password,
-    database: 'postgres',
-  });
+    const ds = new DataSource({
+      type: 'postgres',
+      host: config.host,
+      port: Number(config.port),
+      username: config.username,
+      password: config.password,
+      database: 'postgres',
+    });
 
-  await ds.initialize();
+    await ds.initialize();
 
-  const result = await ds.query(`
+    const result = await ds.query(`
     SELECT datname FROM pg_database WHERE datistemplate = false;
   `);
 
-  await ds.destroy();
+    await ds.destroy();
 
-  return result.map((r: any) => r.datname);
-}
+    return result.map((r: any) => r.datname);
+  }
 
 
   // =========================================================
@@ -243,29 +243,29 @@ export class DatabaseMappingService {
   // DATE CLEANER (Fixes gmt+0530 errors)
   // =========================================================
   private cleanDate(value: any) {
-  if (!value) return value;
+    if (!value) return value;
 
-  const str = String(value).trim();
+    const str = String(value).trim();
 
-  // Already in correct YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+    // Already in correct YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
-  // Remove timezone parts
-  const cleaned = str
-    .replace(/\(.*?\)/g, "") // remove (India Standard Time)
-    .replace(/GMT.*$/g, "")  // remove timezone
-    .trim();
+    // Remove timezone parts
+    const cleaned = str
+      .replace(/\(.*?\)/g, "") // remove (India Standard Time)
+      .replace(/GMT.*$/g, "")  // remove timezone
+      .trim();
 
-  // Try parsing
-  const parsed = new Date(cleaned);
+    // Try parsing
+    const parsed = new Date(cleaned);
 
-  if (!isNaN(parsed.getTime())) {
-    // Format to YYYY-MM-DD
-    return parsed.toISOString().split("T")[0];
+    if (!isNaN(parsed.getTime())) {
+      // Format to YYYY-MM-DD
+      return parsed.toISOString().split("T")[0];
+    }
+
+    return null; // invalid date becomes NULL
   }
-
-  return null; // invalid date becomes NULL
-}
 
 
   // =========================================================
@@ -278,8 +278,15 @@ export class DatabaseMappingService {
     const server = this.ensureServer();
 
     // Build SELECT fields dynamically
+    // const clientCols = mappings
+    //   .map(m => (m.merge ? m.client.map(c => `"${c}"`).join(",") : `"${m.client}"`))
+    //   .join(",");
     const clientCols = mappings
-      .map(m => (m.merge ? m.client.map(c => `"${c}"`).join(",") : `"${m.client}"`))
+      .flatMap(m => {
+        const clientDef = Array.isArray(m.client) ? m.client : [m.client];
+        return clientDef.filter((c: string | null | undefined) => !!c);
+      })
+      .map(c => `"${c}"`)
       .join(",");
 
     const serverCols = mappings.map(m => `"${m.server}"`).join(",");
@@ -297,29 +304,49 @@ export class DatabaseMappingService {
     try {
       for (const row of clientRows) {
 
+        // const values = mappings.map(m => {
+        //   let rawValue = "";
+
+        //   // MERGE logic
+        //   if (m.merge) {
+        //     rawValue = m.client
+        //       .map(col => transliterate(String(row[col] ?? "")))
+        //       .join(" ")
+        //       .trim();
+        //   } else {
+        //     rawValue = transliterate(String(row[m.client] ?? ""));
+        //   }
+
+        //   // DATE FIX
+        //   if (
+        //     m.server.toLowerCase().includes("dob") ||
+        //     m.server.toLowerCase().includes("date")
+        //   ) {
+        //     rawValue = this.cleanDate(rawValue);
+        //   }
+
+        //   return rawValue;
+        // });
+
         const values = mappings.map(m => {
-          let rawValue = "";
+          const clientDef = Array.isArray(m.client) ? m.client : [m.client];
 
-          // MERGE logic
-          if (m.merge) {
-            rawValue = m.client
-              .map(col => transliterate(String(row[col] ?? "")))
-              .join(" ")
-              .trim();
-          } else {
-            rawValue = transliterate(String(row[m.client] ?? ""));
-          }
+          // Collect all source pieces for this target column
+          let rawValue = clientDef
+            .filter(c => !!c)
+            .map(col => transliterate(String(row[col] ?? "")))
+            .join(" ")
+            .trim();
 
-          // DATE FIX
-          if (
-            m.server.toLowerCase().includes("dob") ||
-            m.server.toLowerCase().includes("date")
-          ) {
+          // DATE FIX (only for date-like server columns)
+          const serverName = m.server.toLowerCase();
+          if (serverName.includes("dob") || serverName.includes("date")) {
             rawValue = this.cleanDate(rawValue);
           }
 
           return rawValue;
         });
+
 
         const placeholders = values.map((_, i) => `$${i + 1}`).join(",");
 
