@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable prettier/prettier */
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import {  DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { transliterate } from "transliteration";
 
 
@@ -384,8 +384,8 @@ export class DatabaseMappingService {
   // =============================================================
 
   async getPrimaryKeys() {
-  const db = this.ensureClient();
-  return db.query(`
+    const db = this.ensureClient();
+    return db.query(`
     SELECT t.name AS tableName, c.name AS primaryKey
     FROM sys.key_constraints kc
     JOIN sys.tables t ON kc.parent_object_id = t.object_id
@@ -397,17 +397,17 @@ export class DatabaseMappingService {
      AND ic.column_id = c.column_id
     WHERE kc.type = 'PK';
   `);
-}
+  }
 
   //DETECT FK CANDIDATES
 
   async getForeignKeyCandidates() {
-  const db = this.ensureClient();
+    const db = this.ensureClient();
 
-  // only numeric types we consider for FK detection
-  const numericTypes = ["int","bigint","smallint","tinyint"];
+    // only numeric types we consider for FK detection
+    const numericTypes = ["int", "bigint", "smallint", "tinyint"];
 
-  const rows: any[] = await db.query(`
+    const rows: any[] = await db.query(`
     SELECT 
       TABLE_SCHEMA, 
       TABLE_NAME, 
@@ -420,27 +420,27 @@ export class DatabaseMappingService {
       AND TABLE_NAME NOT LIKE 'sys%' -- guard
   `);
 
-  // Normalize to { tableName, columnName, schema }
-  return rows.map(r => ({
-    schema: r.TABLE_SCHEMA,
-    tableName: r.TABLE_NAME,
-    columnName: r.COLUMN_NAME,
-    dataType: r.DATA_TYPE
-  }));
-}
+    // Normalize to { tableName, columnName, schema }
+    return rows.map(r => ({
+      schema: r.TABLE_SCHEMA,
+      tableName: r.TABLE_NAME,
+      columnName: r.COLUMN_NAME,
+      dataType: r.DATA_TYPE
+    }));
+  }
 
 
 
 
 
 
-//real forgin keys 
+  //real forgin keys 
 
 
- async getRealForeignKeys() {
-  const db = this.ensureClient();   // <-- THIS LINE IS REQUIRED
+  async getRealForeignKeys() {
+    const db = this.ensureClient();   // <-- THIS LINE IS REQUIRED
 
-  return db.query(`
+    return db.query(`
     SELECT  
         FK.name AS foreignKey,
         TP.name AS parentTable,
@@ -459,24 +459,24 @@ export class DatabaseMappingService {
          ON FKC.parent_object_id = CC.object_id 
         AND FKC.parent_column_id = CC.column_id
   `);
-}
+  }
 
 
 
   //COMPUTE RELATIONSHIPS CONFIDANCE SCORE
 
   async checkRelationship(childTable, childCol, parentTable, parentCol) {
-  const db = this.ensureClient();
+    const db = this.ensureClient();
 
-  const childType = await this.getColumnType(childTable, childCol);
-  const parentType = await this.getColumnType(parentTable, parentCol);
+    const childType = await this.getColumnType(childTable, childCol);
+    const parentType = await this.getColumnType(parentTable, parentCol);
 
-  if (!childType || !parentType) return 0;
+    if (!childType || !parentType) return 0;
 
-  const allowed = ["int", "bigint", "smallint", "tinyint"];
-  if (!allowed.includes(childType) || childType !== parentType) return 0;
+    const allowed = ["int", "bigint", "smallint", "tinyint"];
+    if (!allowed.includes(childType) || childType !== parentType) return 0;
 
-  const sql = `
+    const sql = `
     SELECT
       (SELECT COUNT(DISTINCT [${childCol}]) FROM [${childTable}]) AS childDistinct,
       (SELECT COUNT(DISTINCT c.[${childCol}])
@@ -486,80 +486,80 @@ export class DatabaseMappingService {
       ) AS matches;
   `;
 
-  const rows = await db.query(sql);
-  const r = rows[0];
+    const rows = await db.query(sql);
+    const r = rows[0];
 
-  if (!r.childDistinct) return 0;
+    if (!r.childDistinct) return 0;
 
-  return (r.matches / r.childDistinct) * 100;
-}
-
-
-// =========================================================
-// BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION)
-// =========================================================
-async generateRelationshipMap() {
-  const pkList = await this.getPrimaryKeys();
-  const fkCandidates = await this.getForeignKeyCandidates();
-
-  const relationships: any[] = [];
-
-  for (const fk of fkCandidates) {
-    for (const pk of pkList) {
-      try {
-        if (fk.tableName === pk.tableName) continue;
-
-        const confidence = await this.checkRelationship(
-          fk.tableName,
-          fk.columnName,
-          pk.tableName,
-          pk.primaryKey
-        );
-
-        if (confidence >= 70) {
-          relationships.push({
-            childTable: fk.tableName,
-            childColumn: fk.columnName,
-            parentTable: pk.tableName,
-            parentColumn: pk.primaryKey,
-            confidence: Number(confidence.toFixed(2)),
-          });
-        }
-
-      } catch (err) {
-        console.error(
-          `ERROR checking relationship: ${fk.tableName}.${fk.columnName} -> ${pk.tableName}.${pk.primaryKey}`,
-          err.message
-        );
-      }
-    }
+    return (r.matches / r.childDistinct) * 100;
   }
 
-  return relationships;
-}
+
+  // =========================================================
+  // BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION)
+  // =========================================================
+  async generateRelationshipMap() {
+    const pkList = await this.getPrimaryKeys();
+    const fkCandidates = await this.getForeignKeyCandidates();
+
+    const relationships: any[] = [];
+
+    for (const fk of fkCandidates) {
+      for (const pk of pkList) {
+        try {
+          if (fk.tableName === pk.tableName) continue;
+
+          const confidence = await this.checkRelationship(
+            fk.tableName,
+            fk.columnName,
+            pk.tableName,
+            pk.primaryKey
+          );
+
+          if (confidence >= 70) {
+            relationships.push({
+              childTable: fk.tableName,
+              childColumn: fk.columnName,
+              parentTable: pk.tableName,
+              parentColumn: pk.primaryKey,
+              confidence: Number(confidence.toFixed(2)),
+            });
+          }
+
+        } catch (err) {
+          console.error(
+            `ERROR checking relationship: ${fk.tableName}.${fk.columnName} -> ${pk.tableName}.${pk.primaryKey}`,
+            err.message
+          );
+        }
+      }
+    }
+
+    return relationships;
+  }
 
 
 
-async getColumnType(table: string, column: string, schema = 'dbo') {
-  const db = this.ensureClient();
-  const sql = `
+  async getColumnType(table: string, column: string, schema = 'dbo') {
+    const db = this.ensureClient();
+    const sql = `
     SELECT LOWER(DATA_TYPE) AS DATA_TYPE
     FROM INFORMATION_SCHEMA.COLUMNS 
     WHERE TABLE_SCHEMA = @0 AND TABLE_NAME = @1 AND COLUMN_NAME = @2
   `;
-  const res = await db.query(sql, [schema, table, column]);
-  return res && res[0] ? res[0].DATA_TYPE : undefined;
-}
+    const res = await db.query(sql, [schema, table, column]);
+    return res && res[0] ? res[0].DATA_TYPE : undefined;
+  }
 
 
 
 
 
-async predictFastRelationships() {
-  const db = this.ensureClient();
+  async predictFastRelationships() {
+    const db = this.ensureClient();
 
-  // Get all PK names
-  const pkList = await db.query(`
+    // Get all PK names
+    const pkList = await db.query(`
     SELECT 
         t.name AS tableName,
         c.name AS primaryKey
@@ -574,8 +574,8 @@ async predictFastRelationships() {
     WHERE kc.type = 'PK';
   `);
 
-  // Get all columns
-  const allCols = await db.query(`
+    // Get all columns
+    const allCols = await db.query(`
     SELECT 
         t.name AS tableName,
         c.name AS columnName
@@ -583,34 +583,34 @@ async predictFastRelationships() {
     JOIN sys.tables t ON c.object_id = t.object_id;
   `);
 
-const relations: any[] = [];
+    const relations: any[] = [];
 
-  for (const pk of pkList) {
-    for (const col of allCols) {
-      if (col.tableName === pk.tableName) continue;
+    for (const pk of pkList) {
+      for (const col of allCols) {
+        if (col.tableName === pk.tableName) continue;
 
-      // simple name-based match: e.g., Cust_id matches primary key Cust_id
-      if (col.columnName.toLowerCase() === pk.primaryKey.toLowerCase()) {
-        relations.push({
-          parentTable: pk.tableName,
-          parentColumn: pk.primaryKey,
-          childTable: col.tableName,
-          childColumn: col.columnName,
-          matchType: "name-match"
-        });
+        // simple name-based match: e.g., Cust_id matches primary key Cust_id
+        if (col.columnName.toLowerCase() === pk.primaryKey.toLowerCase()) {
+          relations.push({
+            parentTable: pk.tableName,
+            parentColumn: pk.primaryKey,
+            childTable: col.tableName,
+            childColumn: col.columnName,
+            matchType: "name-match"
+          });
+        }
       }
     }
+
+    return relations;
   }
 
-  return relations;
-}
 
 
+  async getRealForeignKeysFast() {
+    const db = this.ensureClient();
 
-async getRealForeignKeysFast() {
-  const db = this.ensureClient();
-
-  return db.query(`
+    return db.query(`
     SELECT  
         FK.name AS foreignKey,
         PKT.name AS parentTable,
@@ -629,25 +629,25 @@ async getRealForeignKeysFast() {
          ON C.referenced_object_id = PKC.object_id 
         AND C.referenced_column_id = PKC.column_id;
   `);
-}
+  }
 
 
-//=========================================================
-// BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION) FAST
-// =========================================================
+  //=========================================================
+  // BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION) FAST
+  // =========================================================
 
 
-async getVisualizationMap() {
-  const db = this.ensureClient();
+  async getVisualizationMap() {
+    const db = this.ensureClient();
 
-  // 1. Fetch PK list
-  const primaryKeys = await this.getPrimaryKeys();
+    // 1. Fetch PK list
+    const primaryKeys = await this.getPrimaryKeys();
 
-  // 2. Fetch real Foreign Keys
-  const realFK = await this.getRealForeignKeysFast();
+    // 2. Fetch real Foreign Keys
+    const realFK = await this.getRealForeignKeysFast();
 
-  // 3. Fetch all table + column metadata
-  const allColumns = await db.query(`
+    // 3. Fetch all table + column metadata
+    const allColumns = await db.query(`
     SELECT 
       t.name AS tableName,
       c.name AS columnName,
@@ -658,64 +658,64 @@ async getVisualizationMap() {
     ORDER BY t.name, c.column_id;
   `);
 
-  // 4. Convert into table → columns format
-  const tableMap: any = {};
+    // 4. Convert into table → columns format
+    const tableMap: any = {};
 
-  for (const row of allColumns) {
-    if (!tableMap[row.tableName]) {
-      tableMap[row.tableName] = { name: row.tableName, columns: [] };
+    for (const row of allColumns) {
+      if (!tableMap[row.tableName]) {
+        tableMap[row.tableName] = { name: row.tableName, columns: [] };
+      }
+
+      const isPK = primaryKeys.some(pk =>
+        pk.tableName === row.tableName && pk.primaryKey === row.columnName
+      );
+
+      const isFK = realFK.some(fk =>
+        fk.childTable === row.tableName && fk.childColumn === row.columnName
+      );
+
+      tableMap[row.tableName].columns.push({
+        name: row.columnName,
+        type: row.dataType,
+        pk: isPK,
+        fk: isFK
+      });
     }
 
-    const isPK = primaryKeys.some(pk =>
-      pk.tableName === row.tableName && pk.primaryKey === row.columnName
-    );
+    // 5. Build relationship list
+    const relationships = realFK.map(fk => ({
+      parentTable: fk.parentTable,
+      parentColumn: fk.parentColumn,
+      childTable: fk.childTable,
+      childColumn: fk.childColumn,
+      type: "REAL_FK"
+    }));
 
-    const isFK = realFK.some(fk =>
-      fk.childTable === row.tableName && fk.childColumn === row.columnName
-    );
-
-    tableMap[row.tableName].columns.push({
-      name: row.columnName,
-      type: row.dataType,
-      pk: isPK,
-      fk: isFK
-    });
+    // 6. Return final structure
+    return {
+      tables: Object.values(tableMap),
+      relationships
+    };
   }
 
-  // 5. Build relationship list
-  const relationships = realFK.map(fk => ({
-    parentTable: fk.parentTable,
-    parentColumn: fk.parentColumn,
-    childTable: fk.childTable,
-    childColumn: fk.childColumn,
-    type: "REAL_FK"
-  }));
 
-  // 6. Return final structure
-  return {
-    tables: Object.values(tableMap),
-    relationships
-  };
-}
+  // =========================================================
+  // Fetch TAble
+  // =========================================================
 
 
-// =========================================================
-// Fetch TAble
-// =========================================================
+  async getTableStructureWithKeys() {
+    const db = this.ensureClient();
 
-
-async getTableStructureWithKeys() {
-  const db = this.ensureClient();
-
-  // 1️⃣ Fetch all tables
-  const tables = await db.query(`
+    // 1️⃣ Fetch all tables
+    const tables = await db.query(`
     SELECT name AS tableName 
     FROM sys.tables 
     ORDER BY name;
   `);
 
-  // 2️⃣ Fetch all columns + PK/FK flags
-  const columns = await db.query(`
+    // 2️⃣ Fetch all columns + PK/FK flags
+    const columns = await db.query(`
     SELECT 
         t.name AS tableName,
         c.name AS columnName,
@@ -734,8 +734,8 @@ async getTableStructureWithKeys() {
     ORDER BY t.name, c.column_id;
   `);
 
-  // 3️⃣ Fetch FK relationships
-  const relationships = await db.query(`
+    // 3️⃣ Fetch FK relationships
+    const relationships = await db.query(`
     SELECT  
       fk.name AS fkName,
       childTable.name AS fromTable,
@@ -750,28 +750,28 @@ async getTableStructureWithKeys() {
     JOIN sys.columns parentColumn ON fkc.referenced_object_id = parentColumn.object_id AND fkc.referenced_column_id = parentColumn.column_id;
   `);
 
-  // 4️⃣ Combine into UI-friendly structure
-  return {
-    tables: tables.map((t: any) => ({
-      name: t.tableName,
-      columns: columns
-        .filter((c: any) => c.tableName === t.tableName)
-        .map((c: any) => ({
-          name: c.columnName,
-          type: c.dataType,
-          pk: c.isPK === 1,
-          fk: c.isFK === 1
-        }))
-    })),
-    relationships: relationships.map((r: any) => ({
-      fromTable: r.fromTable,
-      fromColumn: r.fromColumn,
-      toTable: r.toTable,
-      toColumn: r.toColumn,
-      type: "FK"
-    }))
-  };
-}
+    // 4️⃣ Combine into UI-friendly structure
+    return {
+      tables: tables.map((t: any) => ({
+        name: t.tableName,
+        columns: columns
+          .filter((c: any) => c.tableName === t.tableName)
+          .map((c: any) => ({
+            name: c.columnName,
+            type: c.dataType,
+            pk: c.isPK === 1,
+            fk: c.isFK === 1
+          }))
+      })),
+      relationships: relationships.map((r: any) => ({
+        fromTable: r.fromTable,
+        fromColumn: r.fromColumn,
+        toTable: r.toTable,
+        toColumn: r.toColumn,
+        type: "FK"
+      }))
+    };
+  }
 
 }
 
