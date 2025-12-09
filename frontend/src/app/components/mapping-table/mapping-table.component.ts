@@ -64,10 +64,11 @@ export class MappingTableComponent implements OnInit {
     }
 
     const mappings = rows.map((m: any) => ({
-      server: m.serverColumn,      // you must have set this in onOkClick
-      client: m.clientColumn,      // you must have set this in onOkClick
-      merge: m.merge || false
+      server: m.serverColumn,
+      client: m.clientColumns,               // ⭐ ARRAY SENT TO BACKEND
+      merge: m.clientColumns.length > 1      // ⭐ true if multiple columns
     }));
+
 
     const payload = { serverTable, clientTable, mappings };
     console.log('insertData payload:', payload);

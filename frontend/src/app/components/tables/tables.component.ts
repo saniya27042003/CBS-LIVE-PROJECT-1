@@ -286,20 +286,52 @@ export class TablesComponent implements OnInit {
             .find((_, i) => i + 1 == enteredClientId);
         }
 
+
+          // ⭐ PATCH — Detect multi-column mapping like "5 6 7"
+      if (primaryRow.position && primaryRow.position.includes(' ')) {
+
+        const indexes = primaryRow.position
+          .split(' ')
+          .map((v: string) => parseInt(v.trim()))   // typed
+          .filter((v: number) => !isNaN(v));        // typed
+
+        primaryRow.mergeColumns = indexes
+          .map((i: number) => this.getClientRowsForTable(targetClientTable)[i - 1])
+          .filter((col: any) => !!col);             // ⭐ filter out undefined
+      }
+
+
+
+                // ⭐ SINGLE COLUMN MATCH (only when not multi-merge)
+          let finalClientMatch = clientMatch;
+
+          // ⭐ Skip pushing invalid indexes
+          if (!primaryRow.mergeColumns && !finalClientMatch) {
+            console.warn(
+              `⚠ Invalid mapping index "${enteredClientId}" for table "${targetClientTable}". Skipping row.`
+            );
+            return;   // ❗ prevents backend NULL error
+          }
+
         // Only push if we actually have a mapping entered
+        // Now push final mapping
         if (enteredClientId) {
-          this.mappingDataByTable[tableName].push({
-            serverColumn: primaryRow.id,                               // e.g. 'customer_id' (PG)
-            clientColumn: clientMatch ? (clientMatch.id || clientMatch.name) : null, // e.g. 'Cust_id' (MSSQL)
-            clientTableName: targetClientTable,
-            clientId: enteredClientId || '-',
-            clientName: clientMatch
-              ? (clientMatch.name || clientMatch.id || 'Unknown')
-              : 'Not Found'
+  this.mappingDataByTable[tableName].push({
+    serverColumn: primaryRow.id,
+
+    // ⭐ MultiColumns OR Single Column as array
+    clientColumns: primaryRow.mergeColumns
+      ? primaryRow.mergeColumns.map((c: any) => c.id || c.name)
+      : [finalClientMatch.id || finalClientMatch.name],
+
+    merge: primaryRow.mergeColumns ? true : false,
+
+    clientTableName: targetClientTable,
+    clientId: enteredClientId,
+    clientName: primaryRow.mergeColumns
+      ? primaryRow.mergeColumns.map((c: any) => c.name || c.id).join(' ')
+      : (finalClientMatch.name || finalClientMatch.id || 'Unknown')
           });
-
-
-
         }
       });
     });
