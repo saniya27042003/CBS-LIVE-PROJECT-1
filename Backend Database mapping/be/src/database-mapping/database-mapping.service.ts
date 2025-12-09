@@ -294,8 +294,55 @@ export class DatabaseMappingService {
     return null;
   }
 
+  ///new function
+  private cleanDateTime(value: any) {
+    if (!value) return null;
+
+    // If it's already a Date object, keep its time
+    if (value instanceof Date) {
+      return value.toISOString().replace('Z', '');
+    }
+
+    const str = String(value).trim();
+    if (!str) return null;
+
+    // MSSQL usually gives "YYYY-MM-DD HH:MM:SS.mmm"
+    const parsed = new Date(str);
+    if (isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    return parsed.toISOString().replace('Z', '');
+  }
 
 
+
+
+
+  // =========================================================
+  // CLIENT COLUMN TYPES (for auto type detection)
+  // =========================================================
+  private async getClientColumnTypes(tableName: string) {
+    const client = this.ensureClient();
+    const driver = this.getDriver(client);
+
+    // Only implemented for MSSQL right now
+    if (driver !== 'mssql') {
+      return {};
+    }
+
+    const rows = await client.query(`
+    SELECT COLUMN_NAME, DATA_TYPE
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = @0
+  `, [tableName]);
+
+    const map: Record<string, string> = {};
+    for (const r of rows) {
+      map[r.COLUMN_NAME.toLowerCase()] = r.DATA_TYPE.toLowerCase();
+    }
+    return map;
+  }
 
 
   // =========================================================
@@ -304,6 +351,7 @@ export class DatabaseMappingService {
   async insertMappedData(body: any) {
     const { serverTable, clientTable, mappings } = body;
 
+    const clientTypes = await this.getClientColumnTypes(clientTable);
     const client = this.ensureClient();
     const server = this.ensureServer();
 
@@ -341,7 +389,27 @@ export class DatabaseMappingService {
         const values = mappings.map((m: any) => {
           const clientDef = Array.isArray(m.client) ? m.client : [m.client];
           const serverName = String(m.server || '').toLowerCase();
-          const kind = m.type || 'text'; // 'text' | 'number' | 'date' | 'fk'
+          // const kind = m.type || 'text'; // 'text' | 'number' | 'date' | 'fk'
+          // Decide kind automatically from MSSQL DATA_TYPE of first client column
+          const firstClientCol = String((Array.isArray(m.client) ? m.client[0] : m.client) || '').toLowerCase();
+          const clientType = clientTypes[firstClientCol] || '';
+
+          let kind: 'text' | 'number' | 'date' | 'datetime' | 'fk' = 'text';
+
+          if (clientType.includes('date') || clientType.includes('time')) {
+            // datetime, smalldatetime, datetime2 -> datetime
+            // pure date -> date
+            kind = clientType === 'date' ? 'date' : 'datetime';
+          } else if (clientType.includes('int') || clientType.includes('numeric') || clientType.includes('decimal')) {
+            kind = 'number';
+          }
+
+          // Treat *_id as FK if numeric
+          if (firstClientCol.endsWith('_id') && kind === 'number') {
+            kind = 'fk';
+          }
+
+
 
           // Collect raw pieces from client row (case‑insensitive)
           const pieces = clientDef
@@ -360,17 +428,22 @@ export class DatabaseMappingService {
           //   return rawValue;
           // }
           // 2) Date / datetime columns
-          if (kind === 'date' || serverName.includes('dob') || serverName.includes('date')) {
-            const joined = pieces.join(' ').trim();
+          if (kind === 'date' || kind === 'datetime' ||
+            serverName.includes('dob') || serverName.includes('date')) {
 
-            // If source is empty, send NULL (not "")
-            if (!joined) {
-              return null;
+            const joined = pieces.join(' ').trim();
+            if (!joined) return null;
+
+            if (kind === 'datetime') {
+              const cleaned = this.cleanDateTime(joined);
+              //console.log('DATETIME DEBUG', m.server, 'raw=', joined, 'cleaned=', cleaned);
+              return cleaned;
             }
 
-            const cleaned = this.cleanDate(joined); // 'YYYY-MM-DD' or null
-            return cleaned;
+            return this.cleanDate(joined);
           }
+
+
 
           // 2) Numeric / FK columns (IDs, codes)
           if (kind === 'number' || kind === 'fk' || serverName.endsWith('_id')) {
