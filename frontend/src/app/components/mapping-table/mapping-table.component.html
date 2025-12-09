@@ -53,22 +53,27 @@
         </ng-template>
       </div>
 
-      
-      </div>
-      
+
+    </div>
+
   </div>
   <div class="flex flex-col items-end mb-6">
-  
-  
 
+    <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16" (click)="saveMapping()"
+      [disabled]="isMigrating">
+      {{ isMigrating ? 'Migrating...' : 'Save Mapping' }}
+    </button>
+
+
+    <!-- 
   <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16">
     Save Mapping
-  </button>
+  </button> -->
 
-  <pre class="text-info-300 text-sm mb-2 mt-4 me-2" id="Buttoninfo">
+    <pre class="text-info-300 text-sm mb-2 mt-4 me-2" id="Buttoninfo">
     * Please save the mapping data 
     before moving to the next page
   </pre>
-  
-</div>
+
+  </div>
 </div>

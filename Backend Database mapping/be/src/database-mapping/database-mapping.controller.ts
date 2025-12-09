@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { DatabaseMappingService } from "./database-mapping.service";
@@ -61,4 +62,29 @@ getServerDatabases(@Body() config: any) {
   insertData(@Body() data: any) {
     return this.dbService.insertMappedData(data);
   }
+
+@Get("client/relationships/fast")
+getFastRelationships() {
+  return this.dbService.getRealForeignKeysFast();
+}
+
+@Get("client/relationships/real")
+getRealRelationships() {
+  return this.dbService.getRealForeignKeys();
+}
+
+@Get("client/relationships/predict")
+getPredictedRelationships() {
+  return this.dbService.predictFastRelationships();
+}
+
+@Get("client/visual-map")
+getVisualMap() {
+  return this.dbService.getVisualizationMap();
+}
+
+@Get("client/table-map")
+getTableMap() {
+  return this.dbService.getTableStructureWithKeys();
+}
 }
