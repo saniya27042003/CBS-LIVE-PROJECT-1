@@ -87,6 +87,4 @@ getVisualMap() {
 getTableMap() {
   return this.dbService.getTableStructureWithKeys();
 }
-
-
 }
