@@ -248,30 +248,54 @@ export class DatabaseMappingService {
   // =========================================================
   // DATE CLEANER (Fixes gmt+0530 errors)
   // =========================================================
+  // private cleanDate(value: any) {
+  //   if (!value) return value;
+
+  //   const str = String(value).trim();
+
+  //   // Already in correct YYYY-MM-DD
+  //   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  //   // Remove timezone parts, case-insensitive
+  //   const cleaned = str
+  //     .replace(/\(.*?\)/gi, '')             // remove (India Standard Time), any case
+  //     .replace(/gmt[^\d-+]*/gi, '')         // remove 'GMT', 'gmt', etc. plus trailing text
+  //     .replace(/\+\d{4}/g, '')              // remove +0530, +0500, etc.
+  //     .trim();
+
+  //   const parsed = new Date(cleaned);
+
+  //   if (!isNaN(parsed.getTime())) {
+  //     return parsed.toISOString().split('T')[0];
+  //   }
+
+  //   return null; // invalid date becomes NULL
+  // }
+
   private cleanDate(value: any) {
-    if (!value) return value;
+    if (!value) return null;          // <‑ important
 
     const str = String(value).trim();
+    if (!str) return null;
 
-    // Already in correct YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
-    // Remove timezone parts
     const cleaned = str
-      .replace(/\(.*?\)/g, "") // remove (India Standard Time)
-      .replace(/GMT.*$/g, "")  // remove timezone
+      .replace(/\(.*?\)/gi, '')
+      .replace(/gmt[^\d-+]*/gi, '')
+      .replace(/\+\d{4}/g, '')
       .trim();
 
-    // Try parsing
     const parsed = new Date(cleaned);
-
     if (!isNaN(parsed.getTime())) {
-      // Format to YYYY-MM-DD
-      return parsed.toISOString().split("T")[0];
+      return parsed.toISOString().split('T')[0];
     }
 
-    return null; // invalid date becomes NULL
+    return null;
   }
+
+
+
 
 
   // =========================================================
@@ -283,24 +307,23 @@ export class DatabaseMappingService {
     const client = this.ensureClient();
     const server = this.ensureServer();
 
-    // Build SELECT fields dynamically
-    // const clientCols = mappings
-    //   .map(m => (m.merge ? m.client.map(c => `"${c}"`).join(",") : `"${m.client}"`))
-    //   .join(",");
+    // 1) Build SELECT list from all client columns used in mappings
     const clientCols = mappings
-      .flatMap(m => {
+      .flatMap((m: any) => {
         const clientDef = Array.isArray(m.client) ? m.client : [m.client];
         return clientDef.filter((c: string | null | undefined) => !!c);
       })
-      .map(c => `"${c}"`)
-      .join(",");
+      .map((c: string) => `"${c}"`)
+      .join(',');
 
-    const serverCols = mappings.map(m => `"${m.server}"`).join(",");
+    const serverCols = mappings.map((m: any) => `"${m.server}"`).join(',');
 
-    const clientRows = await client.query(`SELECT ${clientCols} FROM "${clientTable}"`);
+    const clientRows = await client.query(
+      `SELECT ${clientCols} FROM "${clientTable}"`
+    );
 
     if (!clientRows.length) {
-      return { success: false, message: "Client table has no data" };
+      return { success: false, message: 'Client table has no data' };
     }
 
     const qr = server.createQueryRunner();
@@ -308,57 +331,74 @@ export class DatabaseMappingService {
     await qr.startTransaction();
 
     try {
-      for (const row of clientRows) {
+      for (const rowOrig of clientRows) {
+        // Normalize keys to lower‑case for safe lookup
+        const row: any = {};
+        Object.keys(rowOrig).forEach(k => {
+          row[k.toLowerCase()] = rowOrig[k];
+        });
 
-        // const values = mappings.map(m => {
-        //   let rawValue = "";
-
-        //   // MERGE logic
-        //   if (m.merge) {
-        //     rawValue = m.client
-        //       .map(col => transliterate(String(row[col] ?? "")))
-        //       .join(" ")
-        //       .trim();
-        //   } else {
-        //     rawValue = transliterate(String(row[m.client] ?? ""));
-        //   }
-
-        //   // DATE FIX
-        //   if (
-        //     m.server.toLowerCase().includes("dob") ||
-        //     m.server.toLowerCase().includes("date")
-        //   ) {
-        //     rawValue = this.cleanDate(rawValue);
-        //   }
-
-        //   return rawValue;
-        // });
-
-        const values = mappings.map(m => {
+        const values = mappings.map((m: any) => {
           const clientDef = Array.isArray(m.client) ? m.client : [m.client];
+          const serverName = String(m.server || '').toLowerCase();
+          const kind = m.type || 'text'; // 'text' | 'number' | 'date' | 'fk'
 
-          // Collect all source pieces for this target column
-          let rawValue = clientDef
-            .filter(c => !!c)
-            .map(col => transliterate(String(row[col] ?? "")))
-            .join(" ")
-            .trim();
+          // Collect raw pieces from client row (case‑insensitive)
+          const pieces = clientDef
+            .filter((c: string | null | undefined) => !!c)
+            .map(c => {
+              const v = row[String(c).toLowerCase()];
+              return v === undefined || v === null ? '' : String(v);
+            });
 
-          // DATE FIX (only for date-like server columns)
-          const serverName = m.server.toLowerCase();
-          if (serverName.includes("dob") || serverName.includes("date")) {
-            rawValue = this.cleanDate(rawValue);
+          let rawValue: any = null;
+
+          // 1) Date columns
+          // if (kind === 'date' || serverName.includes('dob') || serverName.includes('date')) {
+          //   const joined = pieces.join(' ').trim();
+          //   rawValue = this.cleanDate(joined); // returns 'YYYY-MM-DD' or null
+          //   return rawValue;
+          // }
+          // 2) Date / datetime columns
+          if (kind === 'date' || serverName.includes('dob') || serverName.includes('date')) {
+            const joined = pieces.join(' ').trim();
+
+            // If source is empty, send NULL (not "")
+            if (!joined) {
+              return null;
+            }
+
+            const cleaned = this.cleanDate(joined); // 'YYYY-MM-DD' or null
+            return cleaned;
           }
+
+          // 2) Numeric / FK columns (IDs, codes)
+          if (kind === 'number' || kind === 'fk' || serverName.endsWith('_id')) {
+            const firstNum = pieces
+              .map(p => p.trim())
+              .filter(p => p !== '')
+              .map(p => Number(p))
+              .find(n => !Number.isNaN(n));
+
+            // If no numeric value found, return null (DB column should allow NULL)
+            return firstNum ?? null;
+          }
+
+          // 3) Text / merged columns (fullname, address, etc.)
+          rawValue = pieces
+            .map(p => transliterate(p))
+            .map(p => p.trim())
+            .filter(p => p !== '')
+            .join(' ');
 
           return rawValue;
         });
 
-
-        const placeholders = values.map((_, i) => `$${i + 1}`).join(",");
+        const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
 
         await qr.query(
           `INSERT INTO "${serverTable}" (${serverCols}) VALUES (${placeholders})`,
-          values
+          values,
         );
       }
 
@@ -367,16 +407,17 @@ export class DatabaseMappingService {
       return {
         success: true,
         inserted: clientRows.length,
-        message: "Data migrated successfully"
+        message: 'Data migrated successfully',
       };
 
     } catch (err: any) {
       await qr.rollbackTransaction();
-      throw new InternalServerErrorException("Insert failed: " + err.message);
+      throw new InternalServerErrorException('Insert failed: ' + err.message);
     } finally {
       await qr.release();
     }
   }
+
 
 
   // =============================================================
