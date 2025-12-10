@@ -1,5 +1,5 @@
 <!-- section 1 nav bar -->
-<div class="navbar bg-base-100 shadow-sm ">
+<div class="navbar bg-base-100 shadow-sm fixed top-0 left-0 right-0 z-50 h-16">
   <div class="w-20"> <img src="https://www.compservtech.com/imges/compserv.png " alt=""></div>
   <div class="text-2xl ml-4"> / </div>
   <div class="flex-1">
@@ -22,8 +22,13 @@
 <!-- section 2 layout -->
 
 
-<div class="flex h-screen overflow-auto scrollbar-none">
-  <div [ngClass]="expanded ? 'w-64' : 'w-20'" class="bg-base-200 transition-all duration-300 flex flex-col">
+<div class="flex h-screen overflow-hidden">
+<div
+  [ngClass]="expanded ? 'w-64' : 'w-20'"
+  class="bg-base-200 transition-all duration-300 flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] z-40"
+>
+
+
 
     <ul class=" p-2 gap-2 flex flex-col">
       <li *ngFor="let item of menuItems" class="rounded-lg hover:bg-base-300 relative group">
@@ -49,7 +54,14 @@
   </div>
 
 
+<div
+  class="flex-1 overflow-y-auto pt-16 transition-all duration-300"
+  [ngClass]="expanded ? 'ml-64' : 'ml-20'"
+>
   <router-outlet></router-outlet>
+</div>
+
+
 
 
 

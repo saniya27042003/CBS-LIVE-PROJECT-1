@@ -1,18 +1,43 @@
-/* Hide scrollbar but keep scrolling */
 .overflow-y-auto::-webkit-scrollbar {
-    display: none;
-    /* Chrome, Safari */
+  display: none; /* Chrome, Safari */
 }
-
 .overflow-y-auto {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-.badge{
-    font-size: 14px;
-    font-weight: 550;
-    background-color: blue;
-    color: white;
+ 
+/* Badge style (unchanged) */
+.badge {
+  font-size: 14px;
+  font-weight: bold;
+  background-color: blue;
+  color: white;
 }
+ 
+/* === Footer-safe spacing and layout fixes ===
+   Ensure content never sits behind a fixed footer.
+   If your footer height is not 80px, change both values below.
+*/
+body, .app-root, .page-root {
+  /* ensures the whole app reserves space for footer */
+  padding-bottom: 80px; /* reserve space for fixed footer */
+}
+ 
+/* If you prefer to target the specific page wrapper instead of body,
+   set that wrapper's class (e.g., .page-wrapper) and use the same rule. */
+ 
+/* Make sure the main scroll container uses native scrolling and smooth touch */
+div[style*="overflow-y:auto"], .scrollable, .page-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+ 
+/* Optional: If you have a fixed footer element, ensure it has a high z-index */
+footer, .app-footer, .fixed-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px; /* match padding-bottom above */
+  z-index: 1000;
+}
+ 
