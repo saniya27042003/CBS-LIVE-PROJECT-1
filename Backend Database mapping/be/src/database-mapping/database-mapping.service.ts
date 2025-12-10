@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable prettier/prettier */
+
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { transliterate } from "transliteration";
@@ -17,6 +14,55 @@ export class DatabaseMappingService {
   constructor() {
     console.log("Database Mapping Service Loaded");
   }
+
+  // =========================================================
+  // TABLE ORDERING BY RELATIONSHIP (Topological Sort)
+  // =========================================================
+
+
+  // 🔥 Auto-sort tables based on parent → child dependency
+  getMigrationOrder(relations: any[]): string[] {
+    const graph: Map<string, string[]> = new Map();
+    const indegree: Map<string, number> = new Map();
+
+    // Build nodes
+    relations.forEach((r: any) => {
+      if (!graph.has(r.parentTable)) graph.set(r.parentTable, []);
+      if (!graph.has(r.childTable)) graph.set(r.childTable, []);
+    });
+
+    // Build edges
+    relations.forEach((r: any) => {
+      graph.get(r.parentTable)!.push(r.childTable);
+      indegree.set(r.childTable, (indegree.get(r.childTable) || 0) + 1);
+      if (!indegree.has(r.parentTable)) indegree.set(r.parentTable, 0);
+    });
+
+    // Topological sort (Kahn's algorithm)
+    const queue: string[] = [];
+    for (const [node, deg] of indegree) {
+      if (deg === 0) queue.push(node);
+    }
+
+    const result: string[] = [];
+
+    while (queue.length) {
+      const node = queue.shift()!;
+      result.push(node);
+
+      for (const nxt of graph.get(node)!) {
+        indegree.set(nxt, indegree.get(nxt)! - 1);
+        if (indegree.get(nxt) === 0) queue.push(nxt);
+      }
+    }
+
+    return result;
+  }
+
+
+
+
+
 
   // =========================================================
   // SQL Dictionary for all Supported DB Drivers
@@ -565,6 +611,77 @@ export class DatabaseMappingService {
 
 
 
+  //=====================================================================================
+  // MULTIPLE TABLES MAPPING SUPPORT
+  //=====================================================================================
+
+  // 🔥 Multi-table migration in FK-safe order
+  async migrateMultipleTables(body: any) {
+    const { tables, mappingsPerTable, relations } = body;
+
+    if (!Array.isArray(tables) || !mappingsPerTable || !Array.isArray(relations)) {
+      throw new InternalServerErrorException('Invalid payload for migrateMultipleTables');
+    }
+
+    // 1) Get full migration order (parent → child sequence)
+    const order = this.getMigrationOrder(relations);
+
+    // 2) Filter to only the tables selected by the user
+    const finalOrder = order.filter((t) => tables.includes(t));
+
+    // 3) Typed results array to avoid TS "never" error
+    const results: {
+      table: string;
+      success: boolean;
+      inserted?: number;
+      message: string;
+    }[] = [];
+
+    // 4) Migrate tables in dependency-safe order
+    for (const table of finalOrder) {
+      const mapping = mappingsPerTable[table];
+      if (!mapping) {
+        results.push({
+          table,
+          success: false,
+          message: 'No mapping provided for table'
+        });
+        continue;
+      }
+
+      try {
+        const result = await this.insertMappedData({
+          serverTable: table,
+          clientTable: table,
+          mappings: mapping
+        });
+
+        results.push({
+          table,
+          success: !!result.success,
+          inserted: result.inserted,
+          message: result.message || (result.success ? 'Migrated' : 'Failed')
+        });
+
+      } catch (err: any) {
+        results.push({
+          table,
+          success: false,
+          message: `Migration error: ${err?.message ?? String(err)}`
+        });
+      }
+    }
+
+    return {
+      success: true,
+      migratedTables: results
+    };
+  }
+
+
+
+
+
   // =============================================================
   // PRIMARY COLUMNS   chages by poonam
   // =============================================================
@@ -958,6 +1075,3 @@ export class DatabaseMappingService {
 
 
 }
-
-
-

@@ -1,11 +1,12 @@
-/* eslint-disable prettier/prettier */
-
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { DatabaseMappingService } from "./database-mapping.service";
 
 @Controller('database-mapping')
 export class DatabaseMappingController {
-  constructor(private readonly dbService: DatabaseMappingService) {}
+  constructor(private readonly dbService: DatabaseMappingService,
+    private readonly databaseMappingService: DatabaseMappingService
+
+  ) { }
 
   // ================================
   // SERVER DB (Postgres)
@@ -16,9 +17,9 @@ export class DatabaseMappingController {
   }
 
   @Post('server/databases')
-getServerDatabases(@Body() config: any) {
-  return this.dbService.getServerDatabases(config);
-}
+  getServerDatabases(@Body() config: any) {
+    return this.dbService.getServerDatabases(config);
+  }
 
 
 
@@ -63,28 +64,35 @@ getServerDatabases(@Body() config: any) {
     return this.dbService.insertMappedData(data);
   }
 
-@Get("client/relationships/fast")
-getFastRelationships() {
-  return this.dbService.getRealForeignKeysFast();
-}
+  @Get("client/relationships/fast")
+  getFastRelationships() {
+    return this.dbService.getRealForeignKeysFast();
+  }
 
-@Get("client/relationships/real")
-getRealRelationships() {
-  return this.dbService.getRealForeignKeys();
-}
+  @Get("client/relationships/real")
+  getRealRelationships() {
+    return this.dbService.getRealForeignKeys();
+  }
 
-@Get("client/relationships/predict")
-getPredictedRelationships() {
-  return this.dbService.predictFastRelationships();
-}
+  @Get("client/relationships/predict")
+  getPredictedRelationships() {
+    return this.dbService.predictFastRelationships();
+  }
 
-@Get("client/visual-map")
-getVisualMap() {
-  return this.dbService.getVisualizationMap();
-}
+  @Get("client/visual-map")
+  getVisualMap() {
+    return this.dbService.getVisualizationMap();
+  }
 
-@Get("client/table-map")
-getTableMap() {
-  return this.dbService.getTableStructureWithKeys();
-}
+  @Get("client/table-map")
+  getTableMap() {
+    return this.dbService.getTableStructureWithKeys();
+  }
+
+
+  @Post("migrate-multiple")
+  async migrateMultiple(@Body() body: any) {
+    return this.databaseMappingService.migrateMultipleTables(body);
+  }
+
 }
