@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,6 @@ import { RouterModule, Router } from '@angular/router';
     ReactiveFormsModule,
     RouterModule,
     NgIf,
-    
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -23,14 +23,42 @@ export class LoginComponent {
   isLoading: boolean = false;
   loginError: string = '';
 
-  constructor(private fb: FormBuilder, private router: Router) {
-
-    // ✅ USERNAME & PASSWORD setup
+  constructor(private fb: FormBuilder, private router: Router, private ngZone: NgZone, private authService: AuthService) {
+    // USERNAME & PASSWORD setup
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required]
     });
   }
+
+  ngOnInit(): void {
+  this.handleGoogleCallback();
+}
+
+handleGoogleCallback(): void {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+
+  if (code) {
+    fetch('http://localhost:3000/auth/google-callback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.user) {
+
+        this.ngZone.run(() => {
+        this.authService.setUser(data.user);
+        localStorage.setItem('token', data.token);
+        this.router.navigate(['/table']);
+        });
+      }
+    })
+    .catch(err => console.error('Google login error:', err));
+  }
+}
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -41,10 +69,19 @@ export class LoginComponent {
     this.loginError = '';
     this.showPassword = false;
   }
+<<<<<<< Updated upstream
 onGoogleLogin(): void {
   console.log('Google login clicked');
   window.location.href = 'http://localhost:3000/auth/google-login';
 }
+=======
+
+  // ✅ Updated Google login for backend OAuth
+  onGoogleLogin(): void {
+    // Redirect to backend NestJS endpoint
+    window.location.href = 'http://localhost:3000/auth/google-login';
+  }
+>>>>>>> Stashed changes
 
 
   onSubmit(): void {
@@ -52,7 +89,7 @@ onGoogleLogin(): void {
 
     const { username, password } = this.loginForm.value;
 
-    // ✅ Validate immediately on click
+    // Validate immediately on click
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -60,7 +97,7 @@ onGoogleLogin(): void {
 
     this.isLoading = true;
 
-    // ✅ INSTANT VERIFICATION (NO setTimeout)
+    // INSTANT VERIFICATION (No setTimeout)
     if (username === 'ccpl' && password === '1234') {
       console.log('Login successful:', username);
       this.isLoading = false;

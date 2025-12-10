@@ -105,5 +105,18 @@
 }
 
 #googlebutton:hover {
-  background-color: rgb(248, 179, 5);
+  background-color: rgb(237, 170, 1);
+}
+
+#LoginButton{
+    background-color: rgb(17, 156, 211);
+}
+#resetButton{
+    background-color: #da133e;
+}
+#resetButton:hover{
+    background-color: #b1122c;
+}
+#LoginButton:hover{
+    background-color: rgb(10, 119, 161);
 }

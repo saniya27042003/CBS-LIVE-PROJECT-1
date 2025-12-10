@@ -1,6 +1,6 @@
-<div class="p-3 w-full h-screen overflow-y-auto ">
+<div class="p-0 w-full h-screen overflow-y-auto ">
 
-  <div class="flex justify-between items-center mb-4 sticky top-0 z-20 bg-[#1a1a1a] p-2">
+  <div class="flex justify-between items-center bg-gray-800 p-4 border-b border-gray-600 ">
     <h2 class="text-xl font-bold text-white">Mapping Table</h2>
 
     <button class="btn border border-gray-600" (click)="goBack()">
@@ -8,7 +8,8 @@
     </button>
   </div>
 
-  <div class="border border-gray-200 bg-gray-600 p-4 rounded-lg w-350 mb-10">
+
+  <div class="border border-gray-200 bg-gray-600 p-4 rounded-lg w-350 mb-10 relative z-0 m-4">
 
     <div *ngIf="!selectedPrimaryTable.length">
       <p class="text-gray-200 italic">
@@ -59,6 +60,15 @@
   </div>
   <div class="flex flex-col items-end mb-6">
 
+<<<<<<< HEAD
+
+
+    <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16">
+      Save Mapping
+    </button>
+
+    <pre class="text-info-300 text-sm mb-8 mt-4 me-2" id="Buttoninfo">
+=======
     <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16" (click)="saveMapping()"
       [disabled]="isMigrating">
       {{ isMigrating ? 'Migrating...' : 'Save Mapping' }}
@@ -71,6 +81,7 @@
   </button> -->
 
     <pre class="text-info-300 text-sm mb-2 mt-4 me-2" id="Buttoninfo">
+>>>>>>> 3aa7cd5fbb4cf227d0a7728e943fb35952c8326a
     * Please save the mapping data 
     before moving to the next page
   </pre>

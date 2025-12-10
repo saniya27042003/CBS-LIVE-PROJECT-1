@@ -24,5 +24,7 @@ import { RouterLink } from '@angular/router';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'] // ✅ Correct key: "styleUrls" (plural)
 })
-export class AppComponent { }
+export class AppComponent {
+  title: any;
+}
 

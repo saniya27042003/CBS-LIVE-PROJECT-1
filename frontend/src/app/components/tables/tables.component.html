@@ -1,6 +1,6 @@
 <div class="flex max-h-140 overflow-y-auto w-full">
 
- <!-- ~~~~~~~~~~~~~~~~~
+    <!-- ~~~~~~~~~~~~~~~~~
     Primary Table
  ~~~~~~~~~~~~~~~~~~~~~~~~~-->
     <div class="flex-col w-1/2 w-150">
@@ -12,10 +12,10 @@
                     (toggle)="isPrimaryDropdownOpen = primaryDropdown.hasAttribute('open')">
 
                     <summary class="btn border border-gray-600 w-40 m-1 flex items-center" [ngClass]="{
-            'justify-between pr-2': isPrimaryDropdownOpen && selectedPrimaryTable.length > 0,
-            'justify-center': !(isPrimaryDropdownOpen && selectedPrimaryTable.length > 0)
-          }" (click)="getPrimaryTables()">
-
+    'justify-between pr-2': isPrimaryDropdownOpen && selectedPrimaryTable.length > 0,
+    'justify-center': !(isPrimaryDropdownOpen && selectedPrimaryTable.length > 0),
+    'opacity-40 pointer-events-none': !primaryDatabaseName
+  }" (click)="primaryDatabaseName && getPrimaryTables()">
                         <span>Select Table</span>
 
                         <button *ngIf="isPrimaryDropdownOpen && selectedPrimaryTable.length > 0" type="button"
@@ -24,6 +24,7 @@
                             ✕
                         </button>
                     </summary>
+
 
                     <ul
                         class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
@@ -83,6 +84,8 @@
             </div>
 
             <!-- ✅ ONLY ACTIVE PRIMARY TABLE -->
+                         <div class="border border-gray-200 mt-4">
+
             <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
                 <table class="table min-w-full">
                     <thead>
@@ -102,15 +105,15 @@
                             <td>{{ i + 1 }}</td>
                             <td>{{ row.id }}</td>
                             <td>
-                                <input type="text" 
-               class="input input-bordered input-sm w-full"
-               [(ngModel)]="row.position" 
-               (input)="onMappingChange(row)" />
+                                <input type="text" class="input input-bordered input-sm w-full"
+                                    [(ngModel)]="row.position" (input)="onMappingChange(row)" />
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+
         </div>
     </div>
 
@@ -125,25 +128,20 @@
                 <details #clientDropdown class="dropdown"
                     (toggle)="isClientDropdownOpen = clientDropdown.hasAttribute('open')">
 
-                  <summary
-  class="btn border border-gray-600 w-40 m-1 flex items-center"
-  [ngClass]="{
+                    <summary class="btn border border-gray-600 w-40 m-1 flex items-center" [ngClass]="{
     'justify-between pr-2': isClientDropdownOpen && selectedClientTable.length > 0,
     'justify-center': !(isClientDropdownOpen && selectedClientTable.length > 0),
     'opacity-40 pointer-events-none': !clientDatabaseName
-  }"
-  (click)="clientDatabaseName && getClientTables()">
+  }" (click)="clientDatabaseName && getClientTables()">
 
-  <span>Select Table</span>
+                        <span>Select Table</span>
 
-  <button
-    *ngIf="isClientDropdownOpen && selectedClientTable.length > 0"
-    type="button"
-    class="ml-2 text-red-400 font-bold hover:text-red-600"
-    (click)="closeClientDropdown($event)">
-    ✕
-  </button>
-</summary>
+                        <button *ngIf="isClientDropdownOpen && selectedClientTable.length > 0" type="button"
+                            class="ml-2 text-red-400 font-bold hover:text-red-600"
+                            (click)="closeClientDropdown($event)">
+                            ✕
+                        </button>
+                    </summary>
 
 
                     <ul
@@ -166,9 +164,9 @@
                 </details>
             </div>
 
-            <div class="card bg-base-200 text-base-content h-10 w-65 m-1 border border-gray-600 rounded-lg shadow-sm">
-                <div
-                    class="card-body bg-base-600 p-2 flex items-center justify-start overflow-hidden whitespace-nowrap">
+            <div
+                class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
+                <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
                     {{ selectedClientTable.length > 0 ? selectedClientTable.join(', ') : 'No table selected' }}
                 </div>
             </div>
@@ -187,27 +185,23 @@
                 <h3 class="font-bold mb-1">Client side Tables:</h3>
 
                 <div class="flex flex-wrap gap-1 mt-1">
-  <span
-    *ngFor="let table of selectedClientTable"
-    (click)="clientDatabaseName && (activeClientTable = table)"
-    class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer transition-all duration-200"
-    [ngClass]="{
+                    <span *ngFor="let table of selectedClientTable"
+                        (click)="clientDatabaseName && (activeClientTable = table)"
+                        class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer transition-all duration-200"
+                        [ngClass]="{
       'opacity-100 bg-primary text-white': table === activeClientTable && clientDatabaseName,
       'opacity-40 hover:opacity-70': table !== activeClientTable && clientDatabaseName,
       'opacity-30 pointer-events-none': !clientDatabaseName
-    }"
-  >
-    {{ table }}
+    }">
+                        {{ table }}
 
-    <button
-      class="ml-1 text-white font-bold hover:text-red-400"
-      (click)="removeClientTable(table); $event.stopPropagation()"
-      [disabled]="!clientDatabaseName"
-    >
-      ✕
-    </button>
-  </span>
-</div>
+                        <button class="ml-1 text-white font-bold hover:text-red-400"
+                            (click)="removeClientTable(table); $event.stopPropagation()"
+                            [disabled]="!clientDatabaseName">
+                            ✕
+                        </button>
+                    </span>
+                </div>
 
             </div>
 
@@ -230,11 +224,11 @@
                             <tr *ngFor="let row of getClientRowsForTable(activeClientTable); let i = index">
                                 <td>{{ i + 1 }}</td>
                                 <td>{{ row.id }}</td>
-                            <td>
-                                <input type="text" class="input input-bordered input-sm w-full"
-                                    [(ngModel)]="row.position" />
-                            </td>
-                        </tr>
+                                <td>
+                                    <input type="text" class="input input-bordered input-sm w-full"
+                                        [(ngModel)]="row.position" />
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -250,7 +244,7 @@
             </button>
         </div>
         <!-- ===== Mapping section Table ===== -->
-<!-- <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
+        <!-- <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
   <div *ngFor="let tableName of selectedPrimaryTable">
     <h4 class="bg-gray-300 text-black font-semibold px-2 py-1">
       Table: {{ tableName }}
@@ -285,4 +279,4 @@
       </p>
     </ng-template>
   </div> -->
-</div>
+    </div>

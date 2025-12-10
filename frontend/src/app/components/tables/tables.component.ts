@@ -1,8 +1,8 @@
-import { Component, OnInit, Pipe, PipeTransform } from '@angular/core';
+                                                                                                                                                                                                                             import { Component, OnInit, Pipe, PipeTransform } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AppService } from '../../../service/app.service';
+import { AppService } from '../../service/app.service';
 
 @Pipe({ name: 'filter', standalone: true })
 export class FilterPipe implements PipeTransform {
@@ -63,30 +63,55 @@ export class TablesComponent implements OnInit {
     const params = this.route.snapshot.queryParams;
     const storage = this.loadStateFromStorage();
 
-    // ✅ PRIMARY DB (query > storage)
-    this.primaryDatabaseName =
-      params['primary'] || storage.primaryDatabaseName || '';
+    // ✅ SECURITY CHECK: 
+    // If storage is empty (meaning user logged out or fresh start), 
+    // we strictly reset all table selections to prevent ghost data.
+    const hasValidSession = Object.keys(storage).length > 0;
 
-    // ✅ ✅ ✅ CLIENT DB FROM INPUT (query > storage)
-    this.clientDatabaseName =
-      params['client'] || storage.clientDatabaseName || '';
+    if (hasValidSession) {
+      // --- RESTORE STATE (User is logged in and returning) ---
+      this.primaryDatabaseName = storage.primaryDatabaseName || params['primary'] || '';
+      this.clientDatabaseName = storage.clientDatabaseName || params['client'] || '';
+      
+      this.selectedPrimaryTable = storage.selectedPrimaryTable || [];
+      this.selectedClientTable = storage.selectedClientTable || [];
+      
+      // Ensure active table is valid or null
+      this.activePrimaryTable = storage.activePrimaryTable || (this.selectedPrimaryTable[0] ?? null);
+      this.activeClientTable = storage.activeClientTable || (this.selectedClientTable[0] ?? null);
 
-    // ✅ Restore tables
-    this.selectedPrimaryTable = storage.selectedPrimaryTable || [];
-    this.selectedClientTable = storage.selectedClientTable || [];
+    } else {
+      // --- FRESH START / LOGGED OUT (Reset everything) ---
+      // We accept the DB name from URL (if just navigated), but we WIPE table selections.
+      this.primaryDatabaseName = params['primary'] || '';
+      this.clientDatabaseName = params['client'] || '';
 
-    // ✅ Restore active tables
-    this.activePrimaryTable =
-      storage.activePrimaryTable || (this.selectedPrimaryTable[0] ?? null);
+      this.selectedPrimaryTable = [];
+      this.selectedClientTable = [];
+      this.activePrimaryTable = null;
+      this.activeClientTable = null;
+      
+      // Clear mapping data just in case
+      this.mappingDataByTable = {};
+      this.clientTableDataMap = {};
+    }
 
-    this.activeClientTable =
-      storage.activeClientTable || (this.selectedClientTable[0] ?? null);
+    // ✅ 1. Load Primary Tables List (Only if DB name exists)
+    if (this.primaryDatabaseName) {
+      this.getPrimaryTables();
+    }
 
-    // ✅ Load table lists
-    this.getPrimaryTables();
-    if (this.clientDatabaseName) this.getClientTables();
+    // ✅ 2. Load Client Tables List (Only if DB name exists)
+    if (this.clientDatabaseName) {
+      this.getClientTables();
+    } else {
+      // Clean up UI if no client DB
+      this.dropdownItemsClient = [];
+      this.selectedClientTable = [];
+      this.activeClientTable = null;
+    }
 
-    // ✅ Reload Primary Columns
+    // ✅ 3. Reload Columns for Pre-Selected Tables (if any exist)
     this.primaryTableData = [];
     this.selectedPrimaryTable.forEach(table => {
       this.appService.getServerColumns(table).subscribe((res: any) => {
@@ -97,8 +122,7 @@ export class TablesComponent implements OnInit {
       });
     });
 
-    // ✅ Reload Client Columns ONLY if DB is configured
-    this.clientTableDataMap = {};
+    // ✅ 4. Reload Client Columns (if any exist)
     if (this.clientDatabaseName) {
       this.selectedClientTable.forEach(table => {
         this.appService.getClientColumns(table).subscribe((res: any) => {
@@ -108,16 +132,9 @@ export class TablesComponent implements OnInit {
           this.clientTableDataMap[table] = rows;
         });
       });
-    } else {
-      // ✅ CLEAR CLIENT UI IF NO CLIENT DB
-      this.dropdownItemsClient = [];
-      this.selectedClientTable = [];
-      this.clientTableDataMap = {};
-      this.activeClientTable = null;
-      this.clientTableSearch = '';
-      this.isClientDropdownOpen = false;
     }
 
+    // Save the sanitized state immediately
     this.saveStateToStorage();
   }
 
@@ -143,6 +160,8 @@ export class TablesComponent implements OnInit {
   // ================= NAVIGATION =================
 
   goToDatabase() {
+    sessionStorage.removeItem('tablesComponentState');
+    sessionStorage.clear();
     this.router.navigate(['/database']);
   }
 

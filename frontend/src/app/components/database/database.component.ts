@@ -9,6 +9,8 @@ import {
   Validators
 } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+
 
 @Component({
   selector: 'app-database',
@@ -71,13 +73,27 @@ export class DatabaseComponent implements OnInit {
   constructor(
     private router: Router,
     private fb: FormBuilder,
-    private http: HttpClient
+    private http: HttpClient,
+    private route: ActivatedRoute
   ) {}
 
   // =========================
   // INIT
   // =========================
-  ngOnInit(): void {
+ngOnInit(): void {
+  this.route.queryParams.subscribe(params => {
+    const token = params['token'];
+    if (token) {
+      localStorage.setItem('auth_token', token);
+    } else {
+      const saved = localStorage.getItem('auth_token');
+      if (!saved) {
+        this.router.navigate(['/login']);
+      }
+    }
+  });
+
+
 
     // ✅ SERVER FORM
     this.primaryForm = this.fb.group({
@@ -115,7 +131,7 @@ export class DatabaseComponent implements OnInit {
       MySQL: 'mysql',
       MsSQL: 'mssql',
       Postgres: 'postgres',
-      MariaDB: 'mysql',
+      MariaDB: 'mariadb',
       MongoDB: 'mongodb',
       Oracle: 'oracle'
     };
