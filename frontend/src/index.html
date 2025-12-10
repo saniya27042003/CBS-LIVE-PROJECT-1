@@ -14,5 +14,34 @@
 <body>
   <app-root></app-root>
 </body>
+<script>
+  (function () {
+    try {
+      // Define your default theme here (e.g., 'light')
+      const DEFAULT_THEME = 'dark';
+
+      // Check login status
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      
+      // Check saved theme
+      const savedTheme = localStorage.getItem('app-theme');
+
+      if (isLoggedIn && savedTheme) {
+        // If logged in AND has a saved theme, apply it
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else {
+        // If logged out OR no saved theme, FORCE default theme
+        document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+        
+        // Safety: ensure any lingering local storage is cleared if logged out
+        if (!isLoggedIn) {
+          localStorage.removeItem('app-theme');
+        }
+      }
+    } catch (e) {
+      console.error('Theme initialization failed:', e);
+    }
+  })();
+</script>
 
 </html>

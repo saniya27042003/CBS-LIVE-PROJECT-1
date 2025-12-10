@@ -115,7 +115,7 @@ export class DatabaseComponent implements OnInit {
       MySQL: 'mysql',
       MsSQL: 'mssql',
       Postgres: 'postgres',
-      MariaDB: 'mysql',
+      MariaDB: 'mariadb',
       MongoDB: 'mongodb',
       Oracle: 'oracle'
     };

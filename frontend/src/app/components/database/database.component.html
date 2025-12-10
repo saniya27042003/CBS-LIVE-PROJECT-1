@@ -23,7 +23,7 @@
       <!-- ✅ PRIMARY FORM -->
       <form [formGroup]="primaryForm" class="w-full flex flex-col items-center gap-3">
 
-  <select class="select select-primary select-outline w-4/5" [(ngModel)]="selectedDatabase"
+        <!-- <select class="select select-primary select-outline w-4/5" [(ngModel)]="selectedDatabase"
     [ngModelOptions]="{ standalone: true }" (click)="onOpenDatabaseDropdown()">
 
     <option value="" disabled selected *ngIf="!selectedDatabase">
@@ -33,21 +33,53 @@
     <option *ngFor="let db of databaseList" [value]="db">
       {{ db }}
     </option>
-  </select>
+  </select> -->
 
-  <div class="grid grid-cols-2 gap-2 w-4/5">
-    
-    <input class="input input-bordered input-xs h-8 w-full" placeholder="Host" formControlName="host">
+        <div class="grid grid-cols-2 gap-2 w-4/5">
 
-    <input class="input input-bordered input-xs h-8 w-full" placeholder="Port" formControlName="port">
+          <input class="input input-bordered input-xs h-8 w-full" placeholder="Host" formControlName="host">
 
-    <input class="input input-bordered input-xs h-8 w-full" placeholder="Username" formControlName="username">
+          <input class="input input-bordered input-xs h-8 w-full" placeholder="Port" formControlName="port">
 
-    <input class="input input-bordered input-xs h-8 w-full" placeholder="Password" type="password" formControlName="password">
+          <input class="input input-bordered input-xs h-8 w-full" placeholder="Username" formControlName="username">
 
-  </div>
+          <input class="input input-bordered input-xs h-8 w-full" placeholder="Password" type="password"
+            formControlName="password">
 
-</form>
+        </div>
+
+        <div class="relative w-4/5">
+          <select class="w-full appearance-none bg-gray-700
+           border border-gray-300
+           text-gray-200 text-sm font-medium
+           px-4 py-2.5 rounded-lg
+           shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           hover:border-gray-400
+           transition-all duration-200 ease-in-out
+           cursor-pointer pr-10" [(ngModel)]="selectedDatabase" [ngModelOptions]="{ standalone: true }"
+            (click)="onOpenDatabaseDropdown()">
+
+            <!-- Placeholder -->
+            <option value="" disabled selected *ngIf="!selectedDatabase" class="text-gray-500">
+              {{ loadingDatabases ? 'Loading databases...' : 'Select Database' }}
+            </option>
+
+            <!-- Database List -->
+            <option *ngFor="let db of databaseList" [value]="db" id="option1">
+              {{ db }}
+            </option>
+
+          </select>
+
+          <!-- Professional Dropdown Arrow -->
+          <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+
+      </form>
 
     </div>
 
