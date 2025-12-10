@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-=======
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// app.module.ts
-
->>>>>>> 44f767d39b6e86f27f0546f039f0938dfd202287
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -37,4 +31,4 @@ import { User } from './users/user.entity'; // your entity
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -13,7 +13,7 @@ import { RouterModule, Router } from '@angular/router';
     ReactiveFormsModule,
     RouterModule,
     NgIf,
-    
+
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -42,10 +42,10 @@ export class LoginComponent {
     this.showPassword = false;
   }
 
-  onGoogleLogin() {
-  console.log('Google login clicked');
-  // Later you can integrate Firebase / OAuth here
-}
+  onGoogleLogin(): void {
+    console.log('Google login clicked');
+    window.location.href = 'http://localhost:3000/auth/google-login';
+  }
 
   onSubmit(): void {
     this.loginError = '';

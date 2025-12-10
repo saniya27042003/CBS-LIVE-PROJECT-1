@@ -216,6 +216,28 @@ export class DatabaseMappingService {
     return result.map((c: any) => c.column_name);
   }
 
+  // SERVER: get primary key column name for a table (Postgres)
+  private async getServerPrimaryKey(tableName: string): Promise<string | null> {
+    const server = this.ensureServer();
+
+    const rows = await server.query(
+      `
+    SELECT a.attname AS column_name
+    FROM   pg_index i
+    JOIN   pg_attribute a
+           ON a.attrelid = i.indrelid
+          AND a.attnum = ANY(i.indkey)
+    WHERE  i.indrelid = $1::regclass
+    AND    i.indisprimary;
+    `,
+      [tableName],
+    );
+
+    return rows[0]?.column_name ?? null;
+  }
+
+
+
   // =========================================================
   // CLIENT COLUMNS (PG / MSSQL / MySQL)
   // =========================================================
@@ -273,11 +295,12 @@ export class DatabaseMappingService {
   // }
 
   private cleanDate(value: any) {
-    if (!value) return null;          // <‑ important
+    if (!value) return null;
 
     const str = String(value).trim();
     if (!str) return null;
 
+    // If it already looks like YYYY-MM-DD, just return it
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
     const cleaned = str
@@ -285,6 +308,9 @@ export class DatabaseMappingService {
       .replace(/gmt[^\d-+]*/gi, '')
       .replace(/\+\d{4}/g, '')
       .trim();
+
+    // If cleaned is still just a date, avoid Date() timezone shift
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
 
     const parsed = new Date(cleaned);
     if (!isNaN(parsed.getTime())) {
@@ -351,6 +377,13 @@ export class DatabaseMappingService {
   async insertMappedData(body: any) {
     const { serverTable, clientTable, mappings } = body;
 
+    // Dynamically detect PK for the chosen server table
+    const pkColumn = await this.getServerPrimaryKey(serverTable);
+    if (!pkColumn) {
+      throw new InternalServerErrorException(
+        `No primary key found for server table ${serverTable}`,
+      );
+    }
     const clientTypes = await this.getClientColumnTypes(clientTable);
     const client = this.ensureClient();
     const server = this.ensureServer();
@@ -469,10 +502,49 @@ export class DatabaseMappingService {
 
         const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
 
-        await qr.query(
-          `INSERT INTO "${serverTable}" (${serverCols}) VALUES (${placeholders})`,
-          values,
-        );
+        // Build UPSERT: INSERT ... ON CONFLICT (pkColumn) DO UPDATE
+        const colsArray = mappings.map((m: any) => String(m.server)); // e.g. ['customer_id','gender',...]
+        const pk = pkColumn; // dynamic PK from Postgres
+
+        // const updateAssignments = colsArray
+        //   .filter(col => col !== pk)
+        //   .map(col => `"${col}" = EXCLUDED."${col}"`)
+        //   .join(', ');
+
+        // const sql = `
+        //   INSERT INTO "${serverTable}" (${serverCols})
+        //   VALUES (${placeholders})
+        //   ON CONFLICT ("${pk}")
+        //   DO UPDATE SET ${updateAssignments};
+        // `;
+
+        // await qr.query(sql, values);
+        const updateAssignments = colsArray
+          .filter(col => col !== pk)
+          .map(col => `"${col}" = EXCLUDED."${col}"`)
+          .join(', ');
+
+        let sql: string;
+
+        if (!updateAssignments) {
+          // Only PK is mapped → just insert; ignore duplicates
+          sql = `
+    INSERT INTO "${serverTable}" (${serverCols})
+    VALUES (${placeholders})
+    ON CONFLICT ("${pk}") DO NOTHING;
+  `;
+        } else {
+          // PK + other columns → full upsert
+          sql = `
+    INSERT INTO "${serverTable}" (${serverCols})
+    VALUES (${placeholders})
+    ON CONFLICT ("${pk}")
+    DO UPDATE SET ${updateAssignments};
+  `;
+        }
+
+        await qr.query(sql, values);
+
       }
 
       await qr.commitTransaction();
@@ -881,6 +953,9 @@ export class DatabaseMappingService {
       }))
     };
   }
+
+
+
 
 }
 
