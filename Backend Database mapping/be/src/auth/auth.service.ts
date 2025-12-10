@@ -14,8 +14,12 @@ export class AuthService {
     private jwtService: JwtService,
     private config: ConfigService
   ) {
-    this.redirectUri = 'http://localhost:3000/auth/google-callback';
+    //this.redirectUri = 'http://localhost:3000/auth/google-callback';
     
+    //this.redirectUri = this.config.get<string>('GOOGLE_REDIRECT_URI');
+
+    this.redirectUri = this.config.get<string>('GOOGLE_REDIRECT_URI')!;
+
   console.log('GOOGLE_CLIENT_ID=', this.config.get<string>('GOOGLE_CLIENT_ID'));
   console.log('GOOGLE_CLIENT_SECRET=', !!this.config.get<string>('GOOGLE_CLIENT_SECRET') ? 'SET' : 'MISSING');
   

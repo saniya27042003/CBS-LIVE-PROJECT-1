@@ -41,11 +41,11 @@ export class LoginComponent {
     this.loginError = '';
     this.showPassword = false;
   }
-
-  onGoogleLogin() {
+onGoogleLogin(): void {
   console.log('Google login clicked');
-  // Later you can integrate Firebase / OAuth here
+  window.location.href = 'http://localhost:3000/auth/google-login';
 }
+
 
   onSubmit(): void {
     this.loginError = '';
