@@ -10,8 +10,14 @@ async function bootstrap() {
   app.enableCors({
     allowedHeaders: '*',
     origin: '*',
+    credentials: true,
   });
-  await app.listen(3000);
+  //await app.listen(3000);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  console.log(`Backend running on http://localhost:${port}`);
 }
 bootstrap();
 // import { NestFactory } from '@nestjs/core';
