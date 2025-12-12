@@ -22,7 +22,6 @@ export class DatabaseMappingController {
   }
 
 
-
   @Get('server/tables')
   getServerTables() {
     return this.dbService.getPrimaryTableNames();
