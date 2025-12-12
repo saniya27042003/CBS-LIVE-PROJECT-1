@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                             import { Component, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, Pipe, PipeTransform } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -72,10 +72,10 @@ export class TablesComponent implements OnInit {
       // --- RESTORE STATE (User is logged in and returning) ---
       this.primaryDatabaseName = storage.primaryDatabaseName || params['primary'] || '';
       this.clientDatabaseName = storage.clientDatabaseName || params['client'] || '';
-      
+
       this.selectedPrimaryTable = storage.selectedPrimaryTable || [];
       this.selectedClientTable = storage.selectedClientTable || [];
-      
+
       // Ensure active table is valid or null
       this.activePrimaryTable = storage.activePrimaryTable || (this.selectedPrimaryTable[0] ?? null);
       this.activeClientTable = storage.activeClientTable || (this.selectedClientTable[0] ?? null);
@@ -90,7 +90,7 @@ export class TablesComponent implements OnInit {
       this.selectedClientTable = [];
       this.activePrimaryTable = null;
       this.activeClientTable = null;
-      
+
       // Clear mapping data just in case
       this.mappingDataByTable = {};
       this.clientTableDataMap = {};
@@ -306,50 +306,50 @@ export class TablesComponent implements OnInit {
         }
 
 
-          // ⭐ PATCH — Detect multi-column mapping like "5 6 7"
-      if (primaryRow.position && primaryRow.position.includes(' ')) {
+        // ⭐ PATCH — Detect multi-column mapping like "5 6 7"
+        if (primaryRow.position && primaryRow.position.includes(' ')) {
 
-        const indexes = primaryRow.position
-          .split(' ')
-          .map((v: string) => parseInt(v.trim()))   // typed
-          .filter((v: number) => !isNaN(v));        // typed
+          const indexes = primaryRow.position
+            .split(' ')
+            .map((v: string) => parseInt(v.trim()))   // typed
+            .filter((v: number) => !isNaN(v));        // typed
 
-        primaryRow.mergeColumns = indexes
-          .map((i: number) => this.getClientRowsForTable(targetClientTable)[i - 1])
-          .filter((col: any) => !!col);             // ⭐ filter out undefined
-      }
+          primaryRow.mergeColumns = indexes
+            .map((i: number) => this.getClientRowsForTable(targetClientTable)[i - 1])
+            .filter((col: any) => !!col);             // ⭐ filter out undefined
+        }
 
 
 
-                // ⭐ SINGLE COLUMN MATCH (only when not multi-merge)
-          let finalClientMatch = clientMatch;
+        // ⭐ SINGLE COLUMN MATCH (only when not multi-merge)
+        let finalClientMatch = clientMatch;
 
-          // ⭐ Skip pushing invalid indexes
-          if (!primaryRow.mergeColumns && !finalClientMatch) {
-            console.warn(
-              `⚠ Invalid mapping index "${enteredClientId}" for table "${targetClientTable}". Skipping row.`
-            );
-            return;   // ❗ prevents backend NULL error
-          }
+        // ⭐ Skip pushing invalid indexes
+        if (!primaryRow.mergeColumns && !finalClientMatch) {
+          console.warn(
+            `⚠ Invalid mapping index "${enteredClientId}" for table "${targetClientTable}". Skipping row.`
+          );
+          return;   // ❗ prevents backend NULL error
+        }
 
         // Only push if we actually have a mapping entered
         // Now push final mapping
         if (enteredClientId) {
-  this.mappingDataByTable[tableName].push({
-    serverColumn: primaryRow.id,
+          this.mappingDataByTable[tableName].push({
+            serverColumn: primaryRow.id,
 
-    // ⭐ MultiColumns OR Single Column as array
-    clientColumns: primaryRow.mergeColumns
-      ? primaryRow.mergeColumns.map((c: any) => c.id || c.name)
-      : [finalClientMatch.id || finalClientMatch.name],
+            // ⭐ MultiColumns OR Single Column as array
+            clientColumns: primaryRow.mergeColumns
+              ? primaryRow.mergeColumns.map((c: any) => c.id || c.name)
+              : [finalClientMatch.id || finalClientMatch.name],
 
-    merge: primaryRow.mergeColumns ? true : false,
+            merge: primaryRow.mergeColumns ? true : false,
 
-    clientTableName: targetClientTable,
-    clientId: enteredClientId,
-    clientName: primaryRow.mergeColumns
-      ? primaryRow.mergeColumns.map((c: any) => c.name || c.id).join(' ')
-      : (finalClientMatch.name || finalClientMatch.id || 'Unknown')
+            clientTableName: targetClientTable,
+            clientId: enteredClientId,
+            clientName: primaryRow.mergeColumns
+              ? primaryRow.mergeColumns.map((c: any) => c.name || c.id).join(' ')
+              : (finalClientMatch.name || finalClientMatch.id || 'Unknown')
           });
         }
       });
