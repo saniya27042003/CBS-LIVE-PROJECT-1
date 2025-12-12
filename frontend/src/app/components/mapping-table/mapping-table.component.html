@@ -37,13 +37,20 @@
 
             <tbody>
               <tr *ngFor="let map of getMappingRows(tableName); let i = index">
+<<<<<<< HEAD
                 <td>{{ i + 1 }}</td>
                 <td>{{ map.serverColumn }}</td>
+=======
+                <td>{{ i + 1 }}</td> <!-- No -->
+                <td>{{ i + 1 }}</td> <!-- Row ID -->
+>>>>>>> 5da471a9075635f89b12045bfc4057aaea0a377d
                 <td class="text-blue-400 font-semibold">{{ map.clientTableName }}</td>
                 <td>{{ map.clientId }}</td>
                 <td>{{ map.clientName }}</td>
               </tr>
+
             </tbody>
+
           </table>
         </div>
 

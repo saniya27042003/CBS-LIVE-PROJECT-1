@@ -32,4 +32,4 @@ import { User } from './users/user.entity'; // your entity
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

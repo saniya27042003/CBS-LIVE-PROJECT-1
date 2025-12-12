@@ -14,6 +14,10 @@ import { AuthService } from '../../service/auth.service';
     ReactiveFormsModule,
     RouterModule,
     NgIf,
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5da471a9075635f89b12045bfc4057aaea0a377d
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -69,10 +73,18 @@ handleGoogleCallback(): void {
     this.loginError = '';
     this.showPassword = false;
   }
+<<<<<<< HEAD
 onGoogleLogin(): void {
   console.log('Google login clicked');
   window.location.href = 'http://localhost:3000/auth/google-login';
 }
+=======
+
+  onGoogleLogin(): void {
+    console.log('Google login clicked');
+    window.location.href = 'http://localhost:3000/auth/google-login';
+  }
+>>>>>>> 5da471a9075635f89b12045bfc4057aaea0a377d
 
 
   onSubmit(): void {

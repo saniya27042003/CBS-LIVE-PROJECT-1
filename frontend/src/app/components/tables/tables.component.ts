@@ -84,8 +84,89 @@ export class TablesComponent implements OnInit {
 
   // ---------------- STORAGE helpers ----------------
 
+<<<<<<< HEAD
   private saveTablesComponentState() {
     // We use the backing fields (_) to avoid recursion, though getters are safe here too.
+=======
+    // ✅ SECURITY CHECK: 
+    // If storage is empty (meaning user logged out or fresh start), 
+    // we strictly reset all table selections to prevent ghost data.
+    const hasValidSession = Object.keys(storage).length > 0;
+
+    if (hasValidSession) {
+      // --- RESTORE STATE (User is logged in and returning) ---
+      this.primaryDatabaseName = storage.primaryDatabaseName || params['primary'] || '';
+      this.clientDatabaseName = storage.clientDatabaseName || params['client'] || '';
+
+      this.selectedPrimaryTable = storage.selectedPrimaryTable || [];
+      this.selectedClientTable = storage.selectedClientTable || [];
+
+      // Ensure active table is valid or null
+      this.activePrimaryTable = storage.activePrimaryTable || (this.selectedPrimaryTable[0] ?? null);
+      this.activeClientTable = storage.activeClientTable || (this.selectedClientTable[0] ?? null);
+
+    } else {
+      // --- FRESH START / LOGGED OUT (Reset everything) ---
+      // We accept the DB name from URL (if just navigated), but we WIPE table selections.
+      this.primaryDatabaseName = params['primary'] || '';
+      this.clientDatabaseName = params['client'] || '';
+
+      this.selectedPrimaryTable = [];
+      this.selectedClientTable = [];
+      this.activePrimaryTable = null;
+      this.activeClientTable = null;
+
+      // Clear mapping data just in case
+      this.mappingDataByTable = {};
+      this.clientTableDataMap = {};
+    }
+
+    // ✅ 1. Load Primary Tables List (Only if DB name exists)
+    if (this.primaryDatabaseName) {
+      this.getPrimaryTables();
+    }
+
+    // ✅ 2. Load Client Tables List (Only if DB name exists)
+    if (this.clientDatabaseName) {
+      this.getClientTables();
+    } else {
+      // Clean up UI if no client DB
+      this.dropdownItemsClient = [];
+      this.selectedClientTable = [];
+      this.activeClientTable = null;
+    }
+
+    // ✅ 3. Reload Columns for Pre-Selected Tables (if any exist)
+    this.primaryTableData = [];
+    this.selectedPrimaryTable.forEach(table => {
+      this.appService.getServerColumns(table).subscribe((res: any) => {
+        const tableData = Array.isArray(res)
+          ? res.map(r => ({ id: r, source: table }))
+          : [];
+        this.primaryTableData = [...this.primaryTableData, ...tableData];
+      });
+    });
+
+    // ✅ 4. Reload Client Columns (if any exist)
+    if (this.clientDatabaseName) {
+      this.selectedClientTable.forEach(table => {
+        this.appService.getClientColumns(table).subscribe((res: any) => {
+          const rows = Array.isArray(res)
+            ? res.map(r => (typeof r === 'object' ? r : { id: r }))
+            : [];
+          this.clientTableDataMap[table] = rows;
+        });
+      });
+    }
+
+    // Save the sanitized state immediately
+    this.saveStateToStorage();
+  }
+
+  // ================= STORAGE =================
+
+  private saveStateToStorage() {
+>>>>>>> 5da471a9075635f89b12045bfc4057aaea0a377d
     const state = {
       primaryDatabaseName: this.primaryDatabaseName,
       clientDatabaseName: this.clientDatabaseName,
@@ -387,6 +468,7 @@ export class TablesComponent implements OnInit {
         const clientRows = this.getClientRowsForTable(targetClientTable);
         let clientMatch;
 
+<<<<<<< HEAD
         if (enteredClientId.includes(' ')) {
            const indexes = enteredClientId.split(' ').map((v: string) => parseInt(v.trim())).filter((v: number) => !isNaN(v));
            const mergeCols = indexes.map((i: number) => clientRows[i - 1]).filter((col: any) => !!col);
@@ -412,6 +494,60 @@ export class TablesComponent implements OnInit {
                clientName: clientMatch.name || clientMatch.id || 'Unknown'
             });
           }
+=======
+        // ✅ FIX: Use targetClientTable instead of this.activeClientTable
+        if (enteredClientId && targetClientTable) {
+          clientMatch = this.getClientRowsForTable(targetClientTable)
+            .find((_, i) => i + 1 == enteredClientId);
+        }
+
+
+        // ⭐ PATCH — Detect multi-column mapping like "5 6 7"
+        if (primaryRow.position && primaryRow.position.includes(' ')) {
+
+          const indexes = primaryRow.position
+            .split(' ')
+            .map((v: string) => parseInt(v.trim()))   // typed
+            .filter((v: number) => !isNaN(v));        // typed
+
+          primaryRow.mergeColumns = indexes
+            .map((i: number) => this.getClientRowsForTable(targetClientTable)[i - 1])
+            .filter((col: any) => !!col);             // ⭐ filter out undefined
+        }
+
+
+
+        // ⭐ SINGLE COLUMN MATCH (only when not multi-merge)
+        let finalClientMatch = clientMatch;
+
+        // ⭐ Skip pushing invalid indexes
+        if (!primaryRow.mergeColumns && !finalClientMatch) {
+          console.warn(
+            `⚠ Invalid mapping index "${enteredClientId}" for table "${targetClientTable}". Skipping row.`
+          );
+          return;   // ❗ prevents backend NULL error
+        }
+
+        // Only push if we actually have a mapping entered
+        // Now push final mapping
+        if (enteredClientId) {
+          this.mappingDataByTable[tableName].push({
+            serverColumn: primaryRow.id,
+
+            // ⭐ MultiColumns OR Single Column as array
+            clientColumns: primaryRow.mergeColumns
+              ? primaryRow.mergeColumns.map((c: any) => c.id || c.name)
+              : [finalClientMatch.id || finalClientMatch.name],
+
+            merge: primaryRow.mergeColumns ? true : false,
+
+            clientTableName: targetClientTable,
+            clientId: enteredClientId,
+            clientName: primaryRow.mergeColumns
+              ? primaryRow.mergeColumns.map((c: any) => c.name || c.id).join(' ')
+              : (finalClientMatch.name || finalClientMatch.id || 'Unknown')
+          });
+>>>>>>> 5da471a9075635f89b12045bfc4057aaea0a377d
         }
       });
     });
