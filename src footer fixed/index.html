@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-theme="halloween">
+
+<head>
+  <meta charset="utf-8">
+  <title>PersonalApp</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+</head>
+
+<body>
+  <app-root></app-root>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+</body>
+<script>
+  (function () {
+    try {
+      // Define your default theme here (e.g., 'light')
+      const DEFAULT_THEME = 'dark';
+
+      // Check login status
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+      
+      // Check saved theme
+      const savedTheme = localStorage.getItem('app-theme');
+
+      if (isLoggedIn && savedTheme) {
+        // If logged in AND has a saved theme, apply it
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } else {
+        // If logged out OR no saved theme, FORCE default theme
+        document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+        
+        // Safety: ensure any lingering local storage is cleared if logged out
+        if (!isLoggedIn) {
+          localStorage.removeItem('app-theme');
+        }
+      }
+    } catch (e) {
+      console.error('Theme initialization failed:', e);
+    }
+  })();
+</script>
+
+</html>

@@ -6,12 +6,9 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { TablesComponent } from './components/tables/tables.component';
 import { MappingTableComponent } from './components/mapping-table/mapping-table.component';
 
-
-
-
 export const routes: Routes = [
 
-  // ✅ Login Route
+  // LOGIN OUTSIDE THE LAYOUT
   {
     path: '',
     pathMatch: 'full',
@@ -22,16 +19,14 @@ export const routes: Routes = [
     component: LoginComponent
   },
 
-  // ✅ Main Layout Routes
+  // EVERYTHING ELSE INSIDE LAYOUT
   {
     path: '',
-    component: LayoutComponent,
+    component: LayoutComponent,  // layout wraps these pages ONLY
     children: [
       { path: 'database', component: DatabaseComponent },
-      { path: 'setting', component: SettingsComponent },
       { path: 'table', component: TablesComponent },
-
-      // ✅ mapping-table is also inside the layout
+      { path: 'setting', component: SettingsComponent },
       { path: 'mapping-table', component: MappingTableComponent }
     ]
   }

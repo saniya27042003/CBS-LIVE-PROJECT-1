@@ -10,6 +10,8 @@ import {
 } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
+import { DbStateService } from '../../service/db-state.service';
+import { SettingsComponent } from '../settings/settings.component';
 
 
 @Component({
@@ -74,13 +76,16 @@ export class DatabaseComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private http: HttpClient,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dbState: DbStateService
   ) {}
 
   // =========================
   // INIT
   // =========================
 ngOnInit(): void {
+
+  // ✅ AUTH CHECK (your existing code)
   this.route.queryParams.subscribe(params => {
     const token = params['token'];
     if (token) {
@@ -93,26 +98,36 @@ ngOnInit(): void {
     }
   });
 
+  // ✅ FORM INIT
+  this.primaryForm = this.fb.group({
+    host: ['', Validators.required],
+    port: ['', Validators.required],
+    username: ['', Validators.required],
+    password: ['', Validators.required],
+  });
 
+  this.clientForm = this.fb.group({
+    type: ['', Validators.required],
+    host: ['', Validators.required],
+    port: ['', Validators.required],
+    username: ['', Validators.required],
+    password: ['', Validators.required],
+    database: ['', Validators.required],
+  });
 
-    // ✅ SERVER FORM
-    this.primaryForm = this.fb.group({
-      host: ['', Validators.required],
-      port: ['', Validators.required],
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-    });
+  // ✅ ✅ ✅ RESTORE PREVIOUS STATE IF EXISTS
+  if (this.dbState.primaryForm) {
+    this.primaryForm.patchValue(this.dbState.primaryForm);
+    this.clientForm.patchValue(this.dbState.clientForm);
 
-    // ✅ CLIENT FORM
-    this.clientForm = this.fb.group({
-      type: ['', Validators.required],
-      host: ['', Validators.required],
-      port: ['', Validators.required],
-      username: ['', Validators.required],
-      password: ['', Validators.required],
-      database: ['', Validators.required],
-    });
+    this.selectedDatabase = this.dbState.selectedDatabase;
+    this.databaseList = this.dbState.databaseList;
+
+    this.primaryClassMap = this.dbState.primaryClassMap;
+    this.clientClassMap = this.dbState.clientClassMap;
   }
+}
+
 
   // =========================
   // UI SELECTIONS
@@ -266,14 +281,17 @@ ngOnInit(): void {
   // =========================
   // CANCEL
   // =========================
-  onCancelClick() {
-    this.primaryForm.reset();
-    this.clientForm.reset();
-    this.selectedDatabase = '';
-    this.databaseList = [];
-    this.primaryClassMap = {};
-    this.clientClassMap = {};
-  }
+onCancelClick() {
+  this.primaryForm.reset();
+  this.clientForm.reset();
+  this.selectedDatabase = '';
+  this.databaseList = [];
+
+  this.primaryClassMap = {};
+  this.clientClassMap = {};
+
+  this.dbState.clear();   // ✅ CLEAR STORED STATE
+}
 
   // =========================
   // MESSAGE BOX

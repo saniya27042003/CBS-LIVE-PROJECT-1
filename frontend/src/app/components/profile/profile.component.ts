@@ -1,67 +1,61 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../service/auth.service';
-import { Subscription } from 'rxjs';
-
 
 @Component({
   selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit, OnDestroy {
-  name: string = 'User Name';
-  username: string = '@username';
-  picture: string = 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp';
+export class ProfileComponent implements OnInit {
 
-   private userSub!: Subscription;
+  username = '';
+  email = '';
+  profilePic: string = '';
+  defaultPic = 'https://www.gravatar.com/avatar/?d=mp&s=200'; // clean fallback
 
-  constructor(private router: Router, private authService: AuthService) {}
+    isGoogleUser: boolean = false; // NEW FLAG
 
- ngOnInit(): void {
-  // Subscribe to AuthService user$ to reactively update profile
-  this.userSub = this.authService.user$.subscribe((user: any) => {
-      if (user) {
-        this.name = user.name || this.name;
-        this.username = user.email ? '@' + user.email.split('@')[0] : this.username;
-        this.picture = user.picture || this.picture;
-      } else {
-        // Reset to default values if no user
-        this.name = 'User Name';
-        this.username = '@username';
-        this.picture = 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp';
-      }
-  });
+  constructor(private router: Router) {}
+
+ngOnInit(): void {
+  const userData = localStorage.getItem('user');
+
+  if (userData) {
+    const user = JSON.parse(userData);
+
+    this.username = user?.name || 'User';
+    this.email = user?.email || '';
+
+    // ⭐ Fallback to REAL Google avatar if picture missing
+   this.profilePic = user.picture
+  ? user.picture
+  : 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+
+   this.isGoogleUser = localStorage.getItem('isGoogleUser') === '1';
+  } else {
+    this.router.navigate(['/login']);
+  }
 }
 
- ngOnDestroy(): void {
-    // Prevent memory leaks
-    this.userSub.unsubscribe();
+openGoogleAccount() {
+  if (this.isGoogleUser) {
+    window.open('https://myaccount.google.com', '_blank');
+  }
+}
+
+
+
+  // 🔥 STEP 3 — Broken images automatically fallback
+  onImageError(event: any) {
+    event.target.src = this.defaultPic;
   }
 
-  onLogout(): void {
-      // Clear auth info and any session state
-    this.authService.logout(); // clears user$ and localStorage
-    // Clear session + auth info
-    sessionStorage.removeItem('tablesComponentState');
-<<<<<<< Updated upstream
+  onLogout() {
+    localStorage.clear();
     sessionStorage.clear();
-
-    localStorage.removeItem('app-theme');
-    document.documentElement.setAttribute('data-theme', 'dark');
-
-  // Remove theme from page
-  // document.documentElement.removeAttribute('data-theme');
-    // (Optional) Clear everything if you want a full reset:
-    // sessionStorage.clear();
-    // localStorage.clear();
-
-    // ✅ Navigate to login
-=======
-    //localStorage.removeItem('auth_user');
-    //localStorage.removeItem('app_token');
-
->>>>>>> Stashed changes
-    this.router.navigate(['/login']);
+    window.location.href = '/login';
   }
 }

@@ -1,0 +1,33 @@
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* Hide scrollbar for Chrome, Safari, Edge */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.no-scrollbar {
+    scrollbar-width: none;
+}
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+label{
+    font-weight: bold;
+    color: white;
+}
+button{
+    color: white;
+    
+}
+#primarydb{
+    cursor:not-allowed;
+}
+#primarydb{
+    cursor:not-allowed;
+}

@@ -1,11 +1,14 @@
-import { Component, ChangeDetectionStrategy, NgZone } from '@angular/core';
+// src/app/components/login/login.component.ts
+import { Component, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { AuthService } from '../../service/auth.service';
+import { HttpClient } from '@angular/common/http';
+
+declare var google: any;
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
   standalone: true,
@@ -13,52 +16,53 @@ import { AuthService } from '../../service/auth.service';
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    NgIf,
+    NgIf
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+
   loginForm: FormGroup;
   showPassword: boolean = false;
   isLoading: boolean = false;
   loginError: string = '';
 
-  constructor(private fb: FormBuilder, private router: Router, private ngZone: NgZone, private authService: AuthService) {
-    // USERNAME & PASSWORD setup
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private http: HttpClient
+  ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required]
     });
   }
 
-  ngOnInit(): void {
-  this.handleGoogleCallback();
-}
-
-handleGoogleCallback(): void {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-
-  if (code) {
-    fetch('http://localhost:3000/auth/google-callback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.user) {
-
-        this.ngZone.run(() => {
-        this.authService.setUser(data.user);
-        localStorage.setItem('token', data.token);
-        this.router.navigate(['/table']);
-        });
-      }
-    })
-    .catch(err => console.error('Google login error:', err));
+ngOnInit(): void {
+   if (window.google) {
+    google.accounts.id.disableAutoSelect();
   }
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const user = params.get('user');
+
+  if (token && user) {
+  try {
+    const parsedUser = JSON.parse(user);
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('user', JSON.stringify(parsedUser));
+     localStorage.setItem('isGoogleUser', '1');
+  } catch (e) {
+    console.error("Failed to parse user:", user);
+  }
+
+  window.history.replaceState({}, '', '/login');
+
+  setTimeout(() => this.router.navigate(['/database']), 100);
 }
+
+}
+
+
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
@@ -69,44 +73,39 @@ handleGoogleCallback(): void {
     this.loginError = '';
     this.showPassword = false;
   }
-<<<<<<< Updated upstream
-onGoogleLogin(): void {
-  console.log('Google login clicked');
-  window.location.href = 'http://localhost:3000/auth/google-login';
-}
-=======
 
-  // ✅ Updated Google login for backend OAuth
-  onGoogleLogin(): void {
-    // Redirect to backend NestJS endpoint
-    window.location.href = 'http://localhost:3000/auth/google-login';
+  onGoogleLogin() {
+    // redirect to backend which starts Google OAuth
+    window.location.href = 'http://localhost:3000/auth/google/login';
   }
->>>>>>> Stashed changes
-
 
   onSubmit(): void {
     this.loginError = '';
-
-    const { username, password } = this.loginForm.value;
-
-    // Validate immediately on click
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
       return;
     }
-
+    const { username, password } = this.loginForm.value;
     this.isLoading = true;
 
-    // INSTANT VERIFICATION (No setTimeout)
-    if (username === 'ccpl' && password === '1234') {
-      console.log('Login successful:', username);
-      this.isLoading = false;
-      this.router.navigate(['/database']);
-    } else {
+if (username === 'ccpl' && password === '1234') {
+
+  localStorage.setItem('auth_token', 'logged_in');
+  localStorage.setItem('isGoogleUser', '0');  // ⭐ NOT a Google user
+
+ const user = {
+    name: 'CCPL User',
+    email: 'ccpl@gmail.com',
+    picture: ''
+  };
+
+  localStorage.setItem('user', JSON.stringify(user));
+
+  this.router.navigateByUrl('/database');
+} 
+ else {
       this.loginError = 'Invalid credentials! Please check your username and password.';
       this.isLoading = false;
-      this.loginForm.controls['username'].markAsTouched();
-      this.loginForm.controls['password'].markAsTouched();
     }
   }
 }

@@ -1,0 +1,68 @@
+<!-- section 1 nav bar -->
+<div class="navbar bg-base-100 shadow-sm fixed top-0 left-0 right-0 z-50 h-16">
+  <div class="w-20"> <img src="https://www.compservtech.com/imges/compserv.png " alt=""></div>
+  <div class="text-2xl ml-4"> / </div>
+  <div class="flex-1">
+    <a class="text-xl">&nbsp;&nbsp;CompservTech</a>
+  </div>
+  <div class="flex-none">
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+
+        <div tabindex="0" class="card card-compact dropdown-content bg-base-100 z-1 mt-3 w-52 shadow">
+
+        </div>
+      </div>
+      <app-profile></app-profile>
+    </div>
+  </div>
+</div>
+
+
+<!-- section 2 layout -->
+
+
+<div class="flex h-screen overflow-hidden">
+<div
+  [ngClass]="expanded ? 'w-64' : 'w-20'"
+  class="bg-base-200 transition-all duration-300 flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] z-40"
+>
+
+
+
+    <ul class=" p-2 gap-2 flex flex-col">
+      <li *ngFor="let item of menuItems" class="rounded-lg hover:bg-base-300 relative group">
+        <a [routerLink]="item.path" class="flex items-center gap-4 p-3">
+          <i class="fa fa-{{item.icon}} text-lg w-6 text-center"></i>
+
+          <span class="transition-all duration-300 whitespace-nowrap"
+            [ngClass]="expanded ? 'opacity-100' : 'opacity-0 pointer-events-none'">
+            {{ item.label }}
+          </span>
+        </a>
+      </li>
+    </ul>
+
+    <button (click)="toggleSideba()" class="mr-6 btn-rectangle btn-ghost mt-80 self-end flex items-center 
+         backdrop-blur-md bg-white/20 rounded-sm border border-white/30">
+      <i class="fas w-8 m-2  text-center" [ngClass]="expanded ? 'fa-angle-left' : 'fa-angle-right'"></i>
+      <span *ngIf="expanded" class="ml-2 whitespace-nowrap">
+        <div class="mr-24">Collapse</div>
+      </span>
+    </button>
+
+  </div>
+
+
+<div
+  class="flex-1 overflow-y-auto pt-16 transition-all duration-300"
+  [ngClass]="expanded ? 'ml-64' : 'ml-20'"
+>
+  <router-outlet></router-outlet>
+</div>
+
+
+
+
+
+</div>
