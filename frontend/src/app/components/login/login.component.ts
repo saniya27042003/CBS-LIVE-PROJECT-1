@@ -69,19 +69,10 @@ handleGoogleCallback(): void {
     this.loginError = '';
     this.showPassword = false;
   }
-<<<<<<< Updated upstream
 onGoogleLogin(): void {
   console.log('Google login clicked');
   window.location.href = 'http://localhost:3000/auth/google-login';
 }
-=======
-
-  // ✅ Updated Google login for backend OAuth
-  onGoogleLogin(): void {
-    // Redirect to backend NestJS endpoint
-    window.location.href = 'http://localhost:3000/auth/google-login';
-  }
->>>>>>> Stashed changes
 
 
   onSubmit(): void {
@@ -99,14 +90,19 @@ onGoogleLogin(): void {
 
     // INSTANT VERIFICATION (No setTimeout)
     if (username === 'ccpl' && password === '1234') {
-      console.log('Login successful:', username);
-      this.isLoading = false;
-      this.router.navigate(['/database']);
-    } else {
-      this.loginError = 'Invalid credentials! Please check your username and password.';
-      this.isLoading = false;
-      this.loginForm.controls['username'].markAsTouched();
-      this.loginForm.controls['password'].markAsTouched();
-    }
+  console.log('Login successful:', username);
+
+  // ⭐ FIX: Tell app user is authenticated
+  localStorage.setItem('auth_token', 'logged_in');
+
+  this.isLoading = false;
+
+  this.router.navigate(['/database'])
+    .then(n => console.log('navigated =', n))
+    .catch(err => console.error('nav error', err));
+
+} else {
+  console.warn('Login failed');
+}
   }
 }

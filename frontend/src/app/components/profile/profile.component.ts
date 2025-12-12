@@ -40,28 +40,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onLogout(): void {
-      // Clear auth info and any session state
-    this.authService.logout(); // clears user$ and localStorage
-    // Clear session + auth info
-    sessionStorage.removeItem('tablesComponentState');
-<<<<<<< Updated upstream
-    sessionStorage.clear();
+  // Remove login flag FIRST (important)
+  sessionStorage.removeItem('isLoggedIn');
 
-    localStorage.removeItem('app-theme');
-    document.documentElement.setAttribute('data-theme', 'dark');
+  // Remove any theme stored
+  localStorage.removeItem('app-theme');
 
-  // Remove theme from page
-  // document.documentElement.removeAttribute('data-theme');
-    // (Optional) Clear everything if you want a full reset:
-    // sessionStorage.clear();
-    // localStorage.clear();
+  // OPTIONAL: Immediately apply default theme (dark)
+  document.documentElement.setAttribute('data-theme', 'dark');
 
-    // ✅ Navigate to login
-=======
-    //localStorage.removeItem('auth_user');
-    //localStorage.removeItem('app_token');
+  // Clear other app/session data
+  sessionStorage.removeItem('tablesComponentState');
+  localStorage.removeItem('tablesComponentState');
+  this.authService.logout();
+  
+  // Redirect to login
+  this.router.navigate(['/login']);
+}
 
->>>>>>> Stashed changes
-    this.router.navigate(['/login']);
-  }
 }
