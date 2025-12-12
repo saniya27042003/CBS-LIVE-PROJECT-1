@@ -3,19 +3,21 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppService } from '../../service/app.service';
-import { DbStateService } from '../../service/db-state.service';
 
 @Pipe({ name: 'filter', standalone: true })
 export class FilterPipe implements PipeTransform {
   transform(items: any[], searchText: string): any[] {
-    if (!items || !searchText) return items;
+    if (!items) return [];
+    if (!searchText) return items;
     searchText = searchText.toLowerCase();
-    return items.filter(item =>
-      (item?.label ?? item?.name ?? item?.id ?? '')
-        .toString()
-        .toLowerCase()
-        .includes(searchText)
-    );
+
+    return items.filter(item => {
+      const value =
+        typeof item === 'string'
+          ? item
+          : item.label ?? (item.name ?? item.id ?? '');
+      return value?.toString().toLowerCase().includes(searchText);
+    });
   }
 }
 
@@ -28,101 +30,216 @@ export class FilterPipe implements PipeTransform {
 })
 export class TablesComponent implements OnInit {
 
-  // ✅ SEARCH
+  // PRIMARY DB
+  dropdownItemsPrimary: any[] = [];
+  selectedPrimaryTable: string[] = [];
+  primaryTableData: any[] = [];
+  primaryDatabaseName: string = '';
   primaryTableSearch: string = '';
+  mappingDataByTable: Record<string, any[]> = {};
+
+  // --- CHANGED: Use Backing Fields for Active Tables ---
+  private _activePrimaryTable: string | null = null;
+  private _activeClientTable: string | null = null;
+
+  // --- GETTERS & SETTERS (The Magic Fix) ---
+  // When HTML says "activePrimaryTable = table", this SETTER runs and auto-saves.
+  get activePrimaryTable(): string | null {
+    return this._activePrimaryTable;
+  }
+  set activePrimaryTable(value: string | null) {
+    this._activePrimaryTable = value;
+    this.saveTablesComponentState(); // <--- This saves the state instantly when clicked
+  }
+
+  get activeClientTable(): string | null {
+    return this._activeClientTable;
+  }
+  set activeClientTable(value: string | null) {
+    this._activeClientTable = value;
+    // Only save/load if we have a valid table (prevents issues during clearing)
+    if (value) { 
+        this.ensureClientColumnsLoaded(value);
+    }
+    this.saveTablesComponentState(); // <--- This saves the state instantly when clicked
+  }
+  // ---------------------------------------------
+
+  // CLIENT DB
+  dropdownItemsClient: any[] = [];
+  selectedClientTable: string[] = [];
+  clientTableDataMap: { [tableName: string]: any[] } = {};
+  clientDatabaseName: string = '';
   clientTableSearch: string = '';
 
-  // ✅ DROPDOWN STATE
+  // DROPDOWN STATE
   isPrimaryDropdownOpen = false;
   isClientDropdownOpen = false;
-
-  // ✅ DATABASE NAMES
-  primaryDatabaseName: string = '';
-  clientDatabaseName: string = '';
-
-  // ✅ TABLE LISTS
-  dropdownItemsPrimary: any[] = [];
-  dropdownItemsClient: any[] = [];
-
-  // ✅ SELECTED TABLES
-  selectedPrimaryTable: string[] = [];
-  selectedClientTable: string[] = [];
-
-  // ✅ ACTIVE TABLE
-  activePrimaryTable: string | null = null;
-  activeClientTable: string | null = null;
-
-  // ✅ ROW DATA
-  primaryTableData: any[] = [];
-  clientTableDataMap: { [tableName: string]: any[] } = {};
-
-  // ✅ FINAL MAPPING
-  mappingDataByTable: Record<string, any[]> = {};
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private appService: AppService,
-    private dbState: DbStateService
-  ) {}
+    private appService: AppService
+  ) { }
 
-  // ================= INIT =================
+  // ---------------- STORAGE helpers ----------------
+
+  private saveTablesComponentState() {
+    // We use the backing fields (_) to avoid recursion, though getters are safe here too.
+    const state = {
+      primaryDatabaseName: this.primaryDatabaseName,
+      clientDatabaseName: this.clientDatabaseName,
+      selectedPrimaryTable: this.selectedPrimaryTable,
+      selectedClientTable: this.selectedClientTable,
+      activePrimaryTable: this._activePrimaryTable, 
+      activeClientTable: this._activeClientTable
+    };
+    sessionStorage.setItem('tablesComponentState', JSON.stringify(state));
+  }
+
+  private loadTablesComponentState(): any {
+    const raw = sessionStorage.getItem('tablesComponentState');
+    return raw ? JSON.parse(raw) : null;
+  }
+
+  private saveMappingState() {
+    const mappingState = {
+      mappingDataByTable: this.mappingDataByTable || {},
+      selectedPrimaryTable: this.selectedPrimaryTable || [],
+      selectedClientTable: this.selectedClientTable || [],
+      primaryDatabaseName: this.primaryDatabaseName || '',
+      clientDatabaseName: this.clientDatabaseName || ''
+    };
+
+    if (Object.keys(this.mappingDataByTable || {}).length > 0 || 
+        this.selectedPrimaryTable.length > 0 || 
+        this.selectedClientTable.length > 0) {
+      sessionStorage.setItem('mappingState', JSON.stringify(mappingState));
+    } else {
+      sessionStorage.removeItem('mappingState');
+    }
+  }
+
+  // ---------------- lifecycle ----------------
 
   ngOnInit() {
     const params = this.route.snapshot.queryParams;
-    const storage = this.loadStateFromStorage();
+    const navState: any = (history.state && Object.keys(history.state).length > 1) ? history.state : null;
+    const storedMappingRaw = sessionStorage.getItem('mappingState');
+    const storedMapping = storedMappingRaw ? JSON.parse(storedMappingRaw) : null;
+    const compState = this.loadTablesComponentState(); 
 
-    this.primaryDatabaseName = storage.primaryDatabaseName || params['primary'] || '';
-    this.clientDatabaseName = storage.clientDatabaseName || params['client'] || '';
+    const hasCompState = !!compState;
 
-    this.selectedPrimaryTable = storage.selectedPrimaryTable || [];
-    this.selectedClientTable = storage.selectedClientTable || [];
+    // 1. RESTORE LISTS & DATA
+    if (navState && (navState.mappingDataByTable || navState.selectedPrimaryTable || navState.selectedClientTable)) {
+      // From Navigation (Back button)
+      this.mappingDataByTable = navState.mappingDataByTable || {};
+      this.selectedPrimaryTable = hasCompState ? (compState.selectedPrimaryTable || []) : (navState.selectedPrimaryTable || []);
+      const navClient = navState.selectedClientTable ? (Array.isArray(navState.selectedClientTable) ? navState.selectedClientTable : [navState.selectedClientTable]) : [];
+      this.selectedClientTable = hasCompState ? (compState.selectedClientTable || []) : navClient;
+      this.primaryDatabaseName = navState.primaryDatabaseName || compState?.primaryDatabaseName || params['primary'] || '';
+      this.clientDatabaseName = navState.clientDatabaseName || compState?.clientDatabaseName || params['client'] || '';
 
-    this.activePrimaryTable =
-      storage.activePrimaryTable || (this.selectedPrimaryTable[0] || null);
+    } else if (hasCompState) {
+      // From Refresh (Saved State)
+      this.primaryDatabaseName = compState.primaryDatabaseName || params['primary'] || '';
+      this.clientDatabaseName = compState.clientDatabaseName || params['client'] || '';
+      this.selectedPrimaryTable = compState.selectedPrimaryTable || [];
+      this.selectedClientTable = compState.selectedClientTable || [];
 
-    this.activeClientTable =
-      storage.activeClientTable || (this.selectedClientTable[0] || null);
+      if (storedMapping && storedMapping.mappingDataByTable) {
+        this.mappingDataByTable = storedMapping.mappingDataByTable;
+        this.pruneMappingToSelected();
+      } else {
+        this.mappingDataByTable = {};
+      }
 
+    } else if (storedMapping) {
+      // Fallback
+      this.mappingDataByTable = storedMapping.mappingDataByTable || {};
+      this.selectedPrimaryTable = storedMapping.selectedPrimaryTable || [];
+      this.selectedClientTable = storedMapping.selectedClientTable || [];
+      this.primaryDatabaseName = storedMapping.primaryDatabaseName || params['primary'] || '';
+      this.clientDatabaseName = storedMapping.clientDatabaseName || params['client'] || '';
+    } else {
+      // Fresh Start
+      this.primaryDatabaseName = params['primary'] || '';
+      this.clientDatabaseName = params['client'] || '';
+      this.selectedPrimaryTable = [];
+      this.selectedClientTable = [];
+      this.mappingDataByTable = {};
+    }
+
+    // 2. RESTORE ACTIVE TABS
+    // We update the backing field directly here to avoid triggering 'save' unnecessarily 
+    // during init, though triggering it wouldn't hurt.
+    
+    // Fix Primary
+    const savedActivePrimary = compState?.activePrimaryTable;
+    if (savedActivePrimary && this.selectedPrimaryTable.includes(savedActivePrimary)) {
+        this._activePrimaryTable = savedActivePrimary;
+    } else {
+        this._activePrimaryTable = this.selectedPrimaryTable.length > 0 ? this.selectedPrimaryTable[0] : null;
+    }
+
+    // Fix Client
+    const savedActiveClient = compState?.activeClientTable;
+    if (savedActiveClient && this.selectedClientTable.includes(savedActiveClient)) {
+        this._activeClientTable = savedActiveClient;
+    } else {
+        this._activeClientTable = this.selectedClientTable.length > 0 ? this.selectedClientTable[0] : null;
+    }
+
+    // 3. LOAD DATA
     if (this.primaryDatabaseName) this.getPrimaryTables();
     if (this.clientDatabaseName) this.getClientTables();
 
-    this.restorePrimaryColumns();
-    this.restoreClientColumns();
+    // Ensure columns are loaded for whatever client table is active
+    this.selectedClientTable.forEach(tbl => {
+      this.ensureClientColumnsLoaded(tbl);
+    });
 
-    this.saveStateToStorage();
+    this.reconstructPrimaryTableData();
+
+    // Initial Save
+    this.saveTablesComponentState();
   }
 
-  // ================= STORAGE =================
-
-  private saveStateToStorage() {
-    sessionStorage.setItem(
-      'tablesComponentState',
-      JSON.stringify({
-        primaryDatabaseName: this.primaryDatabaseName,
-        clientDatabaseName: this.clientDatabaseName,
-        selectedPrimaryTable: this.selectedPrimaryTable,
-        selectedClientTable: this.selectedClientTable,
-        activePrimaryTable: this.activePrimaryTable,
-        activeClientTable: this.activeClientTable
-      })
-    );
+  // ---------------- prune helper ----------------
+  private pruneMappingToSelected() {
+    if (!this.mappingDataByTable) return;
+    const keepPrimary = new Set(this.selectedPrimaryTable);
+    Object.keys(this.mappingDataByTable).forEach(k => {
+      if (!keepPrimary.has(k)) delete this.mappingDataByTable[k];
+    });
+    const selectedClientSet = new Set(this.selectedClientTable || []);
+    Object.keys(this.mappingDataByTable).forEach(primary => {
+      const arr = (this.mappingDataByTable[primary] || []).filter((m: any) => {
+        if (!m.clientTableName) return true; 
+        return selectedClientSet.has(m.clientTableName);
+      });
+      if (arr.length) this.mappingDataByTable[primary] = arr;
+      else this.mappingDataByTable[primary] = []; 
+    });
   }
 
-  private loadStateFromStorage() {
-    const raw = sessionStorage.getItem('tablesComponentState');
-    return raw ? JSON.parse(raw) : {};
-  }
-
-  // ================= NAVIGATION =================
-
+  // ---------------- navigation ----------------
   goToDatabase() {
-    sessionStorage.clear();
+    // 1. Clear the UI state
+    sessionStorage.removeItem('tablesComponentState');
+    
+    // 2. Clear the mapping backup (CRITICAL STEP)
+    sessionStorage.removeItem('mappingState');
+
+    // 3. Clear local storage if you are using it (optional based on your previous code)
+    localStorage.removeItem('tablesComponentState'); 
+
+    // 4. Navigate
     this.router.navigate(['/database']);
   }
 
-  // ================= PRIMARY TABLES =================
-
+  // ---------------- primary side ----------------
   getPrimaryTables() {
     this.appService.getServerTables().subscribe((res: any) => {
       this.dropdownItemsPrimary = res || [];
@@ -132,24 +249,13 @@ export class TablesComponent implements OnInit {
   onSelectPrimaryTable(tableName: string) {
     if (!this.selectedPrimaryTable.includes(tableName)) {
       this.selectedPrimaryTable.push(tableName);
-      this.activePrimaryTable = tableName;
-
       this.appService.getServerColumns(tableName).subscribe((res: any) => {
-        const tableData = res.map((r: any) => ({
-          id: r,
-          source: tableName
-        }));
-        this.primaryTableData.push(...tableData);
+        const tableData = Array.isArray(res) ? res.map(r => ({ id: r, source: tableName })) : [];
+        this.primaryTableData = [...this.primaryTableData, ...tableData];
       });
-
-      this.saveStateToStorage();
     }
-  }
-
-  removePrimaryTable(table: string) {
-    this.selectedPrimaryTable = this.selectedPrimaryTable.filter(t => t !== table);
-    this.activePrimaryTable = this.selectedPrimaryTable[0] || null;
-    this.saveStateToStorage();
+    // Assignment triggers setter -> triggers save
+    this.activePrimaryTable = tableName; 
   }
 
   getRowsForTable(tableName: string | null) {
@@ -157,132 +263,186 @@ export class TablesComponent implements OnInit {
     return this.primaryTableData.filter(r => r.source === tableName);
   }
 
-  // ================= CLIENT TABLES =================
+  removePrimaryTable(table: string) {
+    this.selectedPrimaryTable = this.selectedPrimaryTable.filter(t => t !== table);
+    
+    // If we are removing the active table, switch to another one
+    if (this.activePrimaryTable === table) {
+      this.activePrimaryTable = this.selectedPrimaryTable[0] ?? null;
+    } else {
+      // Even if we didn't change active, we changed selection, so save.
+      this.saveTablesComponentState();
+    }
 
+    this.primaryTableData = this.primaryTableData.filter(r => r.source !== table);
+    if (this.mappingDataByTable && this.mappingDataByTable[table]) {
+      delete this.mappingDataByTable[table];
+    }
+    
+    this.saveMappingState();
+  }
+
+  // ---------------- client side ----------------
   getClientTables() {
+    if (!this.clientDatabaseName) {
+      this.dropdownItemsClient = [];
+      return;
+    }
     this.appService.getClientTables().subscribe((res: any) => {
       this.dropdownItemsClient = res || [];
     });
   }
 
-  onSelectClientTable(tableName: string) {
-    if (!this.selectedClientTable.includes(tableName)) {
-      this.selectedClientTable.push(tableName);
-      this.activeClientTable = tableName;
-
+  ensureClientColumnsLoaded(tableName: string) {
+    if (!this.clientTableDataMap[tableName]) {
       this.appService.getClientColumns(tableName).subscribe((res: any) => {
-        this.clientTableDataMap[tableName] = res.map((r: any) =>
-          typeof r === 'object' ? r : { id: r }
-        );
+        const rows = Array.isArray(res) ? res.map(r => (typeof r === 'object' ? r : { id: r, name: r })) : [];
+        this.clientTableDataMap[tableName] = rows;
       });
-
-      this.saveStateToStorage();
     }
   }
 
-  removeClientTable(table: string) {
-    this.selectedClientTable = this.selectedClientTable.filter(t => t !== table);
-    this.activeClientTable = this.selectedClientTable[0] || null;
-    delete this.clientTableDataMap[table];
-    this.saveStateToStorage();
+  onSelectClientTable(tableName: string) {
+    if (!this.clientDatabaseName) return;
+
+    if (this.selectedClientTable.includes(tableName)) {
+      this.removeClientTable(tableName); 
+      return;
+    }
+
+    this.selectedClientTable.push(tableName);
+    // Assignment triggers setter -> triggers save
+    this.activeClientTable = tableName;
   }
 
-  getClientRowsForTable(tableName: string | null) {
+  getClientRowsForTable(tableName: string | null): any[] {
     if (!tableName) return [];
     return this.clientTableDataMap[tableName] || [];
   }
 
-  // ================= MAPPING =================
+  removeClientTable(table: string) {
+    this.selectedClientTable = this.selectedClientTable.filter(t => t !== table);
 
-  onMappingChange(row: any) {
-    if (this.activeClientTable) {
-      row.mappedTable = this.activeClientTable;
+    if (this.activeClientTable === table) {
+      this.activeClientTable = this.selectedClientTable[0] ?? null;
+    } else {
+      this.saveTablesComponentState();
     }
+
+    if (this.clientTableDataMap[table]) delete this.clientTableDataMap[table];
+    
+    if (this.mappingDataByTable) {
+      Object.keys(this.mappingDataByTable).forEach(primary => {
+        const mappings = this.mappingDataByTable[primary];
+        if (mappings) {
+            const filtered = mappings.filter((m: any) => m.clientTableName !== table);
+            this.mappingDataByTable[primary] = filtered;
+        }
+      });
+    }
+    this.saveMappingState();
   }
 
-  onOkClick() {
-    this.mappingDataByTable = {};
-
-    this.selectedPrimaryTable.forEach((tableName: string) => {
-      this.mappingDataByTable[tableName] = [];
-
-      const relatedPrimaryData =
-        this.primaryTableData.filter(row => row.source === tableName);
-
-      relatedPrimaryData.forEach((primaryRow: any) => {
-
-        const enteredClientId: string = primaryRow.position;
-        const targetClientTable: string =
-          primaryRow.mappedTable || this.activeClientTable;
-
-        if (!enteredClientId || !targetClientTable) return;
-
-        const indexes: number[] = enteredClientId
-          .toString()
-          .split(' ')
-          .map((v: string): number => parseInt(v.trim(), 10))
-          .filter((v: number): boolean => !isNaN(v));
-
-        const clientCols = indexes
-          .map((i: number) => this.getClientRowsForTable(targetClientTable)[i - 1])
-          .filter((c: any) => !!c);
-
-        this.mappingDataByTable[tableName].push({
-          serverColumn: primaryRow.id,
-          clientColumns: clientCols.map((c: any) => c.id || c.name),
-          merge: clientCols.length > 1,
-          clientTableName: targetClientTable,
-          clientId: enteredClientId,
-          clientName: clientCols.map((c: any) => c.name || c.id).join(' ')
+  // ---------------- reconstruction helper ----------------
+  reconstructPrimaryTableData() {
+    this.primaryTableData = [];
+    this.selectedPrimaryTable.forEach(table => {
+      const mappedRows = this.mappingDataByTable[table];
+      if (Array.isArray(mappedRows) && mappedRows.length) {
+        const reconstructed = mappedRows.map((m: any) => ({
+          id: m.serverColumn,
+          source: table,
+          position: m.clientId ? String(m.clientId) : '',
+          mappedTable: m.clientTableName || null,
+          mapped: !!m.mapped
+        }));
+        this.primaryTableData = [...this.primaryTableData, ...reconstructed];
+      } else {
+        this.appService.getServerColumns(table).subscribe((res: any) => {
+          const tableData = Array.isArray(res) ? res.map(r => ({ id: r, source: table })) : [];
+          const existingIds = new Set(this.primaryTableData.filter(p => p.source === table).map(p => p.id));
+          const newRows = tableData.filter(d => !existingIds.has(d.id));
+          this.primaryTableData = [...this.primaryTableData, ...newRows];
         });
-      });
-    });
-
-    this.router.navigate(['/mapping-table'], {
-      state: {
-        mappingDataByTable: this.mappingDataByTable,
-        selectedPrimaryTable: this.selectedPrimaryTable,
-        selectedClientTable: this.selectedClientTable[0] || null
       }
     });
   }
 
-  // ================= RESTORE =================
-
-  private restorePrimaryColumns() {
-    this.selectedPrimaryTable.forEach(table => {
-      this.appService.getServerColumns(table).subscribe((res: any) => {
-        const tableData = res.map((r: any) => ({
-          id: r,
-          source: table
-        }));
-        this.primaryTableData.push(...tableData);
-      });
-    });
+  // ---------------- mapping logic ----------------
+  onMappingChange(row: any) {
+    if (this.activeClientTable) row.mappedTable = this.activeClientTable;
   }
 
-  private restoreClientColumns() {
-    this.selectedClientTable.forEach(table => {
-      this.appService.getClientColumns(table).subscribe((res: any) => {
-        this.clientTableDataMap[table] = res.map((r: any) =>
-          typeof r === 'object' ? r : { id: r }
-        );
+  onOkClick() {
+    this.mappingDataByTable = {};
+    this.selectedPrimaryTable.forEach(tableName => {
+      this.mappingDataByTable[tableName] = [];
+      const relatedPrimaryData = this.primaryTableData.filter(row => row.source === tableName);
+      
+      relatedPrimaryData.forEach(primaryRow => {
+        const enteredClientId = (primaryRow as any).position;
+        const targetClientTable = (primaryRow as any).mappedTable || this.activeClientTable;
+        if (!enteredClientId || !targetClientTable) return;
+
+        const clientRows = this.getClientRowsForTable(targetClientTable);
+        let clientMatch;
+
+        if (enteredClientId.includes(' ')) {
+           const indexes = enteredClientId.split(' ').map((v: string) => parseInt(v.trim())).filter((v: number) => !isNaN(v));
+           const mergeCols = indexes.map((i: number) => clientRows[i - 1]).filter((col: any) => !!col);
+           if (mergeCols.length) {
+             this.mappingDataByTable[tableName].push({
+               serverColumn: primaryRow.id,
+               clientColumns: mergeCols.map((c: any) => c.id || c.name),
+               merge: true,
+               clientTableName: targetClientTable,
+               clientId: enteredClientId,
+               clientName: mergeCols.map((c: any) => c.name || c.id).join(' ')
+             });
+           }
+        } else {
+          clientMatch = clientRows.find((_, i) => i + 1 == enteredClientId);
+          if (clientMatch) {
+            this.mappingDataByTable[tableName].push({
+               serverColumn: primaryRow.id,
+               clientColumns: [clientMatch.id || clientMatch.name || ''],
+               merge: false,
+               clientTableName: targetClientTable,
+               clientId: enteredClientId,
+               clientName: clientMatch.name || clientMatch.id || 'Unknown'
+            });
+          }
+        }
       });
     });
+
+    this.saveTablesComponentState();
+    const navState = {
+      mappingDataByTable: this.mappingDataByTable,
+      selectedPrimaryTable: this.selectedPrimaryTable,
+      selectedClientTable: this.selectedClientTable,
+      primaryDatabaseName: this.primaryDatabaseName,
+      clientDatabaseName: this.clientDatabaseName
+    };
+    sessionStorage.setItem('mappingState', JSON.stringify(navState));
+    this.router.navigate(['/mapping-table'], { state: navState });
   }
 
-  // ================= DROPDOWN =================
+  getMappingRows(tableName: string): any[] {
+    return this.mappingDataByTable[tableName] ?? [];
+  }
 
   closePrimaryDropdown(event: Event) {
     event.stopPropagation();
     const dropdown = document.querySelector('details.dropdown');
     dropdown?.removeAttribute('open');
+    this.isPrimaryDropdownOpen = false;
   }
 
   closeClientDropdown(event: Event) {
     event.stopPropagation();
-    const dropdown =
-      document.querySelectorAll('details.dropdown')[1] as HTMLElement;
+    const dropdown = document.querySelectorAll('details.dropdown')[1] as HTMLElement;
     dropdown?.removeAttribute('open');
+    this.isClientDropdownOpen = false;
   }
 }

@@ -55,6 +55,8 @@ export class SettingsComponent implements OnInit {
   localStorage.setItem('app-theme', theme);
   sessionStorage.setItem('isLoggedIn', '1'); // VERY IMPORTANT
   document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem(this.STORAGE_KEY, theme);
+  this.currentTheme = theme;
 }
 
 

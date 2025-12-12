@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable prettier/prettier */
+
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { transliterate } from "transliteration";
@@ -17,6 +14,55 @@ export class DatabaseMappingService {
   constructor() {
     console.log("Database Mapping Service Loaded");
   }
+
+  // =========================================================
+  // TABLE ORDERING BY RELATIONSHIP (Topological Sort)
+  // =========================================================
+
+
+  // 🔥 Auto-sort tables based on parent → child dependency
+  getMigrationOrder(relations: any[]): string[] {
+    const graph: Map<string, string[]> = new Map();
+    const indegree: Map<string, number> = new Map();
+
+    // Build nodes
+    relations.forEach((r: any) => {
+      if (!graph.has(r.parentTable)) graph.set(r.parentTable, []);
+      if (!graph.has(r.childTable)) graph.set(r.childTable, []);
+    });
+
+    // Build edges
+    relations.forEach((r: any) => {
+      graph.get(r.parentTable)!.push(r.childTable);
+      indegree.set(r.childTable, (indegree.get(r.childTable) || 0) + 1);
+      if (!indegree.has(r.parentTable)) indegree.set(r.parentTable, 0);
+    });
+
+    // Topological sort (Kahn's algorithm)
+    const queue: string[] = [];
+    for (const [node, deg] of indegree) {
+      if (deg === 0) queue.push(node);
+    }
+
+    const result: string[] = [];
+
+    while (queue.length) {
+      const node = queue.shift()!;
+      result.push(node);
+
+      for (const nxt of graph.get(node)!) {
+        indegree.set(nxt, indegree.get(nxt)! - 1);
+        if (indegree.get(nxt) === 0) queue.push(nxt);
+      }
+    }
+
+    return result;
+  }
+
+
+
+
+
 
   // =========================================================
   // SQL Dictionary for all Supported DB Drivers
@@ -216,6 +262,28 @@ export class DatabaseMappingService {
     return result.map((c: any) => c.column_name);
   }
 
+  // SERVER: get primary key column name for a table (Postgres)
+  private async getServerPrimaryKey(tableName: string): Promise<string | null> {
+    const server = this.ensureServer();
+
+    const rows = await server.query(
+      `
+    SELECT a.attname AS column_name
+    FROM   pg_index i
+    JOIN   pg_attribute a
+           ON a.attrelid = i.indrelid
+          AND a.attnum = ANY(i.indkey)
+    WHERE  i.indrelid = $1::regclass
+    AND    i.indisprimary;
+    `,
+      [tableName],
+    );
+
+    return rows[0]?.column_name ?? null;
+  }
+
+
+
   // =========================================================
   // CLIENT COLUMNS (PG / MSSQL / MySQL)
   // =========================================================
@@ -273,11 +341,12 @@ export class DatabaseMappingService {
   // }
 
   private cleanDate(value: any) {
-    if (!value) return null;          // <‑ important
+    if (!value) return null;
 
     const str = String(value).trim();
     if (!str) return null;
 
+    // If it already looks like YYYY-MM-DD, just return it
     if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
 
     const cleaned = str
@@ -285,6 +354,9 @@ export class DatabaseMappingService {
       .replace(/gmt[^\d-+]*/gi, '')
       .replace(/\+\d{4}/g, '')
       .trim();
+
+    // If cleaned is still just a date, avoid Date() timezone shift
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
 
     const parsed = new Date(cleaned);
     if (!isNaN(parsed.getTime())) {
@@ -351,6 +423,13 @@ export class DatabaseMappingService {
   async insertMappedData(body: any) {
     const { serverTable, clientTable, mappings } = body;
 
+    // Dynamically detect PK for the chosen server table
+    const pkColumn = await this.getServerPrimaryKey(serverTable);
+    if (!pkColumn) {
+      throw new InternalServerErrorException(
+        `No primary key found for server table ${serverTable}`,
+      );
+    }
     const clientTypes = await this.getClientColumnTypes(clientTable);
     const client = this.ensureClient();
     const server = this.ensureServer();
@@ -469,10 +548,49 @@ export class DatabaseMappingService {
 
         const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
 
-        await qr.query(
-          `INSERT INTO "${serverTable}" (${serverCols}) VALUES (${placeholders})`,
-          values,
-        );
+        // Build UPSERT: INSERT ... ON CONFLICT (pkColumn) DO UPDATE
+        const colsArray = mappings.map((m: any) => String(m.server)); // e.g. ['customer_id','gender',...]
+        const pk = pkColumn; // dynamic PK from Postgres
+
+        // const updateAssignments = colsArray
+        //   .filter(col => col !== pk)
+        //   .map(col => `"${col}" = EXCLUDED."${col}"`)
+        //   .join(', ');
+
+        // const sql = `
+        //   INSERT INTO "${serverTable}" (${serverCols})
+        //   VALUES (${placeholders})
+        //   ON CONFLICT ("${pk}")
+        //   DO UPDATE SET ${updateAssignments};
+        // `;
+
+        // await qr.query(sql, values);
+        const updateAssignments = colsArray
+          .filter(col => col !== pk)
+          .map(col => `"${col}" = EXCLUDED."${col}"`)
+          .join(', ');
+
+        let sql: string;
+
+        if (!updateAssignments) {
+          // Only PK is mapped → just insert; ignore duplicates
+          sql = `
+    INSERT INTO "${serverTable}" (${serverCols})
+    VALUES (${placeholders})
+    ON CONFLICT ("${pk}") DO NOTHING;
+  `;
+        } else {
+          // PK + other columns → full upsert
+          sql = `
+    INSERT INTO "${serverTable}" (${serverCols})
+    VALUES (${placeholders})
+    ON CONFLICT ("${pk}")
+    DO UPDATE SET ${updateAssignments};
+  `;
+        }
+
+        await qr.query(sql, values);
+
       }
 
       await qr.commitTransaction();
@@ -490,6 +608,77 @@ export class DatabaseMappingService {
       await qr.release();
     }
   }
+
+
+
+  //=====================================================================================
+  // MULTIPLE TABLES MAPPING SUPPORT
+  //=====================================================================================
+
+  // 🔥 Multi-table migration in FK-safe order
+  async migrateMultipleTables(body: any) {
+    const { tables, mappingsPerTable, relations } = body;
+
+    if (!Array.isArray(tables) || !mappingsPerTable || !Array.isArray(relations)) {
+      throw new InternalServerErrorException('Invalid payload for migrateMultipleTables');
+    }
+
+    // 1) Get full migration order (parent → child sequence)
+    const order = this.getMigrationOrder(relations);
+
+    // 2) Filter to only the tables selected by the user
+    const finalOrder = order.filter((t) => tables.includes(t));
+
+    // 3) Typed results array to avoid TS "never" error
+    const results: {
+      table: string;
+      success: boolean;
+      inserted?: number;
+      message: string;
+    }[] = [];
+
+    // 4) Migrate tables in dependency-safe order
+    for (const table of finalOrder) {
+      const mapping = mappingsPerTable[table];
+      if (!mapping) {
+        results.push({
+          table,
+          success: false,
+          message: 'No mapping provided for table'
+        });
+        continue;
+      }
+
+      try {
+        const result = await this.insertMappedData({
+          serverTable: table,
+          clientTable: table,
+          mappings: mapping
+        });
+
+        results.push({
+          table,
+          success: !!result.success,
+          inserted: result.inserted,
+          message: result.message || (result.success ? 'Migrated' : 'Failed')
+        });
+
+      } catch (err: any) {
+        results.push({
+          table,
+          success: false,
+          message: `Migration error: ${err?.message ?? String(err)}`
+        });
+      }
+    }
+
+    return {
+      success: true,
+      migratedTables: results
+    };
+  }
+
+
 
 
 
@@ -882,7 +1071,7 @@ export class DatabaseMappingService {
     };
   }
 
+
+
+
 }
-
-
-

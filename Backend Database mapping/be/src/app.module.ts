@@ -32,4 +32,4 @@ import { DatabaseMappingModule } from './database-mapping/database-mapping.modul
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

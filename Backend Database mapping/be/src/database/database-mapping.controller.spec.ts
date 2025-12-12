@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { DatabaseMappingController } from './database-mapping.controller';
+import { DatabaseMappingController } from '../database-mapping/database-mapping.controller';
 
 describe('DatabaseMappingController', () => {
   let controller: DatabaseMappingController;
