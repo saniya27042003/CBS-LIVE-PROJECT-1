@@ -13,47 +13,51 @@ export class ProfileComponent implements OnInit {
 
   username = '';
   email = '';
-  profilePic: string = '';
-  defaultPic = 'https://www.gravatar.com/avatar/?d=mp&s=200'; // clean fallback
 
-    isGoogleUser: boolean = false; // NEW FLAG
+  profilePic: string | null = null;
+  initialLetter = '';
+
+  isGoogleUser = false;
+
+  // ⭐ NEW FLAG
+  showImage = false;
 
   constructor(private router: Router) {}
 
-ngOnInit(): void {
-  const userData = localStorage.getItem('user');
+  ngOnInit(): void {
+    const userData = localStorage.getItem('user');
 
-  if (userData) {
+    if (!userData) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     const user = JSON.parse(userData);
 
     this.username = user?.name || 'User';
     this.email = user?.email || '';
 
-    // ⭐ Fallback to REAL Google avatar if picture missing
-   this.profilePic = user.picture
-  ? user.picture
-  : 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+    this.profilePic = user?.picture || null;
+    this.initialLetter = this.username.charAt(0).toUpperCase();
 
-   this.isGoogleUser = localStorage.getItem('isGoogleUser') === '1';
-  } else {
-    this.router.navigate(['/login']);
-  }
-}
+    // show image only if URL exists
+    this.showImage = !!this.profilePic;
 
-openGoogleAccount() {
-  if (this.isGoogleUser) {
-    window.open('https://myaccount.google.com', '_blank');
-  }
-}
-
-
-
-  // 🔥 STEP 3 — Broken images automatically fallback
-  onImageError(event: any) {
-    event.target.src = this.defaultPic;
+    this.isGoogleUser = localStorage.getItem('isGoogleUser') === '1';
   }
 
-  onLogout() {
+  // 🔥 CRITICAL FIX
+  onImageError(): void {
+    this.showImage = false; // fallback to initials
+  }
+
+  openGoogleAccount(): void {
+    if (this.isGoogleUser) {
+      window.open('https://myaccount.google.com', '_blank');
+    }
+  }
+
+  onLogout(): void {
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = '/login';
