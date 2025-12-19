@@ -21,8 +21,6 @@ export class DatabaseMappingController {
     return this.dbService.getServerDatabases(config);
   }
 
-
-
   @Get('server/tables')
   getServerTables() {
     return this.dbService.getPrimaryTableNames();
@@ -89,10 +87,9 @@ export class DatabaseMappingController {
     return this.dbService.getTableStructureWithKeys();
   }
 
-
   @Post("migrate-multiple")
   async migrateMultiple(@Body() body: any) {
     return this.databaseMappingService.migrateMultipleTables(body);
   }
-
+  
 }

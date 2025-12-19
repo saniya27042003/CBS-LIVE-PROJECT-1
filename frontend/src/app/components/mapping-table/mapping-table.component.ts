@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { AppService } from '../../../service/app.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-mapping-table',

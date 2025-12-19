@@ -5,7 +5,6 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { transliterate } from "transliteration";
 
-
 @Injectable()
 export class DatabaseMappingService {
   private clientDB: DataSource | null = null;
@@ -18,8 +17,6 @@ export class DatabaseMappingService {
   // =========================================================
   // TABLE ORDERING BY RELATIONSHIP (Topological Sort)
   // =========================================================
-
-
   // 🔥 Auto-sort tables based on parent → child dependency
   getMigrationOrder(relations: any[]): string[] {
     const graph: Map<string, string[]> = new Map();
@@ -58,11 +55,6 @@ export class DatabaseMappingService {
 
     return result;
   }
-
-
-
-
-
 
   // =========================================================
   // SQL Dictionary for all Supported DB Drivers
@@ -386,10 +378,6 @@ export class DatabaseMappingService {
 
     return parsed.toISOString().replace('Z', '');
   }
-
-
-
-
 
   // =========================================================
   // CLIENT COLUMN TYPES (for auto type detection)
@@ -1074,4 +1062,4 @@ export class DatabaseMappingService {
 
 
 
-}
+} 
