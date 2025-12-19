@@ -98,12 +98,12 @@
             </button>
             <hr class="my-4 border-gray-600" aria-placeholder="or">
             <!-- ✅ CONTINUE WITH GOOGLE -->
-            <button type="button" (click)="onGoogleLogin()" class="btn w-full h-10 shadow-lg text-sm tracking-wide
-                     flex items-center justify-center gap-3
-                     border border-gray-500 bg-white text-black hover:bg-gray-100" id="googlebutton">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
-              Continue with Google
-            </button>
+          <!-- inside your login form where button sits -->
+<button type="button" (click)="onGoogleLogin()" class="btn w-full h-10 ...">
+  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5" />
+  Sign in with Google
+</button>
+
 
           </div>
 

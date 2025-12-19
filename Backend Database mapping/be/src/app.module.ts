@@ -1,16 +1,17 @@
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UsersModule } from './users/users.module';
+
 import { AuthModule } from './auth/auth.module';
 import { DatabaseMappingModule } from './database-mapping/database-mapping.module';
-import { User } from './users/user.entity'; // your entity
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule,AuthModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         type: 'postgres',
@@ -19,7 +20,7 @@ import { User } from './users/user.entity'; // your entity
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         database: config.get<string>('DB_NAME'),
-        entities: [User], // add all other entities you need here
+        // add all other entities you need here
         synchronize: false,
         logging: false,
       }),
@@ -27,7 +28,7 @@ import { User } from './users/user.entity'; // your entity
 
     // Feature modules
     DatabaseMappingModule,
-    UsersModule,
+  
     AuthModule,
   ],
 })

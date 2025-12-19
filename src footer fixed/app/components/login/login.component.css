@@ -1,0 +1,122 @@
+/* Page Background */
+.relative {
+  background-color: #131111;
+}
+
+/* ✅ LEFT LOGO STYLING */
+.logo-img {
+  width: 260px;
+  animation: floatLogo 4s ease-in-out infinite;
+}
+
+.company-name {
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.company-tag {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #d1d5db;
+  margin-bottom: 12px;
+}
+
+.company-desc {
+  font-size: 13px;
+  color: #d1d5db;
+  margin-top: 14px;
+  line-height: 1.6;
+  max-width: 380px;
+}
+
+.divider {
+  width: 80px;
+  height: 4px;
+  margin: 10px auto;
+  border-radius: 999px;
+  background: linear-gradient(to right, #3b82f6, #06b6d4);
+}
+
+/* ✅ Floating Logo Animation */
+@keyframes floatLogo {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* ✅ Input Line Style */
+.input-line {
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid #9ca3af;
+  background-color: transparent;
+  transition: border-color 0.3s;
+  height: 32px;
+  color: white;
+}
+
+.input-line:focus {
+  outline: none;
+  border-color: #00a99a;
+}
+
+.label-text {
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+/* ✅ RIGHT LOGIN CARD */
+.login-card {
+  background-image: linear-gradient(to bottom, #611717, #0f2443);
+  box-shadow: 5px 5px 50px rgba(17, 145, 139, 0.528);
+  margin-right: 120px;
+}
+
+/* Buttons */
+.btn {
+  color: white;
+}
+
+/* ✅ Blob Animation */
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10px, -10px) scale(1); }
+  66% { transform: translate(-5px, 10px) scale(0.6); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+  filter: blur(100px);
+}
+
+.animation-delay-1000 {
+  animation-delay: 5s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 5s;
+}
+
+#googlebutton {
+  background-color: rgb(248, 192, 51);
+  color: black;
+}
+
+#googlebutton:hover {
+  background-color: rgb(237, 170, 1);
+}
+
+#LoginButton{
+    background-color: rgb(17, 156, 211);
+}
+#resetButton{
+    background-color: #da133e;
+}
+#resetButton:hover{
+    background-color: #b1122c;
+}
+#LoginButton:hover{
+    background-color: rgb(10, 119, 161);
+}

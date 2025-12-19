@@ -21,6 +21,10 @@ export class DatabaseMappingController {
     return this.dbService.getServerDatabases(config);
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> c8906b80ab3adca39702a640c9eccffa26c2f166
   @Get('server/tables')
   getServerTables() {
     return this.dbService.getPrimaryTableNames();

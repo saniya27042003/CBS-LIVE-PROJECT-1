@@ -1,282 +1,222 @@
-<div class="flex max-h-140 overflow-y-auto w-full">
-
-    <!-- ~~~~~~~~~~~~~~~~~
+<!-- top-level page wrapper: gives full viewport height and reserves space for footer -->
+<div class="flex w-full min-h-screen pb-20" style="overflow-y:auto; -webkit-overflow-scrolling: touch;">
+  <!-- ~~~~~~~
     Primary Table
- ~~~~~~~~~~~~~~~~~~~~~~~~~-->
-    <div class="flex-col w-1/2 w-150">
-
-        <!-- DROPDOWN -->
-        <div class="flex space-x-4 p-4 h-40">
-            <div>
-                <details #primaryDropdown class="dropdown"
-                    (toggle)="isPrimaryDropdownOpen = primaryDropdown.hasAttribute('open')">
-
-                    <summary class="btn border border-gray-600 w-40 m-1 flex items-center" [ngClass]="{
-    'justify-between pr-2': isPrimaryDropdownOpen && selectedPrimaryTable.length > 0,
-    'justify-center': !(isPrimaryDropdownOpen && selectedPrimaryTable.length > 0),
-    'opacity-40 pointer-events-none': !primaryDatabaseName
-  }" (click)="primaryDatabaseName && getPrimaryTables()">
-                        <span>Select Table</span>
-
-                        <button *ngIf="isPrimaryDropdownOpen && selectedPrimaryTable.length > 0" type="button"
-                            class="ml-2 text-red-400 font-bold hover:text-red-600"
-                            (click)="closePrimaryDropdown($event)">
-                            ✕
-                        </button>
-                    </summary>
-
-
-                    <ul
-                        class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
-                        <li class="mb-2">
-                            <input type="text" placeholder="Type here" class="input input-bordered w-full"
-                                [(ngModel)]="primaryTableSearch" />
-                        </li>
-
-                        <div class="max-h-35 overflow-y-auto">
-                            <li *ngFor="let item of dropdownItemsPrimary | filter:primaryTableSearch">
-                                <a (click)="onSelectPrimaryTable(item)" class="flex justify-between">
-                                    {{ item }}
-                                    <span *ngIf="selectedPrimaryTable.includes(item)"
-                                        class="font-bold text-primary">✓</span>
-                                </a>
-                            </li>
-                        </div>
-                    </ul>
-                </details>
+  ~~~~~~~~~-->
+  <div class="flex-col w-1/2 w-150">
+    <!-- DROPDOWN -->
+    <div class="flex space-x-4 p-4 h-40">
+      <div>
+        <details #primaryDropdown class="dropdown" (toggle)="isPrimaryDropdownOpen = primaryDropdown.hasAttribute('open')">
+          <summary
+            class="btn border border-gray-600 w-40 m-1 flex items-center"
+            [ngClass]="{
+              'justify-between pr-2': isPrimaryDropdownOpen && selectedPrimaryTable.length > 0,
+              'justify-center': !(isPrimaryDropdownOpen && selectedPrimaryTable.length > 0),
+              'opacity-40 pointer-events-none': !primaryDatabaseName
+            }"
+            (click)="primaryDatabaseName && getPrimaryTables()"
+          >
+            <span>Select Table</span>
+ 
+            <button *ngIf="isPrimaryDropdownOpen && selectedPrimaryTable.length > 0" type="button"
+              class="ml-2 text-red-400 font-bold hover:text-red-600"
+              (click)="closePrimaryDropdown($event)">
+              ✕
+            </button>
+          </summary>
+ 
+          <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
+            <li class="mb-2">
+              <input type="text" placeholder="Type here" class="input input-bordered w-full" [(ngModel)]="primaryTableSearch" />
+            </li>
+ 
+            <div class="max-h-35 overflow-y-auto">
+              <li *ngFor="let item of dropdownItemsPrimary | filter:primaryTableSearch">
+                <a (click)="onSelectPrimaryTable(item)" class="flex justify-between">
+                  {{ item }}
+                  <span *ngIf="selectedPrimaryTable.includes(item)" class="font-bold text-primary">✓</span>
+                </a>
+              </li>
             </div>
-
-            <div
-                class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
-                <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
-                    {{ selectedPrimaryTable.length ? selectedPrimaryTable.join(', ') : 'No table selected' }}
-                </div>
-            </div>
+          </ul>
+        </details>
+      </div>
+ 
+      <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
+        <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
+          {{ selectedPrimaryTable.length ? selectedPrimaryTable.join(', ') : 'No table selected' }}
         </div>
-
-        <!-- DB NAME -->
-        <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4">
-            <div class="card-body p-0 font-bold font-roboto">
-                <h3>{{ primaryDatabaseName }}</h3>
-            </div>
-        </div>
-
-        <!-- ✅ PRIMARY BADGES (ACTIVE + OPACITY) -->
-        <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
-            <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
-                <h3 class="font-bold mb-1">Primary side Tables:</h3>
-
-                <div class="flex flex-wrap gap-1 mt-1">
-                    <span *ngFor="let table of selectedPrimaryTable" (click)="activePrimaryTable = table"
-                        class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer" [ngClass]="{
-            'opacity-100 bg-primary text-white': table === activePrimaryTable,
-            'opacity-40 hover:opacity-70': table !== activePrimaryTable
-          }">
-
-                        {{ table }}
-
-                        <button class="ml-1 text-white font-bold hover:text-red-400"
-                            (click)="removePrimaryTable(table); $event.stopPropagation()">
-                            ✕
-                        </button>
-                    </span>
-                </div>
-            </div>
-
-            <!-- ✅ ONLY ACTIVE PRIMARY TABLE -->
-                         <div class="border border-gray-200 mt-4">
-
-            <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
-                <table class="table min-w-full">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Position</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr class="bg-gray-300 text-black font-bold">
-                            <td colspan="3">Table :{{ activePrimaryTable }}</td>
-                        </tr>
-
-                        <tr *ngFor="let row of getRowsForTable(activePrimaryTable); let i = index">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ row.id }}</td>
-                            <td>
-                                <input type="text" class="input input-bordered input-sm w-full"
-                                    [(ngModel)]="row.position" (input)="onMappingChange(row)" />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        </div>
+      </div>
     </div>
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~
-    CLIENT TABLE
- ~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-    <div class="flex-col w-1/2">
-        <div class="flex space-x-4 p-4 h-40 ml-4">
-
-            <div>
-                <details #clientDropdown class="dropdown"
-                    (toggle)="isClientDropdownOpen = clientDropdown.hasAttribute('open')">
-
-                    <summary class="btn border border-gray-600 w-40 m-1 flex items-center" [ngClass]="{
-    'justify-between pr-2': isClientDropdownOpen && selectedClientTable.length > 0,
-    'justify-center': !(isClientDropdownOpen && selectedClientTable.length > 0),
-    'opacity-40 pointer-events-none': !clientDatabaseName
-  }" (click)="clientDatabaseName && getClientTables()">
-
-                        <span>Select Table</span>
-
-                        <button *ngIf="isClientDropdownOpen && selectedClientTable.length > 0" type="button"
-                            class="ml-2 text-red-400 font-bold hover:text-red-600"
-                            (click)="closeClientDropdown($event)">
-                            ✕
-                        </button>
-                    </summary>
-
-
-                    <ul
-                        class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
-                        <li class="mb-2">
-                            <input type="text" placeholder="Type here" class="input input-bordered w-full"
-                                [(ngModel)]="clientTableSearch" />
-                        </li>
-
-                        <div class="max-h-35 overflow-y-auto">
-                            <li *ngFor="let item of dropdownItemsClient | filter:clientTableSearch">
-                                <a (click)="onSelectClientTable(item)" class="flex justify-between">
-                                    {{ item }}
-                                    <span *ngIf="selectedClientTable.includes(item)"
-                                        class="font-bold text-primary">✓</span>
-                                </a>
-                            </li>
-                        </div>
-                    </ul>
-                </details>
-            </div>
-
-            <div
-                class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
-                <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
-                    {{ selectedClientTable.length > 0 ? selectedClientTable.join(', ') : 'No table selected' }}
-                </div>
-            </div>
-        </div>
-
-        <!-- ✅ DATABASE NAME (UNCHANGED) -->
-        <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4">
-            <div class="card-body p-0 font-bold font-roboto">
-                <h3>{{clientDatabaseName}}</h3>
-            </div>
-        </div>
-
-        <!-- ✅ CLIENT TABLE BADGES (ONLY OPACITY ADDED) -->
-        <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg ">
-            <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
-                <h3 class="font-bold mb-1">Client side Tables:</h3>
-
-                <div class="flex flex-wrap gap-1 mt-1">
-                    <span *ngFor="let table of selectedClientTable"
-                        (click)="clientDatabaseName && (activeClientTable = table)"
-                        class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer transition-all duration-200"
-                        [ngClass]="{
-      'opacity-100 bg-primary text-white': table === activeClientTable && clientDatabaseName,
-      'opacity-40 hover:opacity-70': table !== activeClientTable && clientDatabaseName,
-      'opacity-30 pointer-events-none': !clientDatabaseName
-    }">
-                        {{ table }}
-
-                        <button class="ml-1 text-white font-bold hover:text-red-400"
-                            (click)="removeClientTable(table); $event.stopPropagation()"
-                            [disabled]="!clientDatabaseName">
-                            ✕
-                        </button>
-                    </span>
-                </div>
-
-            </div>
-
-            <!-- ✅ CLIENT DATA TABLE (ORIGINAL STRUCTURE RESTORED) -->
-            <div class="border border-gray-200 mt-4">
-                <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
-                    <table class="table min-w-full">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            <tr class="bg-gray-300 text-black font-bold">
-                                <td colspan="3">Table: {{ activeClientTable }}</td>
-                            </tr>
-
-                            <tr *ngFor="let row of getClientRowsForTable(activeClientTable); let i = index">
-                                <td>{{ i + 1 }}</td>
-                                <td>{{ row.id }}</td>
-                                <td>
-                                    <input type="text" class="input input-bordered input-sm w-full"
-                                        [(ngModel)]="row.position" />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="ml-8 mt-4 flex space-x-4">
-            <button class="btn btn-wide border border-gray-600" (click)="goToDatabase()">
-                Go back to Select Database
+ 
+    <!-- DB NAME -->
+    <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4">
+      <div class="card-body p-0 font-bold font-roboto">
+        <h3>{{ primaryDatabaseName }}</h3>
+      </div>
+    </div>
+ 
+    <!-- ✅ PRIMARY BADGES (ACTIVE + OPACITY) -->
+    <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
+      <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
+        <h3 class="font-bold mb-1">Primary side Tables:</h3>
+ 
+        <div class="flex flex-wrap gap-1 mt-1">
+          <span *ngFor="let table of selectedPrimaryTable" (click)="activePrimaryTable = table"
+                class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer"
+                [ngClass]="{
+                  'opacity-100 bg-primary text-white': table === activePrimaryTable,
+                  'opacity-40 hover:opacity-70': table !== activePrimaryTable
+                }">
+            {{ table }}
+            <button class="ml-1 text-white font-bold hover:text-red-400"
+                    (click)="removePrimaryTable(table); $event.stopPropagation()">
+              ✕
             </button>
-            <button class="btn btn-wide border border-gray-600 w-44" (click)="onOkClick()">
-                OK
-            </button>
+          </span>
         </div>
-        <!-- ===== Mapping section Table ===== -->
-        <!-- <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
-  <div *ngFor="let tableName of selectedPrimaryTable">
-    <h4 class="bg-gray-300 text-black font-semibold px-2 py-1">
-      Table: {{ tableName }}
-    </h4>
-
-    <div class="overflow-x-auto border border-base-content/5 bg-base-100 mt-2">
-      <div *ngIf="getMappingRows(tableName).length > 0; else noMapping">
-        <table class="table w-full text-center">
+      </div>
+ 
+      <!-- ✅ ONLY ACTIVE PRIMARY TABLE -->
+      <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
+        <table class="table min-w-full">
           <thead>
             <tr>
-              <th>No</th>
-              <th>Row ID</th>
-              <th>Client ID</th>
-              <th>Client Name</th>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Position</th>
             </tr>
           </thead>
+ 
           <tbody>
-            <tr *ngFor="let map of getMappingRows(tableName); let i = index">
+            <tr class="bg-gray-300 text-black font-bold">
+              <td colspan="3">Table :{{ activePrimaryTable }}</td>
+            </tr>
+ 
+            <tr *ngFor="let row of getRowsForTable(activePrimaryTable); let i = index">
               <td>{{ i + 1 }}</td>
-              <td>{{ map.rowId }}</td>
-              <td>{{ map.clientId }}</td>
-              <td>{{ map.clientName }}</td>
+              <td>{{ row.id }}</td>
+              <td>
+                <input type="text" class="input input-bordered input-sm w-full" [(ngModel)]="row.position" (input)="onMappingChange(row)" />
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
-
-    <ng-template #noMapping>
-      <p class="text-gray-400 italic p-2">
-        No mapping data found for {{ tableName }}
-      </p>
-    </ng-template>
-  </div> -->
+  </div>
+ 
+  <!-- ~~~~~~~~~
+    CLIENT TABLE
+  ~~~~~~~~~ -->
+ 
+  <div class="flex-col w-1/2">
+    <div class="flex space-x-4 p-4 h-40 ml-4">
+      <div>
+        <details #clientDropdown class="dropdown" (toggle)="isClientDropdownOpen = clientDropdown.hasAttribute('open')">
+          <summary class="btn border border-gray-600 w-40 m-1 flex items-center"
+                   [ngClass]="{
+                     'justify-between pr-2': isClientDropdownOpen && selectedClientTable.length > 0,
+                     'justify-center': !(isClientDropdownOpen && selectedClientTable.length > 0),
+                     'opacity-40 pointer-events-none': !clientDatabaseName
+                   }"
+                   (click)="clientDatabaseName && getClientTables()">
+            <span>Select Table</span>
+ 
+            <button *ngIf="isClientDropdownOpen && selectedClientTable.length > 0" type="button"
+                    class="ml-2 text-red-400 font-bold hover:text-red-600"
+                    (click)="closeClientDropdown($event)">
+              ✕
+            </button>
+          </summary>
+ 
+          <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-110 p-2 shadow-sm border border-gray-200 mt-2">
+            <li class="mb-2">
+              <input type="text" placeholder="Type here" class="input input-bordered w-full" [(ngModel)]="clientTableSearch" />
+            </li>
+ 
+            <div class="max-h-35 overflow-y-auto">
+              <li *ngFor="let item of dropdownItemsClient | filter:clientTableSearch">
+                <a (click)="onSelectClientTable(item)" class="flex justify-between">
+                  {{ item }}
+                  <span *ngIf="selectedClientTable.includes(item)" class="font-bold text-primary">✓</span>
+                </a>
+              </li>
+            </div>
+          </ul>
+        </details>
+      </div>
+ 
+     <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm h-10 w-60 m-1 p-2 flex items-center justify-start">
+        <div class="card-body p-0 max-h-40 overflow-y-auto scrollbar-hide">
+          {{ selectedClientTable.length > 0 ? selectedClientTable.join(', ') : 'No table selected' }}
+        </div>
+      </div>
     </div>
+ 
+    <!-- ✅ DATABASE NAME (UNCHANGED) -->
+    <div class="card bg-base-200 text-base-content border border-gray-600 rounded-lg shadow-sm ml-4 p-4">
+      <div class="card-body p-0 font-bold font-roboto">
+        <h3>{{clientDatabaseName}}</h3>
+      </div>
+    </div>
+ 
+    <!-- ✅ CLIENT TABLE BADGES (ONLY OPACITY ADDED) -->
+    <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg ">
+      <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
+        <h3 class="font-bold mb-1">Client side Tables:</h3>
+ 
+        <div class="flex flex-wrap gap-1 mt-1">
+          <span *ngFor="let table of selectedClientTable" (click)="clientDatabaseName && (activeClientTable = table)"
+                class="badge badge-lg flex items-center gap-2 pr-2 cursor-pointer transition-all duration-200"
+                [ngClass]="{
+                  'opacity-100 bg-primary text-white': table === activeClientTable && clientDatabaseName,
+                  'opacity-40 hover:opacity-70': table !== activeClientTable && clientDatabaseName,
+                  'opacity-30 pointer-events-none': !clientDatabaseName
+                }">
+            {{ table }}
+            <button class="ml-1 text-white font-bold hover:text-red-400"
+                    (click)="removeClientTable(table); $event.stopPropagation()"
+                    [disabled]="!clientDatabaseName">
+              ✕
+            </button>
+          </span>
+        </div>
+      </div>
+ 
+      <!-- ✅ CLIENT DATA TABLE (ORIGINAL STRUCTURE RESTORED) -->
+      <div class="border border-gray-200 mt-4">
+        <div class="max-h-80 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100">
+          <table class="table min-w-full">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+              </tr>
+            </thead>
+ 
+            <tbody>
+              <tr class="bg-gray-300 text-black font-bold">
+                <td colspan="3">Table: {{ activeClientTable }}</td>
+              </tr>
+ 
+              <tr *ngFor="let row of getClientRowsForTable(activeClientTable); let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ row.id }}</td>
+                <td>
+                  <!-- <input type="text" class="input input-bordered input-sm w-full" [(ngModel)]="row.position" /> -->
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="ml-8 mt-4 flex space-x-4">
+      <button class="btn btn-wide border border-gray-600" (click)="goToDatabase()">Go back to Select Database</button>
+      <button class="btn btn-wide border border-gray-600 w-44" (click)="onOkClick()">OK</button>
+    </div>
+  </div>
+</div>

@@ -1,30 +1,61 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css'] // or .scss
+  styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
+
+  username = '';
+  email = '';
+  profilePic: string = '';
+  defaultPic = 'https://www.gravatar.com/avatar/?d=mp&s=200'; // clean fallback
+
+    isGoogleUser: boolean = false; // NEW FLAG
 
   constructor(private router: Router) {}
 
-  onLogout() {
-    // ✅ Remove tables state so selected tables & DB info are cleared
-    sessionStorage.removeItem('tablesComponentState');
-    sessionStorage.clear();
+ngOnInit(): void {
+  const userData = localStorage.getItem('user');
 
-    localStorage.removeItem('app-theme');
-    document.documentElement.setAttribute('data-theme', 'dark');
+  if (userData) {
+    const user = JSON.parse(userData);
 
-  // Remove theme from page
-  // document.documentElement.removeAttribute('data-theme');
-    // (Optional) Clear everything if you want a full reset:
-    // sessionStorage.clear();
-    // localStorage.clear();
+    this.username = user?.name || 'User';
+    this.email = user?.email || '';
 
-    // ✅ Navigate to login
+    // ⭐ Fallback to REAL Google avatar if picture missing
+   this.profilePic = user.picture
+  ? user.picture
+  : 'https://www.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png';
+
+   this.isGoogleUser = localStorage.getItem('isGoogleUser') === '1';
+  } else {
     this.router.navigate(['/login']);
+  }
+}
+
+openGoogleAccount() {
+  if (this.isGoogleUser) {
+    window.open('https://myaccount.google.com', '_blank');
+  }
+}
+
+
+
+  // 🔥 STEP 3 — Broken images automatically fallback
+  onImageError(event: any) {
+    event.target.src = this.defaultPic;
+  }
+
+  onLogout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/login';
   }
 }
