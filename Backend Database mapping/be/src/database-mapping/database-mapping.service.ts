@@ -1,1077 +1,366 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { transliterate } from "transliteration";
-
+import { decodeYogesh, transliterateMarathiToEnglish } from '../font-decoder';
 
 @Injectable()
 export class DatabaseMappingService {
+  private readonly logger = new Logger(DatabaseMappingService.name);
   private clientDB: DataSource | null = null;
   private serverDB: DataSource | null = null;
 
-  constructor() {
-    console.log("Database Mapping Service Loaded");
-  }
-
-  // =========================================================
-  // TABLE ORDERING BY RELATIONSHIP (Topological Sort)
-  // =========================================================
-
-
-  // 🔥 Auto-sort tables based on parent → child dependency
-  getMigrationOrder(relations: any[]): string[] {
-    const graph: Map<string, string[]> = new Map();
-    const indegree: Map<string, number> = new Map();
-
-    // Build nodes
-    relations.forEach((r: any) => {
-      if (!graph.has(r.parentTable)) graph.set(r.parentTable, []);
-      if (!graph.has(r.childTable)) graph.set(r.childTable, []);
-    });
-
-    // Build edges
-    relations.forEach((r: any) => {
-      graph.get(r.parentTable)!.push(r.childTable);
-      indegree.set(r.childTable, (indegree.get(r.childTable) || 0) + 1);
-      if (!indegree.has(r.parentTable)) indegree.set(r.parentTable, 0);
-    });
-
-    // Topological sort (Kahn's algorithm)
-    const queue: string[] = [];
-    for (const [node, deg] of indegree) {
-      if (deg === 0) queue.push(node);
-    }
-
-    const result: string[] = [];
-
-    while (queue.length) {
-      const node = queue.shift()!;
-      result.push(node);
-
-      for (const nxt of graph.get(node)!) {
-        indegree.set(nxt, indegree.get(nxt)! - 1);
-        if (indegree.get(nxt) === 0) queue.push(nxt);
-      }
-    }
-
-    return result;
-  }
-
-
-
-
-
-
-  // =========================================================
-  // SQL Dictionary for all Supported DB Drivers
-  // =========================================================
-  private getQueryConfig(driver: string) {
-    const configs = {
-      postgres: {
-        tables: `
-          SELECT table_name 
-          FROM information_schema.tables 
-          WHERE table_schema='public' AND table_type='BASE TABLE'
-        `,
-        columns: `
-          SELECT column_name 
-          FROM information_schema.columns 
-          WHERE table_schema='public' AND table_name = $1
-          ORDER BY ordinal_position
-        `,
-        sampleRows: (table: string) => `SELECT * FROM "${table}" LIMIT 100`,
-      },
-
-      mssql: {
-        tables: `
-          SELECT TABLE_NAME 
-          FROM INFORMATION_SCHEMA.TABLES 
-          WHERE TABLE_TYPE='BASE TABLE'
-        `,
-        columns: `
-          SELECT COLUMN_NAME 
-          FROM INFORMATION_SCHEMA.COLUMNS 
-          WHERE TABLE_NAME = @0
-          ORDER BY ORDINAL_POSITION
-        `,
-        sampleRows: (table: string) => `SELECT TOP 100 * FROM [${table}]`,
-      },
-
-      mysql: {
-        tables: `SHOW TABLES`,
-        columns: `SHOW COLUMNS FROM ??`,
-        sampleRows: (table: string) => `SELECT * FROM \`${table}\` LIMIT 100`,
-      }
-    };
-
-    return configs[driver] ?? configs.postgres;  // fallback prevents null errors
-  }
-
-  private getDriver(ds: DataSource) {
-    return ds.options.type as string; // postgres | mssql | mysql...
-  }
-
-  // =========================================================
-  // CLIENT DATABASE CONNECTION (Dynamic: PG / MSSQL / MySQL)
-  // =========================================================
-  async connect(config: any) {
-    try {
-      if (this.clientDB?.isInitialized) await this.clientDB.destroy();
-
-      const isMssql = config.type === 'mssql';
-
-      const ds = new DataSource({
-        type: config.type,
-        host: config.host,
-        port: Number(config.port),
-        username: config.username,
-        password: config.password,
-        database: config.database,
-        entities: [],
-        synchronize: false,
-        options: isMssql
-          ? { encrypt: true, trustServerCertificate: true }
-          : undefined,
-      });
-
-      await ds.initialize();
-      this.clientDB = ds;
-
-      return { success: true, message: "Client DB connected successfully!" };
-
-    } catch (err: any) {
-      return {
-        success: false,
-        message: "Client DB connection failed",
-        error: err.message,
-      };
-    }
-  }
-
-
-  async getServerDatabases(config: any) {
-    const ds = new DataSource({
-      type: 'postgres',
-      host: config.host,
-      port: Number(config.port),
-      username: config.username,
-      password: config.password,
-      database: 'postgres',
-    });
-
-    await ds.initialize();
-
-    const result = await ds.query(`
-    SELECT datname FROM pg_database WHERE datistemplate = false;
-  `);
-
-    await ds.destroy();
-
-    return result.map((r: any) => r.datname);
-  }
-
-
-  // =========================================================
-  // SERVER DATABASE (Always PostgreSQL)
-  // =========================================================
-  async connectServer(config: any) {
-    try {
-      if (this.serverDB?.isInitialized) await this.serverDB.destroy();
-
-      const ds = new DataSource({
-        type: "postgres",
-        host: config.host,
-        port: Number(config.port),
-        username: config.username,
-        password: config.password,
-        database: config.database,
-        synchronize: false,
-      });
-
-      await ds.initialize();
-      this.serverDB = ds;
-
-      return { success: true, message: "Server DB connected successfully!" };
-
-    } catch (err: any) {
-      return {
-        success: false,
-        message: "Server DB connection failed",
-        error: err.message,
-      };
-    }
-  }
+  /* ===================== HELPERS ===================== */
 
   private ensureClient() {
     if (!this.clientDB?.isInitialized)
-      throw new InternalServerErrorException("Client DB not connected");
+      throw new InternalServerErrorException('Client DB not connected');
     return this.clientDB;
   }
 
   private ensureServer() {
     if (!this.serverDB?.isInitialized)
-      throw new InternalServerErrorException("Server DB not connected");
+      throw new InternalServerErrorException('Server DB not connected');
     return this.serverDB;
   }
 
-  // =========================================================
-  // CLIENT TABLE LIST
-  // =========================================================
-  async getClientTableNames() {
-    const client = this.ensureClient();
-    const driver = this.getDriver(client);
-    const config = this.getQueryConfig(driver);
-
-    const result = await client.query(config.tables);
-
-    return result.map((t: any) =>
-      t.table_name || t.TABLE_NAME || Object.values(t)[0]
-    );
+  private getClientDriver() {
+    return this.ensureClient().options.type;
   }
 
-  // =========================================================
-  // SERVER TABLE LIST
-  // =========================================================
+  /* ===================== CONNECTIONS ===================== */
+
+  async connect(config: any) {
+    if (this.clientDB?.isInitialized) await this.clientDB.destroy();
+
+    const isMssql = config.type === 'mssql';
+
+    // ✅ FIX: Ensure password is a String. Numbers will crash Postgres SCRAM auth.
+    const safePassword = config.password !== undefined ? String(config.password) : '';
+
+    const ds = new DataSource({
+      type: config.type,
+      host: config.host,
+      port: Number(config.port),
+      username: config.username,
+      password: safePassword, // <--- Fixed here
+      database: config.database,
+      synchronize: false,
+      options: isMssql
+        ? { encrypt: false, trustServerCertificate: true }
+        : undefined,
+    });
+
+    await ds.initialize();
+    this.clientDB = ds;
+    return { success: true };
+  }
+
+  async connectServer(config: any) {
+    if (this.serverDB?.isInitialized) await this.serverDB.destroy();
+
+    // ✅ FIX: Ensure password is a String here as well
+    const safePassword = config.password !== undefined ? String(config.password) : '';
+
+    const ds = new DataSource({
+      type: 'postgres',
+      host: config.host,
+      port: Number(config.port),
+      username: config.username,
+      password: safePassword, // <--- Fixed here
+      database: config.database,
+      synchronize: false,
+    });
+
+    await ds.initialize();
+    this.serverDB = ds;
+    return { success: true };
+  }
+
+  /* ===================== METADATA ===================== */
+
+  async getServerDatabases(config: any) {
+    const safePassword = config.password !== undefined ? String(config.password) : '';
+
+    const ds = new DataSource({
+      type: 'postgres',
+      host: config.host,
+      port: Number(config.port),
+      username: config.username,
+      password: safePassword,
+      database: 'postgres',
+      synchronize: false,
+    });
+
+    await ds.initialize();
+    const rows = await ds.query(
+      `SELECT datname FROM pg_database WHERE datistemplate = false`,
+    );
+    await ds.destroy();
+    return rows.map((r: any) => r.datname);
+  }
+
   async getPrimaryTableNames() {
-    const server = this.ensureServer();
-
-    const result = await server.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema='public' AND table_type='BASE TABLE'
-    `);
-
-    return result.map((t: any) => t.table_name);
-  }
-
-  // =========================================================
-  // SERVER COLUMNS (Postgres)
-  // =========================================================
-  async getAllColumnsNames(tableName: string) {
-    const server = this.ensureServer();
-
-    const result = await server.query(
-      `SELECT column_name 
-       FROM information_schema.columns 
-       WHERE table_schema='public' AND table_name=$1`,
-      [tableName]
+    const db = this.ensureServer();
+    const rows = await db.query(
+      `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`,
     );
-
-    return result.map((c: any) => c.column_name);
+    return rows.map((r: any) => r.table_name);
   }
 
-  // SERVER: get primary key column name for a table (Postgres)
-  private async getServerPrimaryKey(tableName: string): Promise<string | null> {
-    const server = this.ensureServer();
+  async getAllColumnsNames(tableName: string) {
+    const db = this.ensureServer();
+    const rows = await db.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
+      [tableName],
+    );
+    return rows.map((r: any) => r.column_name);
+  }
 
+  async getClientTableNames() {
+    const db = this.ensureClient();
+    const driver = this.getClientDriver();
+    if (driver === 'postgres') {
+      const rows = await db.query(
+        `SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`,
+      );
+      return rows.map((r: any) => r.table_name);
+    }
+    const rows = await db.query(
+      `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`,
+    );
+    return rows.map((r: any) => r.TABLE_NAME);
+  }
+
+  async getClientColumns(tableName: string) {
+    const db = this.ensureClient();
+    const driver = this.getClientDriver();
+    if (driver === 'postgres') {
+      const rows = await db.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1 ORDER BY ordinal_position`,
+        [tableName],
+      );
+      return rows.map((r: any) => r.column_name);
+    }
+    const rows = await db.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @0 ORDER BY ORDINAL_POSITION`,
+      [tableName],
+    );
+    return rows.map((r: any) => r.COLUMN_NAME);
+  }
+
+  async getTableStructure(tableName: string) {
+    const db = this.ensureClient();
+    const driver = this.getClientDriver();
+    const q =
+      driver === 'postgres'
+        ? `SELECT * FROM "${tableName}" LIMIT 50`
+        : `SELECT TOP 50 * FROM [${tableName}]`;
+    const rows = await db.query(q);
+    const columns = rows[0] ? Object.keys(rows[0]) : [];
+    return { columns, rows };
+  }
+
+  // ===================== TYPE CONVERSION =====================
+
+  private async getServerColumnTypes(tableName: string) {
+    const server = this.ensureServer();
     const rows = await server.query(
       `
-    SELECT a.attname AS column_name
-    FROM   pg_index i
-    JOIN   pg_attribute a
-           ON a.attrelid = i.indrelid
-          AND a.attnum = ANY(i.indkey)
-    WHERE  i.indrelid = $1::regclass
-    AND    i.indisprimary;
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_schema = 'public' AND table_name = $1
     `,
       [tableName],
     );
 
-    return rows[0]?.column_name ?? null;
-  }
-
-
-
-  // =========================================================
-  // CLIENT COLUMNS (PG / MSSQL / MySQL)
-  // =========================================================
-  async getClientColumns(tableName: string) {
-    const client = this.ensureClient();
-    const driver = this.getDriver(client);
-    const config = this.getQueryConfig(driver);
-
-    const result = await client.query(config.columns, [tableName]);
-
-    return result.map((c: any) =>
-      c.column_name || c.COLUMN_NAME || Object.values(c)[0]
-    );
-  }
-
-  // =========================================================
-  // TABLE STRUCTURE PREVIEW
-  // =========================================================
-  async getTableStructure(tableName: string) {
-    const client = this.ensureClient();
-    const driver = this.getDriver(client);
-    const config = this.getQueryConfig(driver);
-
-    const columns = await this.getClientColumns(tableName);
-    const rows = await client.query(config.sampleRows(tableName));
-
-    return { columns, rows };
-  }
-
-  // =========================================================
-  // DATE CLEANER (Fixes gmt+0530 errors)
-  // =========================================================
-  // private cleanDate(value: any) {
-  //   if (!value) return value;
-
-  //   const str = String(value).trim();
-
-  //   // Already in correct YYYY-MM-DD
-  //   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-
-  //   // Remove timezone parts, case-insensitive
-  //   const cleaned = str
-  //     .replace(/\(.*?\)/gi, '')             // remove (India Standard Time), any case
-  //     .replace(/gmt[^\d-+]*/gi, '')         // remove 'GMT', 'gmt', etc. plus trailing text
-  //     .replace(/\+\d{4}/g, '')              // remove +0530, +0500, etc.
-  //     .trim();
-
-  //   const parsed = new Date(cleaned);
-
-  //   if (!isNaN(parsed.getTime())) {
-  //     return parsed.toISOString().split('T')[0];
-  //   }
-
-  //   return null; // invalid date becomes NULL
-  // }
-
-  private cleanDate(value: any) {
-    if (!value) return null;
-
-    const str = String(value).trim();
-    if (!str) return null;
-
-    // If it already looks like YYYY-MM-DD, just return it
-    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
-
-    const cleaned = str
-      .replace(/\(.*?\)/gi, '')
-      .replace(/gmt[^\d-+]*/gi, '')
-      .replace(/\+\d{4}/g, '')
-      .trim();
-
-    // If cleaned is still just a date, avoid Date() timezone shift
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
-
-    const parsed = new Date(cleaned);
-    if (!isNaN(parsed.getTime())) {
-      return parsed.toISOString().split('T')[0];
-    }
-
-    return null;
-  }
-
-  ///new function
-  private cleanDateTime(value: any) {
-    if (!value) return null;
-
-    // If it's already a Date object, keep its time
-    if (value instanceof Date) {
-      return value.toISOString().replace('Z', '');
-    }
-
-    const str = String(value).trim();
-    if (!str) return null;
-
-    // MSSQL usually gives "YYYY-MM-DD HH:MM:SS.mmm"
-    const parsed = new Date(str);
-    if (isNaN(parsed.getTime())) {
-      return null;
-    }
-
-    return parsed.toISOString().replace('Z', '');
-  }
-
-
-
-
-
-  // =========================================================
-  // CLIENT COLUMN TYPES (for auto type detection)
-  // =========================================================
-  private async getClientColumnTypes(tableName: string) {
-    const client = this.ensureClient();
-    const driver = this.getDriver(client);
-
-    // Only implemented for MSSQL right now
-    if (driver !== 'mssql') {
-      return {};
-    }
-
-    const rows = await client.query(`
-    SELECT COLUMN_NAME, DATA_TYPE
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_NAME = @0
-  `, [tableName]);
-
     const map: Record<string, string> = {};
-    for (const r of rows) {
-      map[r.COLUMN_NAME.toLowerCase()] = r.DATA_TYPE.toLowerCase();
-    }
+    rows.forEach((r: any) => {
+      map[r.column_name.toLowerCase()] = r.data_type;
+    });
     return map;
   }
 
+  private convertValue(value: any, pgType: string) {
+    // 1. Handle Nulls
+    if (value === null || value === undefined) return null;
 
-  // =========================================================
-  // INSERT / MIGRATION LOGIC (With Transliteration + Merge + Date Fix)
-  // =========================================================
-  async insertMappedData(body: any) {
-    const { serverTable, clientTable, mappings } = body;
+    // 2. Normalize Target Type
+    const type = pgType ? pgType.toLowerCase() : 'text';
 
-    // Dynamically detect PK for the chosen server table
-    const pkColumn = await this.getServerPrimaryKey(serverTable);
-    if (!pkColumn) {
-      throw new InternalServerErrorException(
-        `No primary key found for server table ${serverTable}`,
-      );
+    // ==========================================================
+    // CASE A: Target is STRING / TEXT
+    // ==========================================================
+    if (
+      ['character varying', 'text', 'varchar', 'char', 'character'].some((t) =>
+        type.includes(t),
+      )
+    ) {
+      const originalStr = String(value);
+
+      if (originalStr.trim() === '') return null;
+
+      try {
+        // Translation Logic
+        const decoded = decodeYogesh(originalStr);
+        const translated = transliterateMarathiToEnglish(decoded);
+
+        if (translated && translated.trim().length > 0) {
+          return translated;
+        }
+        return originalStr; // Fallback to original
+      } catch (e) {
+        return originalStr;
+      }
     }
-    const clientTypes = await this.getClientColumnTypes(clientTable);
+
+    // ==========================================================
+    // CASE B: Target is NUMBER
+    // ==========================================================
+    if (
+      [
+        'integer',
+        'smallint',
+        'bigint',
+        'numeric',
+        'decimal',
+        'real',
+        'double precision',
+        'serial',
+      ].some((t) => type.includes(t))
+    ) {
+      if (typeof value === 'string' && value.trim() === '') return null;
+      const num = Number(value);
+      return isNaN(num) ? null : num;
+    }
+
+    // ==========================================================
+    // CASE C: Target is BOOLEAN
+    // ==========================================================
+    if (type.includes('bool')) {
+      const s = String(value).toLowerCase();
+      return ['true', '1', 'yes', 'y', 'on', 't'].includes(s);
+    }
+
+    // ==========================================================
+    // CASE D: Target is DATE
+    // ==========================================================
+    if (type.includes('date') || type.includes('time')) {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    return value;
+  }
+
+  /* ===================== MIGRATION ===================== */
+
+  async insertMappedData(body: any) {
+    const { serverTable, mappings } = body;
+
+    if (!serverTable || !Array.isArray(mappings))
+      throw new InternalServerErrorException('Invalid payload');
+
+    const validMappings = mappings.filter(
+      (m) => m.clientTable && m.serverColumn,
+    );
+    if (!validMappings.length)
+      throw new InternalServerErrorException('No valid mappings found');
+
     const client = this.ensureClient();
     const server = this.ensureServer();
+    const clientType = this.getClientDriver();
 
-    // 1) Build SELECT list from all client columns used in mappings
-    const clientCols = mappings
-      .flatMap((m: any) => {
-        const clientDef = Array.isArray(m.client) ? m.client : [m.client];
-        return clientDef.filter((c: string | null | undefined) => !!c);
-      })
-      .map((c: string) => `"${c}"`)
-      .join(',');
+    // 1. Group by Table
+    const columnsByTable: Record<string, Set<string>> = {};
+    validMappings.forEach((m) => {
+      if (!columnsByTable[m.clientTable])
+        columnsByTable[m.clientTable] = new Set();
+      m.clientColumns.forEach((c: string) =>
+        columnsByTable[m.clientTable].add(c),
+      );
+    });
 
-    const serverCols = mappings.map((m: any) => `"${m.server}"`).join(',');
+    // 2. Fetch Source Data
+    const dataStore: Record<string, any[]> = {};
+    let maxRows = 0;
 
-    const clientRows = await client.query(
-      `SELECT ${clientCols} FROM "${clientTable}"`
-    );
+    for (const table of Object.keys(columnsByTable)) {
+      const cols = Array.from(columnsByTable[table]);
+      const qL = clientType === 'postgres' ? '"' : '[';
+      const qR = clientType === 'postgres' ? '"' : ']';
+      const selectCols = cols.map((c) => `${qL}${c}${qR}`).join(', ');
 
-    if (!clientRows.length) {
-      return { success: false, message: 'Client table has no data' };
+      try {
+        const rows = await client.query(
+          `SELECT ${selectCols} FROM ${qL}${table}${qR}`,
+        );
+        dataStore[table] = rows;
+        if (rows.length > maxRows) maxRows = rows.length;
+      } catch (err: any) {
+        console.error(`Error reading table ${table}:`, err.message);
+        dataStore[table] = [];
+      }
     }
 
+    // 3. Get Target Types
+    const serverTypes = await this.getServerColumnTypes(serverTable);
+
+    const serverCols = validMappings
+      .map((m) => `"${m.serverColumn}"`)
+      .join(', ');
     const qr = server.createQueryRunner();
     await qr.connect();
-    await qr.startTransaction();
+
+    let inserted = 0;
+    let skipped = 0;
+    const errors: string[] = [];
 
     try {
-      for (const rowOrig of clientRows) {
-        // Normalize keys to lower‑case for safe lookup
-        const row: any = {};
-        Object.keys(rowOrig).forEach(k => {
-          row[k.toLowerCase()] = rowOrig[k];
+      for (let i = 0; i < maxRows; i++) {
+        const rowValues = validMappings.map((m) => {
+          const sourceRow = dataStore[m.clientTable]?.[i] || {};
+
+          const rawParts = m.clientColumns.map(
+            (c: string) => sourceRow[c] ?? '',
+          );
+          const merged = rawParts.join(' ').trim();
+
+          const targetType = serverTypes[m.serverColumn.toLowerCase()];
+
+          return this.convertValue(merged, targetType);
         });
 
-        const values = mappings.map((m: any) => {
-          const clientDef = Array.isArray(m.client) ? m.client : [m.client];
-          const serverName = String(m.server || '').toLowerCase();
-          // const kind = m.type || 'text'; // 'text' | 'number' | 'date' | 'fk'
-          // Decide kind automatically from MSSQL DATA_TYPE of first client column
-          const firstClientCol = String((Array.isArray(m.client) ? m.client[0] : m.client) || '').toLowerCase();
-          const clientType = clientTypes[firstClientCol] || '';
-
-          let kind: 'text' | 'number' | 'date' | 'datetime' | 'fk' = 'text';
-
-          if (clientType.includes('date') || clientType.includes('time')) {
-            // datetime, smalldatetime, datetime2 -> datetime
-            // pure date -> date
-            kind = clientType === 'date' ? 'date' : 'datetime';
-          } else if (clientType.includes('int') || clientType.includes('numeric') || clientType.includes('decimal')) {
-            kind = 'number';
-          }
-
-          // Treat *_id as FK if numeric
-          if (firstClientCol.endsWith('_id') && kind === 'number') {
-            kind = 'fk';
-          }
-
-
-
-          // Collect raw pieces from client row (case‑insensitive)
-          const pieces = clientDef
-            .filter((c: string | null | undefined) => !!c)
-            .map(c => {
-              const v = row[String(c).toLowerCase()];
-              return v === undefined || v === null ? '' : String(v);
-            });
-
-          let rawValue: any = null;
-
-          // 1) Date columns
-          // if (kind === 'date' || serverName.includes('dob') || serverName.includes('date')) {
-          //   const joined = pieces.join(' ').trim();
-          //   rawValue = this.cleanDate(joined); // returns 'YYYY-MM-DD' or null
-          //   return rawValue;
-          // }
-          // 2) Date / datetime columns
-          if (kind === 'date' || kind === 'datetime' ||
-            serverName.includes('dob') || serverName.includes('date')) {
-
-            const joined = pieces.join(' ').trim();
-            if (!joined) return null;
-
-            if (kind === 'datetime') {
-              const cleaned = this.cleanDateTime(joined);
-              //console.log('DATETIME DEBUG', m.server, 'raw=', joined, 'cleaned=', cleaned);
-              return cleaned;
-            }
-
-            return this.cleanDate(joined);
-          }
-
-
-
-          // 2) Numeric / FK columns (IDs, codes)
-          if (kind === 'number' || kind === 'fk' || serverName.endsWith('_id')) {
-            const firstNum = pieces
-              .map(p => p.trim())
-              .filter(p => p !== '')
-              .map(p => Number(p))
-              .find(n => !Number.isNaN(n));
-
-            // If no numeric value found, return null (DB column should allow NULL)
-            return firstNum ?? null;
-          }
-
-          // 3) Text / merged columns (fullname, address, etc.)
-          rawValue = pieces
-            .map(p => transliterate(p))
-            .map(p => p.trim())
-            .filter(p => p !== '')
-            .join(' ');
-
-          return rawValue;
-        });
-
-        const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
-
-        // Build UPSERT: INSERT ... ON CONFLICT (pkColumn) DO UPDATE
-        const colsArray = mappings.map((m: any) => String(m.server)); // e.g. ['customer_id','gender',...]
-        const pk = pkColumn; // dynamic PK from Postgres
-
-        // const updateAssignments = colsArray
-        //   .filter(col => col !== pk)
-        //   .map(col => `"${col}" = EXCLUDED."${col}"`)
-        //   .join(', ');
-
-        // const sql = `
-        //   INSERT INTO "${serverTable}" (${serverCols})
-        //   VALUES (${placeholders})
-        //   ON CONFLICT ("${pk}")
-        //   DO UPDATE SET ${updateAssignments};
-        // `;
-
-        // await qr.query(sql, values);
-        const updateAssignments = colsArray
-          .filter(col => col !== pk)
-          .map(col => `"${col}" = EXCLUDED."${col}"`)
+        const placeholders = rowValues
+          .map((_, idx) => `$${idx + 1}`)
           .join(', ');
 
-        let sql: string;
-
-        if (!updateAssignments) {
-          // Only PK is mapped → just insert; ignore duplicates
-          sql = `
-    INSERT INTO "${serverTable}" (${serverCols})
-    VALUES (${placeholders})
-    ON CONFLICT ("${pk}") DO NOTHING;
-  `;
-        } else {
-          // PK + other columns → full upsert
-          sql = `
-    INSERT INTO "${serverTable}" (${serverCols})
-    VALUES (${placeholders})
-    ON CONFLICT ("${pk}")
-    DO UPDATE SET ${updateAssignments};
-  `;
+        try {
+          await qr.query(
+            `INSERT INTO "${serverTable}" (${serverCols}) VALUES (${placeholders})`,
+            rowValues,
+          );
+          inserted++;
+        } catch (rowErr: any) {
+          skipped++;
+          if (rowErr.code !== '23505') {
+            const msg = `Row ${i + 1} Error: ${rowErr.message}`;
+            if (errors.length < 5) errors.push(msg);
+          }
         }
-
-        await qr.query(sql, values);
-
       }
-
-      await qr.commitTransaction();
 
       return {
         success: true,
-        inserted: clientRows.length,
-        message: 'Data migrated successfully',
+        inserted,
+        skipped,
+        processed: maxRows,
+        errors: errors.length ? errors : undefined,
       };
-
-    } catch (err: any) {
-      await qr.rollbackTransaction();
-      throw new InternalServerErrorException('Insert failed: ' + err.message);
     } finally {
       await qr.release();
     }
   }
-
-
-
-  //=====================================================================================
-  // MULTIPLE TABLES MAPPING SUPPORT
-  //=====================================================================================
-
-  // 🔥 Multi-table migration in FK-safe order
-  async migrateMultipleTables(body: any) {
-    const { tables, mappingsPerTable, relations } = body;
-
-    if (!Array.isArray(tables) || !mappingsPerTable || !Array.isArray(relations)) {
-      throw new InternalServerErrorException('Invalid payload for migrateMultipleTables');
-    }
-
-    // 1) Get full migration order (parent → child sequence)
-    const order = this.getMigrationOrder(relations);
-
-    // 2) Filter to only the tables selected by the user
-    const finalOrder = order.filter((t) => tables.includes(t));
-
-    // 3) Typed results array to avoid TS "never" error
-    const results: {
-      table: string;
-      success: boolean;
-      inserted?: number;
-      message: string;
-    }[] = [];
-
-    // 4) Migrate tables in dependency-safe order
-    for (const table of finalOrder) {
-      const mapping = mappingsPerTable[table];
-      if (!mapping) {
-        results.push({
-          table,
-          success: false,
-          message: 'No mapping provided for table'
-        });
-        continue;
-      }
-
-      try {
-        const result = await this.insertMappedData({
-          serverTable: table,
-          clientTable: table,
-          mappings: mapping
-        });
-
-        results.push({
-          table,
-          success: !!result.success,
-          inserted: result.inserted,
-          message: result.message || (result.success ? 'Migrated' : 'Failed')
-        });
-
-      } catch (err: any) {
-        results.push({
-          table,
-          success: false,
-          message: `Migration error: ${err?.message ?? String(err)}`
-        });
-      }
-    }
-
-    return {
-      success: true,
-      migratedTables: results
-    };
-  }
-
-
-
-
-
-  // =============================================================
-  // PRIMARY COLUMNS   chages by poonam
-  // =============================================================
-
-  async getPrimaryKeys() {
-    const db = this.ensureClient();
-    return db.query(`
-    SELECT t.name AS tableName, c.name AS primaryKey
-    FROM sys.key_constraints kc
-    JOIN sys.tables t ON kc.parent_object_id = t.object_id
-    JOIN sys.index_columns ic 
-      ON kc.parent_object_id = ic.object_id 
-     AND kc.unique_index_id = ic.index_id
-    JOIN sys.columns c 
-      ON ic.object_id = c.object_id 
-     AND ic.column_id = c.column_id
-    WHERE kc.type = 'PK';
-  `);
-  }
-
-  //DETECT FK CANDIDATES
-
-  async getForeignKeyCandidates() {
-    const db = this.ensureClient();
-
-    // only numeric types we consider for FK detection
-    const numericTypes = ["int", "bigint", "smallint", "tinyint"];
-
-    const rows: any[] = await db.query(`
-    SELECT 
-      TABLE_SCHEMA, 
-      TABLE_NAME, 
-      COLUMN_NAME, 
-      DATA_TYPE
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE 
-      (COLUMN_NAME LIKE '%[_]id' OR COLUMN_NAME LIKE '%Id' OR COLUMN_NAME LIKE 'id%')
-      AND DATA_TYPE IN (${numericTypes.map(t => `'${t}'`).join(',')})
-      AND TABLE_NAME NOT LIKE 'sys%' -- guard
-  `);
-
-    // Normalize to { tableName, columnName, schema }
-    return rows.map(r => ({
-      schema: r.TABLE_SCHEMA,
-      tableName: r.TABLE_NAME,
-      columnName: r.COLUMN_NAME,
-      dataType: r.DATA_TYPE
-    }));
-  }
-
-  //real forgin keys 
-
-
-  async getRealForeignKeys() {
-    const db = this.ensureClient();   // <-- THIS LINE IS REQUIRED
-
-    return db.query(`
-    SELECT  
-        FK.name AS foreignKey,
-        TP.name AS parentTable,
-        CP.name AS parentColumn,
-        TC.name AS childTable,
-        CC.name AS childColumn
-    FROM sys.foreign_keys FK
-    JOIN sys.tables TP ON FK.referenced_object_id = TP.object_id
-    JOIN sys.tables TC ON FK.parent_object_id = TC.object_id
-    JOIN sys.foreign_key_columns FKC 
-         ON FK.object_id = FKC.constraint_object_id
-    JOIN sys.columns CP 
-         ON FKC.referenced_object_id = CP.object_id 
-        AND FKC.referenced_column_id = CP.column_id
-    JOIN sys.columns CC 
-         ON FKC.parent_object_id = CC.object_id 
-        AND FKC.parent_column_id = CC.column_id
-  `);
-  }
-
-
-
-  //COMPUTE RELATIONSHIPS CONFIDANCE SCORE
-
-  async checkRelationship(childTable, childCol, parentTable, parentCol) {
-    const db = this.ensureClient();
-
-    const childType = await this.getColumnType(childTable, childCol);
-    const parentType = await this.getColumnType(parentTable, parentCol);
-
-    if (!childType || !parentType) return 0;
-
-    const allowed = ["int", "bigint", "smallint", "tinyint"];
-    if (!allowed.includes(childType) || childType !== parentType) return 0;
-
-    const sql = `
-    SELECT
-      (SELECT COUNT(DISTINCT [${childCol}]) FROM [${childTable}]) AS childDistinct,
-      (SELECT COUNT(DISTINCT c.[${childCol}])
-       FROM [${childTable}] c
-       JOIN [${parentTable}] p
-         ON c.[${childCol}] = p.[${parentCol}]
-      ) AS matches;
-  `;
-
-    const rows = await db.query(sql);
-    const r = rows[0];
-
-    if (!r.childDistinct) return 0;
-
-    return (r.matches / r.childDistinct) * 100;
-  }
-
-
-  // =========================================================
-  // BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION)
-  // =========================================================
-  async generateRelationshipMap() {
-    const pkList = await this.getPrimaryKeys();
-    const fkCandidates = await this.getForeignKeyCandidates();
-
-    const relationships: any[] = [];
-
-    for (const fk of fkCandidates) {
-      for (const pk of pkList) {
-        try {
-          if (fk.tableName === pk.tableName) continue;
-
-          const confidence = await this.checkRelationship(
-            fk.tableName,
-            fk.columnName,
-            pk.tableName,
-            pk.primaryKey
-          );
-
-          if (confidence >= 70) {
-            relationships.push({
-              childTable: fk.tableName,
-              childColumn: fk.columnName,
-              parentTable: pk.tableName,
-              parentColumn: pk.primaryKey,
-              confidence: Number(confidence.toFixed(2)),
-            });
-          }
-
-        } catch (err) {
-          console.error(
-            `ERROR checking relationship: ${fk.tableName}.${fk.columnName} -> ${pk.tableName}.${pk.primaryKey}`,
-            err.message
-          );
-        }
-      }
-    }
-
-    return relationships;
-  }
-
-
-
-  async getColumnType(table: string, column: string, schema = 'dbo') {
-    const db = this.ensureClient();
-    const sql = `
-    SELECT LOWER(DATA_TYPE) AS DATA_TYPE
-    FROM INFORMATION_SCHEMA.COLUMNS 
-    WHERE TABLE_SCHEMA = @0 AND TABLE_NAME = @1 AND COLUMN_NAME = @2
-  `;
-    const res = await db.query(sql, [schema, table, column]);
-    return res && res[0] ? res[0].DATA_TYPE : undefined;
-  }
-
-
-
-
-
-  async predictFastRelationships() {
-    const db = this.ensureClient();
-
-    // Get all PK names
-    const pkList = await db.query(`
-    SELECT 
-        t.name AS tableName,
-        c.name AS primaryKey
-    FROM sys.key_constraints kc
-    JOIN sys.tables t ON kc.parent_object_id = t.object_id
-    JOIN sys.index_columns ic 
-        ON kc.parent_object_id = ic.object_id 
-       AND kc.unique_index_id = ic.index_id
-    JOIN sys.columns c 
-        ON ic.object_id = c.object_id 
-       AND ic.column_id = c.column_id
-    WHERE kc.type = 'PK';
-  `);
-
-    // Get all columns
-    const allCols = await db.query(`
-    SELECT 
-        t.name AS tableName,
-        c.name AS columnName
-    FROM sys.columns c
-    JOIN sys.tables t ON c.object_id = t.object_id;
-  `);
-
-    const relations: any[] = [];
-
-    for (const pk of pkList) {
-      for (const col of allCols) {
-        if (col.tableName === pk.tableName) continue;
-
-        // simple name-based match: e.g., Cust_id matches primary key Cust_id
-        if (col.columnName.toLowerCase() === pk.primaryKey.toLowerCase()) {
-          relations.push({
-            parentTable: pk.tableName,
-            parentColumn: pk.primaryKey,
-            childTable: col.tableName,
-            childColumn: col.columnName,
-            matchType: "name-match"
-          });
-        }
-      }
-    }
-
-    return relations;
-  }
-
-
-
-  async getRealForeignKeysFast() {
-    const db = this.ensureClient();
-
-    return db.query(`
-    SELECT  
-        FK.name AS foreignKey,
-        PKT.name AS parentTable,
-        PKC.name AS parentColumn,
-        FKT.name AS childTable,
-        FKC.name AS childColumn
-    FROM sys.foreign_keys FK
-    JOIN sys.tables FKT ON FK.parent_object_id = FKT.object_id
-    JOIN sys.tables PKT ON FK.referenced_object_id = PKT.object_id
-    JOIN sys.foreign_key_columns C 
-         ON FK.object_id = C.constraint_object_id
-    JOIN sys.columns FKC 
-         ON C.parent_object_id = FKC.object_id 
-        AND C.parent_column_id = FKC.column_id
-    JOIN sys.columns PKC 
-         ON C.referenced_object_id = PKC.object_id 
-        AND C.referenced_column_id = PKC.column_id;
-  `);
-  }
-
-
-  //=========================================================
-  // BUILD FULL RELATIONSHIP MAP (MAIN FUNCTION) FAST
-  // =========================================================
-
-
-  async getVisualizationMap() {
-    const db = this.ensureClient();
-
-    // 1. Fetch PK list
-    const primaryKeys = await this.getPrimaryKeys();
-
-    // 2. Fetch real Foreign Keys
-    const realFK = await this.getRealForeignKeysFast();
-
-    // 3. Fetch all table + column metadata
-    const allColumns = await db.query(`
-    SELECT 
-      t.name AS tableName,
-      c.name AS columnName,
-      ty.name AS dataType
-    FROM sys.columns c
-    JOIN sys.tables t ON c.object_id = t.object_id
-    JOIN sys.types ty ON c.system_type_id = ty.system_type_id
-    ORDER BY t.name, c.column_id;
-  `);
-
-    // 4. Convert into table → columns format
-    const tableMap: any = {};
-
-    for (const row of allColumns) {
-      if (!tableMap[row.tableName]) {
-        tableMap[row.tableName] = { name: row.tableName, columns: [] };
-      }
-
-      const isPK = primaryKeys.some(pk =>
-        pk.tableName === row.tableName && pk.primaryKey === row.columnName
-      );
-
-      const isFK = realFK.some(fk =>
-        fk.childTable === row.tableName && fk.childColumn === row.columnName
-      );
-
-      tableMap[row.tableName].columns.push({
-        name: row.columnName,
-        type: row.dataType,
-        pk: isPK,
-        fk: isFK
-      });
-    }
-
-    // 5. Build relationship list
-    const relationships = realFK.map(fk => ({
-      parentTable: fk.parentTable,
-      parentColumn: fk.parentColumn,
-      childTable: fk.childTable,
-      childColumn: fk.childColumn,
-      type: "REAL_FK"
-    }));
-
-    // 6. Return final structure
-    return {
-      tables: Object.values(tableMap),
-      relationships
-    };
-  }
-
-
-  // =========================================================
-  // Fetch TAble
-  // =========================================================
-
-
-  async getTableStructureWithKeys() {
-    const db = this.ensureClient();
-
-    // 1️⃣ Fetch all tables
-    const tables = await db.query(`
-    SELECT name AS tableName 
-    FROM sys.tables 
-    ORDER BY name;
-  `);
-
-    // 2️⃣ Fetch all columns + PK/FK flags
-    const columns = await db.query(`
-    SELECT 
-        t.name AS tableName,
-        c.name AS columnName,
-        ty.name AS dataType,
-        CASE WHEN kc.type = 'PK' THEN 1 ELSE 0 END AS isPK,
-        CASE WHEN fk.parent_object_id IS NOT NULL THEN 1 ELSE 0 END AS isFK
-    FROM sys.columns c
-    JOIN sys.tables t ON c.object_id = t.object_id
-    JOIN sys.types ty ON c.user_type_id = ty.user_type_id
-    LEFT JOIN sys.index_columns ic 
-        ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-    LEFT JOIN sys.key_constraints kc 
-        ON ic.index_id = kc.unique_index_id AND kc.parent_object_id = c.object_id
-    LEFT JOIN sys.foreign_key_columns fk 
-        ON fk.parent_object_id = c.object_id AND fk.parent_column_id = c.column_id
-    ORDER BY t.name, c.column_id;
-  `);
-
-    // 3️⃣ Fetch FK relationships
-    const relationships = await db.query(`
-    SELECT  
-      fk.name AS fkName,
-      childTable.name AS fromTable,
-      childColumn.name AS fromColumn,
-      parentTable.name AS toTable,
-      parentColumn.name AS toColumn
-    FROM sys.foreign_keys fk
-    JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-    JOIN sys.tables childTable ON fk.parent_object_id = childTable.object_id
-    JOIN sys.columns childColumn ON fkc.parent_object_id = childColumn.object_id AND fkc.parent_column_id = childColumn.column_id
-    JOIN sys.tables parentTable ON fk.referenced_object_id = parentTable.object_id
-    JOIN sys.columns parentColumn ON fkc.referenced_object_id = parentColumn.object_id AND fkc.referenced_column_id = parentColumn.column_id;
-  `);
-
-    // 4️⃣ Combine into UI-friendly structure
-    return {
-      tables: tables.map((t: any) => ({
-        name: t.tableName,
-        columns: columns
-          .filter((c: any) => c.tableName === t.tableName)
-          .map((c: any) => ({
-            name: c.columnName,
-            type: c.dataType,
-            pk: c.isPK === 1,
-            fk: c.isFK === 1
-          }))
-      })),
-      relationships: relationships.map((r: any) => ({
-        fromTable: r.fromTable,
-        fromColumn: r.fromColumn,
-        toTable: r.toTable,
-        toColumn: r.toColumn,
-        type: "FK"
-      }))
-    };
-  }
-
-
-
-
 }

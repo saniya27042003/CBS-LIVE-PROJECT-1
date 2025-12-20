@@ -11,7 +11,7 @@ import {
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { DbStateService } from '../../service/db-state.service';
-import { SettingsComponent } from '../settings/settings.component';
+import { SettingsComponent } from '../settings/settings.component';                       
 
 
 @Component({
@@ -60,6 +60,9 @@ export class DatabaseComponent implements OnInit {
   clientClassMap: { [key: string]: string } = {};
 
   loadingDatabases = false;
+  
+  // ✅ ADDED: State for loading spinner
+  isConnecting = false; 
 
   // =========================
   // MESSAGE BOX
@@ -83,50 +86,50 @@ export class DatabaseComponent implements OnInit {
   // =========================
   // INIT
   // =========================
-ngOnInit(): void {
+  ngOnInit(): void {
 
-  // ✅ AUTH CHECK (your existing code)
-  this.route.queryParams.subscribe(params => {
-    const token = params['token'];
-    if (token) {
-      localStorage.setItem('auth_token', token);
-    } else {
-      const saved = localStorage.getItem('auth_token');
-      if (!saved) {
-        this.router.navigate(['/login']);
+    // ✅ AUTH CHECK (your existing code)
+    this.route.queryParams.subscribe(params => {
+      const token = params['token'];
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      } else {
+        const saved = localStorage.getItem('auth_token');
+        if (!saved) {
+          this.router.navigate(['/login']);
+        }
       }
+    });
+
+    // ✅ FORM INIT
+    this.primaryForm = this.fb.group({
+      host: ['', Validators.required],
+      port: ['', Validators.required],
+      username: ['', Validators.required],
+      password: ['', Validators.required],
+    });
+
+    this.clientForm = this.fb.group({
+      type: ['', Validators.required],
+      host: ['', Validators.required],
+      port: ['', Validators.required],
+      username: ['', Validators.required],
+      password: ['', Validators.required],
+      database: ['', Validators.required],
+    });
+
+    // ✅ ✅ ✅ RESTORE PREVIOUS STATE IF EXISTS
+    if (this.dbState.primaryForm) {
+      this.primaryForm.patchValue(this.dbState.primaryForm);
+      this.clientForm.patchValue(this.dbState.clientForm);
+
+      this.selectedDatabase = this.dbState.selectedDatabase;
+      this.databaseList = this.dbState.databaseList;
+
+      this.primaryClassMap = this.dbState.primaryClassMap;
+      this.clientClassMap = this.dbState.clientClassMap;
     }
-  });
-
-  // ✅ FORM INIT
-  this.primaryForm = this.fb.group({
-    host: ['', Validators.required],
-    port: ['', Validators.required],
-    username: ['', Validators.required],
-    password: ['', Validators.required],
-  });
-
-  this.clientForm = this.fb.group({
-    type: ['', Validators.required],
-    host: ['', Validators.required],
-    port: ['', Validators.required],
-    username: ['', Validators.required],
-    password: ['', Validators.required],
-    database: ['', Validators.required],
-  });
-
-  // ✅ ✅ ✅ RESTORE PREVIOUS STATE IF EXISTS
-  if (this.dbState.primaryForm) {
-    this.primaryForm.patchValue(this.dbState.primaryForm);
-    this.clientForm.patchValue(this.dbState.clientForm);
-
-    this.selectedDatabase = this.dbState.selectedDatabase;
-    this.databaseList = this.dbState.databaseList;
-
-    this.primaryClassMap = this.dbState.primaryClassMap;
-    this.clientClassMap = this.dbState.clientClassMap;
   }
-}
 
 
   // =========================
@@ -213,6 +216,9 @@ ngOnInit(): void {
       return;
     }
 
+    // ✅ START LOADING
+    this.isConnecting = true;
+
     // ✅ 3) CONNECT SERVER
     const primaryConfig = {
       type: 'postgres',
@@ -230,6 +236,7 @@ ngOnInit(): void {
       next: (res: any) => {
 
         if (!res?.success) {
+          this.isConnecting = false; // Stop loading
           this.showMessage('Server connection failed', 'error');
           return;
         }
@@ -251,10 +258,12 @@ ngOnInit(): void {
           clientConfig
         ).subscribe({
           next: (res: any) => {
+            this.isConnecting = false; // Stop loading
+
             if (res.success) {
               this.navigateAfterSuccess = true;
               this.showMessage(
-                '✅ Both Server & Client Databases Connected Successfully!',
+                'Both Server & Client Databases Connected Successfully!',
                 'success'
               );
             } else {
@@ -265,6 +274,7 @@ ngOnInit(): void {
             }
           },
           error: (err) => {
+            this.isConnecting = false; // Stop loading
             console.error('Client connect error:', err);
             this.showMessage('Failed to connect Client database.', 'error');
           }
@@ -272,6 +282,7 @@ ngOnInit(): void {
 
       },
       error: (err) => {
+        this.isConnecting = false; // Stop loading
         console.error('Server connect error:', err);
         this.showMessage('Failed to connect Server (source) database.', 'error');
       }
@@ -281,17 +292,17 @@ ngOnInit(): void {
   // =========================
   // CANCEL
   // =========================
-onCancelClick() {
-  this.primaryForm.reset();
-  this.clientForm.reset();
-  this.selectedDatabase = '';
-  this.databaseList = [];
+  onCancelClick() {
+    this.primaryForm.reset();
+    this.clientForm.reset();
+    this.selectedDatabase = '';
+    this.databaseList = [];
 
-  this.primaryClassMap = {};
-  this.clientClassMap = {};
+    this.primaryClassMap = {};
+    this.clientClassMap = {};
 
-  this.dbState.clear();   // ✅ CLEAR STORED STATE
-}
+    this.dbState.clear();   // ✅ CLEAR STORED STATE
+  }
 
   // =========================
   // MESSAGE BOX

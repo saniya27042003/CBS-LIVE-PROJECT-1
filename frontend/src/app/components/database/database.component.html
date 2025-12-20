@@ -1,13 +1,11 @@
 <div class="w-full h-full flex items-center justify-center p-4">
   <div class="flex flex-row items-center justify-center gap-8 -mt-24">
 
-    <!-- ================= SOURCE DATABASE (SERVER) ================= -->
     <div
       class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[450px] w-[370px]">
 
       <h2 class="text-lg font-bold text-gray-200 mb-6 tracking-wide">SOURCE DATABASE</h2>
 
-      <!-- Postgres Card -->
       <div class="card bg-gray-700 w-28 h-28 ring-4 ring-green-400 shadow-[4px_4px_0px_#3b82f6]
         border border-blue-200 rounded-xl overflow-hidden flex items-center justify-center"
         (click)="selectPrimary('PostgreSQL')" [ngClass]="primaryClassMap['PostgreSQL']">
@@ -20,20 +18,7 @@
       <span class="mt-4 text-base font-medium text-gray-200">PostgreSQL</span>
       <br>
 
-      <!-- ✅ PRIMARY FORM -->
       <form [formGroup]="primaryForm" class="w-full flex flex-col items-center gap-3">
-
-        <!-- <select class="select select-primary select-outline w-4/5" [(ngModel)]="selectedDatabase"
-    [ngModelOptions]="{ standalone: true }" (click)="onOpenDatabaseDropdown()">
-
-    <option value="" disabled selected *ngIf="!selectedDatabase">
-      {{ loadingDatabases ? 'Loading databases...' : 'Select Database' }}
-    </option>
-
-    <option *ngFor="let db of databaseList" [value]="db">
-      {{ db }}
-    </option>
-  </select> -->
 
         <div class="grid grid-cols-2 gap-2 w-4/5">
 
@@ -60,19 +45,16 @@
            cursor-pointer pr-10" [(ngModel)]="selectedDatabase" [ngModelOptions]="{ standalone: true }"
             (click)="onOpenDatabaseDropdown()">
 
-            <!-- Placeholder -->
             <option value="" disabled selected *ngIf="!selectedDatabase" class="text-gray-500">
               {{ loadingDatabases ? 'Loading databases...' : 'Select Database' }}
             </option>
 
-            <!-- Database List -->
             <option *ngFor="let db of databaseList" [value]="db" id="option1">
               {{ db }}
             </option>
 
           </select>
 
-          <!-- Professional Dropdown Arrow -->
           <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" fill="none"
             stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -83,7 +65,6 @@
 
     </div>
 
-    <!-- ================= ARROW ================= -->
     <div class="text-gray-500 flex-shrink-0">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
         class="w-10 h-10">
@@ -91,7 +72,6 @@
       </svg>
     </div>
 
-    <!-- ================= TARGET DATABASE (CLIENT) ================= -->
     <div class="flex flex-col">
 
       <div
@@ -99,7 +79,6 @@
 
         <h2 class="text-lg font-bold text-gray-200 mb-4 tracking-wide">TARGET CONFIGURATION</h2>
 
-        <!-- ✅ DB TYPE SELECTION -->
         <div class="grid grid-cols-3 gap-6 mb-4 w-full justify-items-center">
           <div *ngFor="let db of databases" class="flex flex-col items-center">
             <div class="card bg-gray border border-gray-200 w-20 h-20 shadow rounded-lg"
@@ -112,7 +91,6 @@
           </div>
         </div>
 
-        <!-- ✅ CLIENT FORM -->
         <form [formGroup]="clientForm" class="w-full p-2 grid grid-cols-2 gap-4">
 
           <input class="input input-bordered input-xs h-8" formControlName="type" placeholder="Type" readonly>
@@ -130,7 +108,6 @@
         </form>
       </div>
 
-      <!-- ✅ BUTTONS -->
       <div class="flex space-x-4 w-[500px] mt-4">
         <button class="btn btn-outline btn-info flex-1" (click)="onOkClick()">Connect</button>
         <button class="btn btn-outline btn-error flex-1" (click)="onCancelClick()">Cancel</button>
@@ -141,20 +118,46 @@
   </div>
 </div>
 
-<!-- ✅ CUSTOM MESSAGE BOX -->
-<div *ngIf="messageBox.visible" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+<div *ngIf="isConnecting || messageBox.visible"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
 
-  <div class="bg-gray-800 border border-gray-600 rounded-xl shadow-2xl p-6 w-[350px] text-center">
+  <div class="bg-gray-800 border border-gray-600 rounded-xl p-8 w-[420px]
+           flex flex-col items-center shadow-2xl text-center">
 
-    <h3 class="text-lg font-bold mb-3" [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
-      {{ messageBox.type === 'success' ? 'Success' : 'Error' }}
-    </h3>
+    <ng-container *ngIf="isConnecting">
+      <span class="loading loading-spinner loading-lg text-blue-500 mb-4"></span>
 
-    <p class="text-gray-300 text-sm mb-6">
-      {{ messageBox.text }}
-    </p>
+      <h3 class="text-lg font-semibold text-white mb-1">
+        Connecting Databases
+      </h3>
 
-    <button class="btn btn-success" (click)="closeMessageBox()">OK</button>
+      <p class="text-gray-300 text-sm">
+        Establishing connection to Server and Client...<br />
+        Please wait.
+      </p>
+    </ng-container>
+
+    <ng-container *ngIf="!isConnecting && messageBox.visible">
+
+      <span class="text-5xl mb-3" [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
+        {{ messageBox.type === 'success' ? '✓' : '✕' }}
+      </span>
+
+      <h3 class="text-lg font-bold mb-3"
+        [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
+        {{ messageBox.type === 'success' ? 'Connection Successful' : 'Connection Failed' }}
+      </h3>
+
+      <p class="text-gray-300 text-sm mb-6">
+        {{ messageBox.text }}
+      </p>
+
+      <button class="btn btn-md" [ngClass]="messageBox.type === 'success' ? 'btn-success' : 'btn-error'"
+        (click)="closeMessageBox()">
+        OK
+      </button>
+
+    </ng-container>
 
   </div>
 </div>
