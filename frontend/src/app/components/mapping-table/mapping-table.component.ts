@@ -100,19 +100,35 @@ export class MappingTableComponent implements OnInit {
 
     const mappings = rows.map((m: any) => ({
       server: m.serverColumn,
-      client: Array.isArray(m.clientColumns) ? m.clientColumns : (m.clientColumns ? [m.clientColumns] : []),
+      client: Array.isArray(m.clientColumns)
+        ? m.clientColumns
+        : (m.clientColumns ? [m.clientColumns] : []),
       merge: Array.isArray(m.clientColumns) && m.clientColumns.length > 1
     }));
 
-    const payload = { serverTable, mappings };
+    //const payload = { serverTable, mappings };
+
+    const clientTable = this.selectedClientTable[0];
+
+    if (!clientTable) {
+      this.isMigrating = false;
+      alert('Client table not selected');
+      return;
+    }
+
+    const payload = {
+      serverTable,
+      clientTable,
+      mappings
+    };
+
+    console.log('insert payload:', payload);
 
     this.appService.insertData(payload).subscribe({
       next: (result: any) => {
         this.isMigrating = false;
-        // mark mapped rows
         this.mappingDataByTable[serverTable] = rows.map(r => ({ ...r, mapped: true }));
 
-        // save mappingState (including selectedClientTable so Tables can restore clients)
         const navState = {
           mappingDataByTable: this.mappingDataByTable,
           selectedPrimaryTable: this.selectedPrimaryTable,

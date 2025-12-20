@@ -1,8 +1,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { AuthModule } from './auth/auth.module';
 import { DatabaseMappingModule } from './database-mapping/database-mapping.module';
 
@@ -11,7 +10,7 @@ import { DatabaseMappingModule } from './database-mapping/database-mapping.modul
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule,AuthModule],
+      imports: [ConfigModule, AuthModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         type: 'postgres',
@@ -28,7 +27,7 @@ import { DatabaseMappingModule } from './database-mapping/database-mapping.modul
 
     // Feature modules
     DatabaseMappingModule,
-  
+
     AuthModule,
   ],
 })
