@@ -36,8 +36,6 @@ export class DatabaseMappingService {
     if (this.clientDB?.isInitialized) await this.clientDB.destroy();
 
     const isMssql = config.type === 'mssql';
-
-    // ✅ FIX: Ensure password is a String. Numbers will crash Postgres SCRAM auth.
     const safePassword = config.password !== undefined ? String(config.password) : '';
 
     const ds = new DataSource({
@@ -45,7 +43,7 @@ export class DatabaseMappingService {
       host: config.host,
       port: Number(config.port),
       username: config.username,
-      password: safePassword, // <--- Fixed here
+      password: safePassword,
       database: config.database,
       synchronize: false,
       options: isMssql
@@ -61,7 +59,6 @@ export class DatabaseMappingService {
   async connectServer(config: any) {
     if (this.serverDB?.isInitialized) await this.serverDB.destroy();
 
-    // ✅ FIX: Ensure password is a String here as well
     const safePassword = config.password !== undefined ? String(config.password) : '';
 
     const ds = new DataSource({
@@ -69,7 +66,7 @@ export class DatabaseMappingService {
       host: config.host,
       port: Number(config.port),
       username: config.username,
-      password: safePassword, // <--- Fixed here
+      password: safePassword,
       database: config.database,
       synchronize: false,
     });
@@ -93,7 +90,7 @@ export class DatabaseMappingService {
       database: 'postgres',
       synchronize: false,
     });
-
+    
     await ds.initialize();
     const rows = await ds.query(
       `SELECT datname FROM pg_database WHERE datistemplate = false`,
@@ -183,70 +180,46 @@ export class DatabaseMappingService {
     return map;
   }
 
-  private convertValue(value: any, pgType: string) {
-    // 1. Handle Nulls
-    if (value === null || value === undefined) return null;
+  // ✅ NEW HELPER: Translates individual values properly
+  private translateSingleValue(value: any): string {
+    if (value === null || value === undefined) return '';
+    const strVal = String(value);
+    if (strVal.trim() === '') return '';
 
-    // 2. Normalize Target Type
+    try {
+      // Decode ONLY this word so spaces from merge logic aren't involved yet
+      const decoded = decodeYogesh(strVal);
+      const translated = transliterateMarathiToEnglish(decoded);
+      return (translated && translated.trim().length > 0) ? translated : strVal;
+    } catch (e) {
+      return strVal;
+    }
+  }
+
+  private convertValue(value: any, pgType: string) {
+    if (value === null || value === undefined) return null;
     const type = pgType ? pgType.toLowerCase() : 'text';
 
-    // ==========================================================
-    // CASE A: Target is STRING / TEXT
-    // ==========================================================
-    if (
-      ['character varying', 'text', 'varchar', 'char', 'character'].some((t) =>
-        type.includes(t),
-      )
-    ) {
-      const originalStr = String(value);
-
-      if (originalStr.trim() === '') return null;
-
-      try {
-        // Translation Logic
-        const decoded = decodeYogesh(originalStr);
-        const translated = transliterateMarathiToEnglish(decoded);
-
-        if (translated && translated.trim().length > 0) {
-          return translated;
-        }
-        return originalStr; // Fallback to original
-      } catch (e) {
-        return originalStr;
-      }
+    // A. STRING / TEXT
+    if (['character varying', 'text', 'varchar', 'char', 'character'].some((t) => type.includes(t))) {
+      // For single values, just translate
+      return this.translateSingleValue(value);
     }
 
-    // ==========================================================
-    // CASE B: Target is NUMBER
-    // ==========================================================
-    if (
-      [
-        'integer',
-        'smallint',
-        'bigint',
-        'numeric',
-        'decimal',
-        'real',
-        'double precision',
-        'serial',
-      ].some((t) => type.includes(t))
-    ) {
+    // B. NUMBER
+    if (['integer', 'smallint', 'bigint', 'numeric', 'decimal', 'real', 'double precision', 'serial'].some((t) => type.includes(t))) {
       if (typeof value === 'string' && value.trim() === '') return null;
       const num = Number(value);
       return isNaN(num) ? null : num;
     }
 
-    // ==========================================================
-    // CASE C: Target is BOOLEAN
-    // ==========================================================
+    // C. BOOLEAN
     if (type.includes('bool')) {
       const s = String(value).toLowerCase();
       return ['true', '1', 'yes', 'y', 'on', 't'].includes(s);
     }
 
-    // ==========================================================
-    // CASE D: Target is DATE
-    // ==========================================================
+    // D. DATE
     if (type.includes('date') || type.includes('time')) {
       const d = new Date(value);
       return isNaN(d.getTime()) ? null : d;
@@ -307,10 +280,7 @@ export class DatabaseMappingService {
 
     // 3. Get Target Types
     const serverTypes = await this.getServerColumnTypes(serverTable);
-
-    const serverCols = validMappings
-      .map((m) => `"${m.serverColumn}"`)
-      .join(', ');
+    const serverCols = validMappings.map((m) => `"${m.serverColumn}"`).join(', ');
     const qr = server.createQueryRunner();
     await qr.connect();
 
@@ -320,22 +290,37 @@ export class DatabaseMappingService {
 
     try {
       for (let i = 0; i < maxRows; i++) {
+        // 4. Map & Convert
         const rowValues = validMappings.map((m) => {
           const sourceRow = dataStore[m.clientTable]?.[i] || {};
+          
+          const targetType = serverTypes[m.serverColumn.toLowerCase()];
+          const isStringTarget = ['character varying', 'text', 'varchar', 'char', 'character']
+            .some(t => targetType?.toLowerCase().includes(t));
 
+          // ✅ SPECIAL FIX: Translate-THEN-Merge
+          // This prevents the font decoder from merging words and eating spaces
+          if (isStringTarget && m.clientColumns.length > 1) {
+             const parts = m.clientColumns.map((c: string) => {
+                 const val = sourceRow[c];
+                 return this.translateSingleValue(val); // Translate "First", then "Last"
+             });
+             // Join the already-translated parts with a space
+             return parts.filter((p: any) => p.trim() !== '').join(' ');
+          }
+
+          // FALLBACK LOGIC (Single columns or Numbers/Dates)
           const rawParts = m.clientColumns.map(
-            (c: string) => sourceRow[c] ?? '',
+            (c: string) => {
+              const val = sourceRow[c];
+              return (val === null || val === undefined) ? '' : val;
+            }
           );
           const merged = rawParts.join(' ').trim();
-
-          const targetType = serverTypes[m.serverColumn.toLowerCase()];
-
           return this.convertValue(merged, targetType);
         });
 
-        const placeholders = rowValues
-          .map((_, idx) => `$${idx + 1}`)
-          .join(', ');
+        const placeholders = rowValues.map((_, idx) => `$${idx + 1}`).join(', ');
 
         try {
           await qr.query(

@@ -15,11 +15,18 @@ import { concatMap, map, catchError, toArray } from 'rxjs/operators';
 export class MappingTableComponent implements OnInit {
   mappingDataByTable: Record<string, any[]> = {};
   selectedPrimaryTable: string[] = [];
-  // Keep client selection as array so Tables can restore it
   selectedClientTable: string[] = [];
   primaryDatabaseName = '';
   clientDatabaseName = '';
   isMigrating = false;
+
+  // ✅ ADDED: Variable to store the client columns list (ID -> Name reference)
+  clientSideColumns: any[] = []; 
+
+  // Modal State
+  showResultModal = false;
+  migrationResultMessage = '';
+  migrationHasErrors = false;
 
   constructor(
     private router: Router,
@@ -27,37 +34,36 @@ export class MappingTableComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Prefer history.state then sessionStorage (mappingState)
     const navState: any = (history.state && Object.keys(history.state).length) ? history.state : null;
     const storedRaw = sessionStorage.getItem('mappingState');
     const stored = storedRaw ? (() => { try { return JSON.parse(storedRaw); } catch (e) { console.warn('Invalid mappingState JSON', e); return null; } })() : null;
 
-    if (navState && (navState.mappingDataByTable || navState.selectedPrimaryTable || navState.selectedClientTable)) {
+    if (navState && (navState.mappingDataByTable || navState.selectedPrimaryTable)) {
       this.mappingDataByTable = navState.mappingDataByTable || {};
       this.selectedPrimaryTable = navState.selectedPrimaryTable || [];
-      // selectedClientTable may be array or string — normalize to array
-      if (navState.selectedClientTable) {
-        this.selectedClientTable = Array.isArray(navState.selectedClientTable) ? navState.selectedClientTable : [navState.selectedClientTable];
-      } else {
-        this.selectedClientTable = [];
-      }
+      this.selectedClientTable = Array.isArray(navState.selectedClientTable) ? navState.selectedClientTable : [navState.selectedClientTable];
       this.primaryDatabaseName = navState.primaryDatabaseName || '';
       this.clientDatabaseName = navState.clientDatabaseName || '';
-      console.log('MappingTable: loaded from history.state', { selectedPrimaryTable: this.selectedPrimaryTable, selectedClientTable: this.selectedClientTable });
+      
+      // ✅ ADDED: Load client columns reference if passed from previous screen
+      this.clientSideColumns = navState.clientSideColumns || []; 
+
     } else if (stored && stored.mappingDataByTable) {
       this.mappingDataByTable = stored.mappingDataByTable || {};
       this.selectedPrimaryTable = stored.selectedPrimaryTable || [];
       this.selectedClientTable = stored.selectedClientTable || [];
       this.primaryDatabaseName = stored.primaryDatabaseName || '';
       this.clientDatabaseName = stored.clientDatabaseName || '';
-      console.log('MappingTable: loaded from sessionStorage mappingState', { selectedPrimaryTable: this.selectedPrimaryTable, selectedClientTable: this.selectedClientTable });
+      
+      // ✅ ADDED: Load from session
+      this.clientSideColumns = stored.clientSideColumns || []; 
     } else {
       this.mappingDataByTable = {};
       this.selectedPrimaryTable = [];
       this.selectedClientTable = [];
     }
 
-    // Defensive prune so deselected primary tables don't reappear
+    // Defensive prune
     if (this.mappingDataByTable && this.selectedPrimaryTable && this.selectedPrimaryTable.length) {
       const keep = new Set(this.selectedPrimaryTable);
       Object.keys({ ...this.mappingDataByTable }).forEach(k => {
@@ -65,125 +71,134 @@ export class MappingTableComponent implements OnInit {
       });
     }
 
-    // Persist mapping state (include selectedClientTable so Tables can restore client tags)
-    const mappingState = {
-      mappingDataByTable: this.mappingDataByTable,
-      selectedPrimaryTable: this.selectedPrimaryTable,
-      selectedClientTable: this.selectedClientTable,
-      primaryDatabaseName: this.primaryDatabaseName || '',
-      clientDatabaseName: this.clientDatabaseName || ''
-    };
-
-    if (Object.keys(this.mappingDataByTable).length) {
-      sessionStorage.setItem('mappingState', JSON.stringify(mappingState));
-    } else {
-      sessionStorage.removeItem('mappingState');
-    }
-
-    console.log('MappingTable init', { mappingKeys: Object.keys(this.mappingDataByTable), selectedClientTable: this.selectedClientTable });
+    this.updateSessionStorage();
   }
 
   getMappingRows(tableName: string): any[] {
     return this.mappingDataByTable[tableName] ?? [];
   }
 
- saveMapping() {
-  if (this.isMigrating || !this.selectedPrimaryTable.length) return;
+  saveMapping() {
+    if (this.isMigrating || !this.selectedPrimaryTable.length) return;
 
-  // 1. Filter: Only migrate tables that actually have mapping data
-  const tablesToMigrate = this.selectedPrimaryTable.filter(table => 
-    this.mappingDataByTable[table] && this.mappingDataByTable[table].length > 0
-  );
+    const tablesToMigrate = this.selectedPrimaryTable.filter(table => 
+      this.mappingDataByTable[table] && this.mappingDataByTable[table].length > 0
+    );
 
-  if (tablesToMigrate.length === 0) {
-    alert('No mappings found to save.');
-    return;
+    if (tablesToMigrate.length === 0) {
+      alert('No mappings found to save.');
+      return;
+    }
+
+    this.isMigrating = true;
+
+    from(tablesToMigrate).pipe(
+      concatMap(serverTable => {
+        const rows = this.mappingDataByTable[serverTable];
+
+        const payload = {
+          serverTable: serverTable,
+          baseClientTable: this.selectedClientTable[0], 
+          mappings: rows.map((m: any) => {
+            
+            // ✅ ADDED: Logic to convert IDs "5,6,7" to Names ["First", "Middle", "Last"]
+            let finalCols: string[] = [];
+
+            // 1. Get the raw input (e.g. "5,6,7")
+            const rawInput = m.clientColumns;
+
+            if (rawInput) {
+              // 2. Split by comma to get individual items
+              const inputs = String(rawInput).split(',').map(s => s.trim());
+              
+              // 3. Try to find Names for these IDs
+              const resolvedNames: string[] = [];
+              
+              inputs.forEach(inputItem => {
+                // Check if 'clientSideColumns' has this ID
+                const match = this.clientSideColumns.find((col: any) => String(col.id) === inputItem || String(col.Id) === inputItem);
+                
+                if (match) {
+                  // Found ID -> Use Name (e.g. "First_name")
+                  resolvedNames.push(match.name || match.Name || match.COLUMN_NAME); 
+                } else {
+                  // ID not found? Assume it's already a Name (fallback)
+                  resolvedNames.push(inputItem);
+                }
+              });
+
+              finalCols = resolvedNames;
+            }
+
+            return {
+              serverColumn: m.serverColumn,
+              clientTable: m.clientTableName,
+              clientColumns: finalCols // Sending Array of Strings to backend
+            };
+          })
+        };
+
+        console.log(`Migrating table: ${serverTable}`, payload);
+
+        return this.appService.insertData(payload).pipe(
+          map(result => ({ table: serverTable, success: true, result })),
+          catchError(err => of({ table: serverTable, success: false, error: err }))
+        );
+      }),
+      toArray()
+    ).subscribe({
+      next: (results) => {
+        this.isMigrating = false;
+
+        const successful = results.filter(r => r.success);
+        const failed = results.filter(r => !r.success);
+
+        successful.forEach(item => {
+          if (this.mappingDataByTable[item.table]) {
+            this.mappingDataByTable[item.table] =
+              this.mappingDataByTable[item.table].map(r => ({ ...r, mapped: true }));
+          }
+        });
+
+        this.updateSessionStorage();
+
+        let msg = `Migration Completed!\n\nSuccessful Tables: ${successful.length}\nFailed Tables: ${failed.length}`;
+        if (failed.length > 0) {
+          msg += `\n\nFailed: ${failed.map(f => f.table).join(', ')}`;
+        }
+
+        this.migrationResultMessage = msg;
+        this.migrationHasErrors = failed.length > 0;
+        this.showResultModal = true;
+      },
+      error: (err) => {
+        this.isMigrating = false;
+        console.error('Critical Migration Error:', err);
+        alert('A critical error stopped the migration process.');
+      }
+    });
   }
 
-  this.isMigrating = true;
-
-  // 2. Loop: Process each table sequentially using RxJS 'from' and 'concatMap'
-  from(tablesToMigrate).pipe(
-    concatMap(serverTable => {
-      const rows = this.mappingDataByTable[serverTable];
-
-      // Prepare payload for THIS specific table
-      const payload = {
-        serverTable: serverTable,
-        // We use the first client table as a fallback base, but your rows contain specific table info
-        baseClientTable: this.selectedClientTable[0], 
-        mappings: rows.map((m: any) => ({
-          serverColumn: m.serverColumn,
-          clientTable: m.clientTableName, // Ensure we send the correct source table
-          clientColumns: Array.isArray(m.clientColumns) ? m.clientColumns : [m.clientColumns]
-        }))
-      };
-
-      console.log(`Migrating table: ${serverTable}...`);
-
-      // Send request and catch errors locally so one failure doesn't stop the loop
-      return this.appService.insertData(payload).pipe(
-        map(result => ({ table: serverTable, success: true, result })),
-        catchError(err => of({ table: serverTable, success: false, error: err }))
-      );
-    }),
-    toArray() // Wait for ALL tables to finish
-  ).subscribe({
-   next: (results) => {
-  this.isMigrating = false;
-
-  const successful = results.filter(r => r.success);
-  const failed = results.filter(r => !r.success);
-
-  successful.forEach(item => {
-    if (this.mappingDataByTable[item.table]) {
-      this.mappingDataByTable[item.table] =
-        this.mappingDataByTable[item.table].map(r => ({ ...r, mapped: true }));
-    }
-  });
-
-  this.updateSessionStorage();
-
-  let msg = `Migration Completed!\n\nSuccessful Tables: ${successful.length}\nFailed Tables: ${failed.length}`;
-  if (failed.length > 0) {
-    msg += `\n\nFailed: ${failed.map(f => f.table).join(', ')}`;
+  updateSessionStorage() {
+    const mappingState = {
+      mappingDataByTable: this.mappingDataByTable,
+      selectedPrimaryTable: this.selectedPrimaryTable,
+      selectedClientTable: this.selectedClientTable,
+      primaryDatabaseName: this.primaryDatabaseName || '',
+      clientDatabaseName: this.clientDatabaseName || '',
+      clientSideColumns: this.clientSideColumns || [] // ✅ Persist client columns
+    };
+    sessionStorage.setItem('mappingState', JSON.stringify(mappingState));
   }
-
-  this.migrationResultMessage = msg;
-  this.migrationHasErrors = failed.length > 0;
-  this.showResultModal = true;
-},
-
-    error: (err) => {
-      this.isMigrating = false;
-      console.error('Critical Migration Error:', err);
-      alert('A critical error stopped the migration process.');
-    }
-  });
-}
-
-// Helper to keep code clean
-updateSessionStorage() {
-  const mappingState = {
-    mappingDataByTable: this.mappingDataByTable,
-    selectedPrimaryTable: this.selectedPrimaryTable,
-    selectedClientTable: this.selectedClientTable,
-    primaryDatabaseName: this.primaryDatabaseName || '',
-    clientDatabaseName: this.clientDatabaseName || ''
-  };
-  sessionStorage.setItem('mappingState', JSON.stringify(mappingState));
-}
-
 
   goBack() {
-    // persist mapping + selectedPrimaryTable + selectedClientTable + DB names,
-    // so Tables page can restore client tags and client columns on Back
     const navState = {
       mappingDataByTable: this.mappingDataByTable,
       selectedPrimaryTable: this.selectedPrimaryTable,
       selectedClientTable: this.selectedClientTable,
       primaryDatabaseName: this.primaryDatabaseName || '',
-      clientDatabaseName: this.clientDatabaseName || ''
+      clientDatabaseName: this.clientDatabaseName || '',
+      clientSideColumns: this.clientSideColumns || [] // ✅ Pass back client columns
     };
 
     if (Object.keys(this.mappingDataByTable).length) {
@@ -192,11 +207,10 @@ updateSessionStorage() {
       sessionStorage.removeItem('mappingState');
     }
 
-    // navigate back to Tables and include navState so Tables receives history.state
     this.router.navigate(['/table'], { state: navState });
   }
-  showResultModal = false;
-migrationResultMessage = '';
-migrationHasErrors = false;
 
+  closeModal() {
+    this.showResultModal = false;
+  }
 }
