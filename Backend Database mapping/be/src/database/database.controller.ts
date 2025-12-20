@@ -3,7 +3,7 @@
 // @Controller('database')
 // export class DatabaseController {}
 
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, } from '@nestjs/common';
 import { DatabaseService } from './database.service';
 
 @Controller('database')
