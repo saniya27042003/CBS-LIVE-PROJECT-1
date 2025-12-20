@@ -251,6 +251,9 @@ export class TablesComponent implements OnInit {
     if (this.activeClientTable) row.mappedTable = this.activeClientTable;
   }
 
+  /* ============================================================
+     ✅ UPDATED OK CLICK (FIX FOR "5,6,7" INPUTS)
+     ============================================================ */
   onOkClick() {
     this.mappingDataByTable = {};
 
@@ -260,28 +263,66 @@ export class TablesComponent implements OnInit {
       const rows = this.primaryTableData.filter(r => r.source === serverTable);
 
       rows.forEach(r => {
-        const pos = Number(r.position);
-        if (!pos || pos < 1) return;
+        // 1. Get raw input (string), don't force Number()
+        const rawPos = r.position ? String(r.position).trim() : '';
+        if (!rawPos) return;
 
         const clientTable = r.mappedTable || this.activeClientTable;
         if (!clientTable) return;
 
         const clientRows = this.getClientRowsForTable(clientTable);
-        const col = clientRows[pos - 1];
-        if (!col?.id) return;
+        if (!clientRows || clientRows.length === 0) return;
 
-        this.mappingDataByTable[serverTable].push({
-          serverColumn: r.id,
-          clientTableName: clientTable,
-          clientColumns: [col.id],
-          clientId: r.position,
-          clientName: col.name
+        // 2. Split input by comma (e.g., "5,6,7" -> ["5","6","7"])
+        const inputParts = rawPos.split(',').map(s => s.trim());
+        const matchedIds: string[] = [];
+        const matchedNames: string[] = [];
+
+        inputParts.forEach(part => {
+          // A. Try to match by ID (User preference)
+          const foundById = clientRows.find(c => String(c.id) === part);
+          
+          if (foundById) {
+            matchedIds.push(foundById.id);
+            matchedNames.push(foundById.name);
+          } else {
+            // B. Fallback: Match by Row Index (Legacy behavior)
+            const idx = Number(part);
+            if (!isNaN(idx) && idx > 0 && clientRows[idx - 1]) {
+              matchedIds.push(clientRows[idx - 1].id);
+              matchedNames.push(clientRows[idx - 1].name);
+            }
+          }
         });
+
+        // 3. Save if we found any valid columns
+        if (matchedIds.length > 0) {
+          this.mappingDataByTable[serverTable].push({
+            serverColumn: r.id,
+            clientTableName: clientTable,
+            clientColumns: matchedIds.join(','), // Save "5,6,7" string
+            clientId: rawPos,
+            clientName: matchedNames.join(', ')
+          });
+        }
       });
     });
 
     this.saveMappingState();
-    this.router.navigate(['/mapping-table']);
+
+    // 4. Pass ALL known client columns to next screen (for ID -> Name lookup)
+    const allClientColumns = Object.values(this.clientTableDataMap).flat();
+
+    this.router.navigate(['/mapping-table'], { 
+      state: { 
+        mappingDataByTable: this.mappingDataByTable,
+        selectedPrimaryTable: this.selectedPrimaryTable,
+        selectedClientTable: this.selectedClientTable,
+        primaryDatabaseName: this.primaryDatabaseName,
+        clientDatabaseName: this.clientDatabaseName,
+        clientSideColumns: allClientColumns // ✅ Pass reference data
+      }
+    });
   }
 
   /* ================= UI HELPERS ================= */
