@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { SHREELIPI_MAP } from "./shreelipi-map";
 
 export class ShreeLipiDecoder {

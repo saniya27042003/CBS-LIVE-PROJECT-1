@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+
 // import { YOGESH_GLYPH_MAP } from './yogesh.glyph-map';
 // import { Token } from './yogesh.tokens';
 // import { reorderIndic } from './yogesh.reorder';
@@ -171,7 +173,7 @@ const MATRA_MAP: Record<string, string> = {
   AU: 'ौ',
   RH: 'ृ',
   EN: 'ें',
-  Ra: '्र',
+ // Ra: '्र',
 };
 
 const DIACRITIC_MAP: Record<string, string> = {
@@ -204,7 +206,7 @@ function tokenize(raw: string): Token[] {
 // 2️⃣ Composite vowels (ORTHOGRAPHY ONLY)
 // =========================
 function resolveCompositeVowels(tokens: Token[]): Token[] {
-  const out: Token[] = [];
+  let out: Token[] = [];
   let i = 0;
 
   while (i < tokens.length) {
@@ -222,6 +224,9 @@ function resolveCompositeVowels(tokens: Token[]): Token[] {
       i += 2;
       continue;
     }
+
+  
+
 
     // े + ै → ौ
     if (
@@ -253,6 +258,10 @@ function resolveCompositeVowels(tokens: Token[]): Token[] {
 
   return out;
 }
+
+
+
+
 
 // =========================
 // 3️⃣ Akshar-level matra anchoring
@@ -376,10 +385,33 @@ function emitUnicode(tokens: Token[]): string {
       continue;
     }
 
-    if (t.type === 'CONSONANT') {
-      out += BASE_CONSONANT_MAP[t.value] ?? '';
+    // Repha (Ra)
+    if (t.type === 'MATRA' && t.value === 'Ra') {
+      const match = out.match(/([क-हळ](्[क-हळ])*)$/u);
+      if (match) {
+        out =
+          out.slice(0, out.length - match[0].length) +
+          'र्' +
+          match[0];
+      }
       continue;
     }
+
+    // if (t.type === 'CONSONANT') {
+    //   out += BASE_CONSONANT_MAP[t.value] ?? '';
+    //   continue;
+    // }
+
+    if (t.type === 'CONSONANT') {
+  const base = BASE_CONSONANT_MAP[t.value] ?? '';
+  out += base;
+  if (t.dead) {
+    out += '्'; // 🔥 HALANT
+  }
+  continue;
+}
+
+
 
     if (t.type === 'MATRA') {
       out += MATRA_MAP[t.value] ?? '';
@@ -399,9 +431,9 @@ function emitUnicode(tokens: Token[]): string {
 // =========================
 // उदळो → उदाळे
 // लगारो → लगारे
-function normalizeFinalO(word: string): string {
-  return word.replace(/([क-हळ])ो$/u, '$1े');
-}
+// function normalizeFinalO(word: string): string {
+//   return word.replace(/([क-हळ])ो$/u, '$1े');
+// }
 
 // =========================
 // 8️⃣ Public API
@@ -418,10 +450,10 @@ export function decodeYogesh(raw: string): string {
   const unicode = emitUnicode(normalized);
 
   // Apply Marathi-only final normalization
-  return unicode
-    .split(/\s+/)
-    .map(normalizeFinalO)
-    .join(' ');
+   return unicode;
+  //   .split(/\s+/)
+  //   .map(normalizeFinalO)
+  //   .join(' ');
 }
 
 

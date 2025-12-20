@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-control-regex */
-/* eslint-disable prettier/prettier */
 
 // UNIVERSAL MARATHI LEGACY → UNICODE DECODER
 
