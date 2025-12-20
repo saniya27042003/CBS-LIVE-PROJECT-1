@@ -21,7 +21,7 @@ export class MappingTableComponent implements OnInit {
   isMigrating = false;
 
   // ✅ ADDED: Variable to store the client columns list (ID -> Name reference)
-  clientSideColumns: any[] = []; 
+  clientSideColumns: any[] = [];
 
   // Modal State
   showResultModal = false;
@@ -44,9 +44,9 @@ export class MappingTableComponent implements OnInit {
       this.selectedClientTable = Array.isArray(navState.selectedClientTable) ? navState.selectedClientTable : [navState.selectedClientTable];
       this.primaryDatabaseName = navState.primaryDatabaseName || '';
       this.clientDatabaseName = navState.clientDatabaseName || '';
-      
+
       // ✅ ADDED: Load client columns reference if passed from previous screen
-      this.clientSideColumns = navState.clientSideColumns || []; 
+      this.clientSideColumns = navState.clientSideColumns || [];
 
     } else if (stored && stored.mappingDataByTable) {
       this.mappingDataByTable = stored.mappingDataByTable || {};
@@ -54,9 +54,9 @@ export class MappingTableComponent implements OnInit {
       this.selectedClientTable = stored.selectedClientTable || [];
       this.primaryDatabaseName = stored.primaryDatabaseName || '';
       this.clientDatabaseName = stored.clientDatabaseName || '';
-      
+
       // ✅ ADDED: Load from session
-      this.clientSideColumns = stored.clientSideColumns || []; 
+      this.clientSideColumns = stored.clientSideColumns || [];
     } else {
       this.mappingDataByTable = {};
       this.selectedPrimaryTable = [];
@@ -81,7 +81,7 @@ export class MappingTableComponent implements OnInit {
   saveMapping() {
     if (this.isMigrating || !this.selectedPrimaryTable.length) return;
 
-    const tablesToMigrate = this.selectedPrimaryTable.filter(table => 
+    const tablesToMigrate = this.selectedPrimaryTable.filter(table =>
       this.mappingDataByTable[table] && this.mappingDataByTable[table].length > 0
     );
 
@@ -98,9 +98,9 @@ export class MappingTableComponent implements OnInit {
 
         const payload = {
           serverTable: serverTable,
-          baseClientTable: this.selectedClientTable[0], 
+          baseClientTable: this.selectedClientTable[0],
           mappings: rows.map((m: any) => {
-            
+
             // ✅ ADDED: Logic to convert IDs "5,6,7" to Names ["First", "Middle", "Last"]
             let finalCols: string[] = [];
 
@@ -110,17 +110,17 @@ export class MappingTableComponent implements OnInit {
             if (rawInput) {
               // 2. Split by comma to get individual items
               const inputs = String(rawInput).split(',').map(s => s.trim());
-              
+
               // 3. Try to find Names for these IDs
               const resolvedNames: string[] = [];
-              
+
               inputs.forEach(inputItem => {
                 // Check if 'clientSideColumns' has this ID
                 const match = this.clientSideColumns.find((col: any) => String(col.id) === inputItem || String(col.Id) === inputItem);
-                
+
                 if (match) {
                   // Found ID -> Use Name (e.g. "First_name")
-                  resolvedNames.push(match.name || match.Name || match.COLUMN_NAME); 
+                  resolvedNames.push(match.name || match.Name || match.COLUMN_NAME);
                 } else {
                   // ID not found? Assume it's already a Name (fallback)
                   resolvedNames.push(inputItem);
