@@ -79,7 +79,7 @@
 //   '¡': { type: 'CONJUNCT', value: 'TRA' },
 
 // };
- 
+
 
 
 
@@ -105,8 +105,8 @@ export const YOGESH_GLYPH_MAP: Record<string, Token> = {
   '›': { type: 'CONSONANT', value: 'DA', dead: false },
   'Æ': { type: 'CONSONANT', value: 'H', dead: false },
   'ô': { type: 'CONSONANT', value: 'La', dead: false }, // ळ helper
-    '™': { type: 'CONSONANT', value: 'T', dead: false },
-
+  '™': { type: 'CONSONANT', value: 'T', dead: false },
+  '¹': { type: 'CONSONANT', value: 'RU', dead: false },
 
 
 
@@ -158,7 +158,7 @@ export const YOGESH_GLYPH_MAP: Record<string, Token> = {
   '÷': { type: 'CONJUNCT', value: 'TTHA' },
   '¦': { type: 'CONJUNCT', value: 'DRA' },
   '¡': { type: 'CONJUNCT', value: 'TRA' },
-    'Á': { type: 'CONJUNCT', value: 'SHRA' },
+  'Á': { type: 'CONJUNCT', value: 'SHRA' },
 
 };
 
