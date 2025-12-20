@@ -1,39 +1,46 @@
 <div class="dropdown dropdown-end">
 
-  <!-- ✅ TOP AVATAR -->
-  <div tabindex="0" role="button" class="avatar cursor-pointer m-1">
-    <div
-      class="w-10 rounded-full ring-offset-base-100 ring-offset-2 hover:ring hover:ring-gray-500 transition-all duration-200">
-      <!-- <img alt="User Avatar" [src]="profilePic" /> -->
-      <img [src]="profilePic || defaultPic" (error)="onImageError($event)"
-        class="w-10 h-10 rounded-full object-cover"/>
+  <!-- TOP AVATAR -->
+  <div tabindex="0" role="button" class="cursor-pointer m-1">
+    <div class="w-10 h-10 rounded-full flex items-center justify-center
+             bg-purple-600 text-white
+             ring-offset-base-100 ring-offset-2
+             hover:ring hover:ring-gray-500 transition-all duration-200">
+
+      <!-- IMAGE -->
+      <img *ngIf="showImage" [src]="profilePic!" (error)="onImageError()" class="w-10 h-10 rounded-full object-cover"
+        alt="User Avatar" />
+
+      <!-- INITIAL LETTER -->
+      <span *ngIf="!showImage" class="text-[17px] leading-none select-none">
+        {{ initialLetter }}
+      </span>
 
     </div>
   </div>
 
-  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-80 border border-base-300">
+  <!-- DROPDOWN -->
+  <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow
+           bg-base-100 rounded-box w-80 border border-base-300">
 
-    <!-- ✅ USER HEADER -->
+    <!-- USER HEADER -->
     <li class="menu-title px-4 py-3">
-      <div class="flex items-center gap-4">
-        <div class="avatar">
-          <div class="w-10 rounded-full">
-            <img [src]="profilePic" />
-          </div>
-        </div>
-        <div class="flex flex-col gap-0.5">
-          <span class="text-sm font-semibold text-base-content">
-            {{ username }}
+      <div class="flex items-center bg-transparent gap-4">
+
+        <div class="w-10 h-10 rounded-full flex items-center justify-center
+                 bg-purple-600 text-white">
+
+          <img *ngIf="showImage" [src]="profilePic!" (error)="onImageError()"
+            class="w-10 h-10 rounded-full object-cover" />
+
+          <span *ngIf="!showImage" class="text-[17px] leading-none select-none">
+            {{ initialLetter }}
           </span>
 
-          <span class="text-xs text-base-content/70">
-            {{ email }}
-          </span>
-          <!--           
-          <a href="#" class="text-xs text-blue-500 hover:underline mt-0.5">
-            View your channel
-          </a> -->
         </div>
+        <div class="flex flex-col gap-0.5"> <span class="text-sm font-semibold text-base-content"> {{ username }}
+          </span> <span class="text-xs text-base-content/70"> {{ email }} </span> </div>
+
       </div>
     </li>
 
@@ -41,43 +48,17 @@
       <div class="divider my-0 py-0 h-px bg-base-200"></div>
     </li>
 
+    <!-- GOOGLE ACCOUNT -->
     <li>
-<button
-  class="py-3 flex items-center gap-3 w-full text-left"
-  [disabled]="!isGoogleUser"
-  [ngClass]="{
-    'opacity-50 cursor-not-allowed': !isGoogleUser
-  }"
-  (click)="openGoogleAccount()"
->
-  <!-- GOOGLE ICON (always visible) -->
-  <img
-    src="https://www.svgrepo.com/show/475656/google-color.svg"
-    alt="Google Icon"
-    class="w-5 h-5 flex-shrink-0"
-  />
+      <button class="py-3 flex items-center gap-3 w-full text-left" [disabled]="!isGoogleUser"
+        [ngClass]="{ 'opacity-50 cursor-not-allowed': !isGoogleUser }" (click)="openGoogleAccount()">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" />
+        <span>Google Account</span>
+      </button>
+    </li>
 
-  <span>Google Account</span>
-</button>
-
-
-</li>
-
-
-    <!-- <li>
-      <a class="py-3 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-          </svg>
-          Switch account
-        </div>
-      </a>
-    </li> -->
-
-    <!-- ✅ SIGN OUT -->
-    <li>
+    <!-- SIGN OUT -->
+   <li>
       <a (click)="onLogout()" class="py-3 flex items-center gap-3 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

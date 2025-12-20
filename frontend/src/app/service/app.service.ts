@@ -26,11 +26,19 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
     return this.http.get<string[]>(this.BASE_URL + 'server/tables');
   }
 
-  getServerColumns(tableName: string) {
-    return this.http.post<string[]>(this.BASE_URL + 'server/columns', {
-      tableName,
-    });
-  }
+  // getServerColumns(tableName: string) {
+  //   return this.http.post<string[]>(this.BASE_URL + 'server/columns', {
+  //     tableName,
+  //   });
+  // }
+getServerColumns(tableName: string) {
+  return this.http.post<string[]>(
+    this.BASE_URL + 'server/columns',
+    { tableName }
+  );
+}
+
+
 
   // =====================================
   // ✅ CLIENT (PG / MSSQL / MYSQL)
@@ -60,8 +68,43 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
   // =====================================
   // ✅ DATA MIGRATION
   // =====================================
+// =====================================
+// ✅ SINGLE TABLE MIGRATION
+// =====================================
+insertData(payload: {
+  serverTable: string;
+  baseClientTable: string;
+  mappings: {
+    serverColumn: string;
+    clientTable: string;
+    clientColumns: string[];
+  }[];
+}) {
+  return this.http.post(this.BASE_URL + 'insert-data', payload);
+}
 
-  insertData(mappingPayload: any) {
-    return this.http.post(this.BASE_URL + 'insert-data', mappingPayload);
-  }
+
+
+
+// =====================================
+// ✅ MULTIPLE TABLE MIGRATION
+// =====================================
+migrateMultipleTables(payload: {
+  tables: string[];
+  mappingsPerTable: {
+    [table: string]: {
+      serverTable: string;
+      clientTable: string;
+      mappings: any[];
+    };
+  };
+  relations: any[];
+}) {
+  return this.http.post(
+    this.BASE_URL + 'migrate-multiple',
+    payload
+  );
+}
+
+
 }
