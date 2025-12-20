@@ -1,9 +1,10 @@
+/* Existing hidden scrollbar behavior (UNCHANGED) */
 .overflow-y-auto::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
 .overflow-y-auto {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
  
 /* Badge style (unchanged) */
@@ -14,30 +15,51 @@
   color: white;
 }
  
-/* === Footer-safe spacing and layout fixes ===
-   Ensure content never sits behind a fixed footer.
-   If your footer height is not 80px, change both values below.
-*/
+/* Footer-safe spacing */
 body, .app-root, .page-root {
-  /* ensures the whole app reserves space for footer */
-  padding-bottom: 80px; /* reserve space for fixed footer */
+  padding-bottom: 80px;
 }
  
-/* If you prefer to target the specific page wrapper instead of body,
-   set that wrapper's class (e.g., .page-wrapper) and use the same rule. */
- 
-/* Make sure the main scroll container uses native scrolling and smooth touch */
+/* Touch scrolling */
 div[style*="overflow-y:auto"], .scrollable, .page-scroll {
   -webkit-overflow-scrolling: touch;
 }
  
-/* Optional: If you have a fixed footer element, ensure it has a high z-index */
+/* Fixed footer */
 footer, .app-footer, .fixed-footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 80px; /* match padding-bottom above */
+  height: 80px;
   z-index: 1000;
 }
  
+/* ===============================
+   PROFESSIONAL TABLE SCROLLBAR
+   (ONLY for primary & client tables)
+   =============================== */
+ 
+.table-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #1f2933;
+}
+ 
+.table-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+ 
+.table-scroll::-webkit-scrollbar-track {
+  background: #1f2933;
+  border-radius: 8px;
+}
+ 
+.table-scroll::-webkit-scrollbar-thumb {
+  background-color: #6b7280;
+  border-radius: 8px;
+  border: 2px solid #1f2933;
+}
+ 
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
