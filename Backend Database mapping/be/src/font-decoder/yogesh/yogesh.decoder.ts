@@ -157,6 +157,7 @@ const BASE_CONSONANT_MAP: Record<string, string> = {
   TH: 'ठ', DH: 'ढ',
   H: 'ह', La: 'ळ',
   DA: 'ड', TA: 'त', KHA: 'ख', T: 'ट',
+  RU: 'रु',
 };
 
 const MATRA_MAP: Record<string, string> = {
@@ -409,10 +410,10 @@ function normalizeFinalO(word: string): string {
 export function decodeYogesh(raw: string): string {
   const tokens = tokenize(raw);
 
-  const reordered  = reorderIndic(tokens);
-  const composite  = resolveCompositeVowels(reordered);
-  const anchored   = anchorMatras(composite);
-  const iCleaned   = resolveIMatraConflicts(anchored);
+  const reordered = reorderIndic(tokens);
+  const composite = resolveCompositeVowels(reordered);
+  const anchored = anchorMatras(composite);
+  const iCleaned = resolveIMatraConflicts(anchored);
   const normalized = normalizeVowels(iCleaned);
 
   const unicode = emitUnicode(normalized);
