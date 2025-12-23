@@ -36,6 +36,11 @@ export class DatabaseMappingController {
     return this.db.getClientTableNames();
   }
 
+  // @Get('client/diagnostic')
+  // getClientDiagnostic() {
+  //   return this.db.getClientDiagnostic();
+  // }
+
   @Post('client/columns')
   getClientColumns(@Body('tableName') tableName: string) {
     return this.db.getClientColumns(tableName);
