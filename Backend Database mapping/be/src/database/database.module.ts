@@ -14,6 +14,6 @@ import { DatabaseController } from './database.controller';
 @Module({
   controllers: [DatabaseController],
   providers: [DatabaseService],
-  exports: [DatabaseService],
+  exports: [DatabaseService], // 👈 ADD THIS: Allows other modules to use this service
 })
 export class DatabaseModule {}

@@ -78,7 +78,7 @@ export class MappingTableComponent implements OnInit {
     return this.mappingDataByTable[tableName] ?? [];
   }
 
-  saveMapping() {
+ saveMapping() {
     if (this.isMigrating || !this.selectedPrimaryTable.length) return;
 
     const tablesToMigrate = this.selectedPrimaryTable.filter(table =>
@@ -92,6 +92,19 @@ export class MappingTableComponent implements OnInit {
 
     this.isMigrating = true;
 
+    // ✅ NEW: Try to find a common "ID" column to use as a Join Key automatically
+    // This assumes your tables have a column like 'id', 'cityid', or 'no'.
+    const potentialJoinKeys = ['id', 'cityid', 'uuid', 'no', 'sr_no', 'row_id'];
+    let detectedJoinKey = '';
+
+    // Check the first client column available to see if it matches any standard ID name
+    if (this.clientSideColumns.length > 0) {
+        const found = this.clientSideColumns.find(c => 
+            potentialJoinKeys.includes((c.name || c.COLUMN_NAME || '').toLowerCase())
+        );
+        if (found) detectedJoinKey = found.name || found.COLUMN_NAME;
+    }
+
     from(tablesToMigrate).pipe(
       concatMap(serverTable => {
         const rows = this.mappingDataByTable[serverTable];
@@ -99,46 +112,39 @@ export class MappingTableComponent implements OnInit {
         const payload = {
           serverTable: serverTable,
           baseClientTable: this.selectedClientTable[0],
+          joinKey: detectedJoinKey, // ✅ SEND THE KEY to fix the relation conflict
           mappings: rows.map((m: any) => {
 
-            // ✅ ADDED: Logic to convert IDs "5,6,7" to Names ["First", "Middle", "Last"]
             let finalCols: string[] = [];
-
-            // 1. Get the raw input (e.g. "5,6,7")
             const rawInput = m.clientColumns;
 
             if (rawInput) {
-              // 2. Split by comma to get individual items
               const inputs = String(rawInput).split(',').map(s => s.trim());
-
-              // 3. Try to find Names for these IDs
               const resolvedNames: string[] = [];
 
               inputs.forEach(inputItem => {
-                // Check if 'clientSideColumns' has this ID
                 const match = this.clientSideColumns.find((col: any) => String(col.id) === inputItem || String(col.Id) === inputItem);
 
                 if (match) {
-                  // Found ID -> Use Name (e.g. "First_name")
-                  resolvedNames.push(match.name || match.Name || match.COLUMN_NAME);
+                  // ✅ FIX: Trim whitespace to ensure clean names
+                  resolvedNames.push((match.name || match.Name || match.COLUMN_NAME).trim());
                 } else {
-                  // ID not found? Assume it's already a Name (fallback)
-                  resolvedNames.push(inputItem);
+                  resolvedNames.push(inputItem.trim());
                 }
               });
-
               finalCols = resolvedNames;
             }
 
             return {
               serverColumn: m.serverColumn,
               clientTable: m.clientTableName,
-              clientColumns: finalCols // Sending Array of Strings to backend
+              clientColumns: finalCols
             };
           })
         };
 
-        console.log(`Migrating table: ${serverTable}`, payload);
+        console.log(`Migrating table: ${serverTable} with JoinKey: ${detectedJoinKey}`, payload);
+
 
         return this.appService.insertData(payload).pipe(
           map(result => ({ table: serverTable, success: true, result })),

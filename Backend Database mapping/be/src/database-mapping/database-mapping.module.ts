@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { DatabaseMappingController } from './database-mapping.controller';
 import { DatabaseMappingService } from './database-mapping.service';
+import { DatabaseMappingController } from './database-mapping.controller';
+import { DatabaseModule } from '../database/database.module'; // 👈 Import the module, not the service
 
 @Module({
-  imports: [],
+  imports: [DatabaseModule], // 👈 ADD THIS: Pulls in the exported DatabaseService
   controllers: [DatabaseMappingController],
   providers: [DatabaseMappingService],
-  exports: [DatabaseMappingService]
 })
 export class DatabaseMappingModule {}
