@@ -215,32 +215,22 @@ export class TablesComponent implements OnInit {
 
   /* ================= REBUILD (RESTORE INPUTS) ================= */
 
-  // ✅ UPDATED: Fetches ALL columns first, then fills in saved values.
   reconstructPrimaryTableData() {
     this.primaryTableData = [];
 
     this.selectedPrimaryTable.forEach(table => {
-      // 1. Get any saved mappings for this table
       const mapped = this.mappingDataByTable[table] || [];
 
-      // 2. ALWAYS fetch the full list of columns from server
       this.appService.getServerColumns(table).subscribe(cols => {
-        
-        // 3. Map full list of columns to UI rows
         const rows = (cols || []).map(c => {
-          // Check if we have saved data for this specific column
           const existingMap = mapped.find((m: any) => m.serverColumn === c);
-
           return {
             id: c,
             source: table,
-            // If mapping exists, restore 'clientId' (which holds your "5,6,7" string)
-            // If not, default to empty string so the row still appears
             position: existingMap ? existingMap.clientId : '',
             mappedTable: existingMap ? existingMap.clientTableName : null
           };
         });
-
         this.primaryTableData.push(...rows);
       });
     });
@@ -293,7 +283,8 @@ export class TablesComponent implements OnInit {
           this.mappingDataByTable[serverTable].push({
             serverColumn: r.id,
             clientTableName: clientTable,
-            clientColumns: matchedIds.join(','),
+            // ✅ FIX: Send ARRAY instead of joined string to match backend expectation
+            clientColumns: matchedIds, 
             clientId: rawPos,
             clientName: matchedNames.join(', ')
           });

@@ -1,86 +1,116 @@
-// import { Controller } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 
-// @Controller('database')
-// export class DatabaseController {}
+import { DatabaseMappingService } from '../database-mapping/database-mapping.service';
 
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
-import { DatabaseService } from './database.service';
-import { ConnectionDto } from './connection.dto';
 
-@Controller('database')
+
+@Controller('database-mapping')
+
 export class DatabaseController {
-  constructor(private readonly databaseService: DatabaseService) {}
 
-  // -------- MYSQL --------
-  @Post('connect-mysql')
-  async connectMySQL(@Body() dto: ConnectionDto) {
-    const result = await this.databaseService.connectMySQL(dto);
+  constructor(private readonly db: DatabaseMappingService) {}
 
-    if (!result.success) {
-      throw new HttpException(
-        result.message || 'MySQL connection failed',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
-    return { message: 'MySQL connected successfully' };
+
+  @Post('connect-server')
+
+  connectServer(@Body() config: any) {
+
+    return this.db.connectServer(config);
+
   }
 
-  // -------- MSSQL --------
-  @Post('connect-mssql')
-  async connectMSSQL(@Body() dto: ConnectionDto) {
-    const result = await this.databaseService.connectMSSQL(dto);
 
-    if (!result.success) {
-      throw new HttpException(
-        result.message || 'MSSQL connection failed',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
-    return { message: 'MSSQL connected successfully' };
+  @Post('server/databases')
+
+  getServerDatabases(@Body() config: any) {
+
+    return this.db.getServerDatabases(config);
+
   }
 
-  // -------- TABLES --------
-  @Get('tables')
-  async getTables() {
-    const result = await this.databaseService.getTables();
 
-    if (!result.success) {
-      throw new HttpException(
-        result.message || 'Failed to fetch tables',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
 
-    return result.tables;
+
+
+  @Get('server/tables')
+
+  getServerTables() {
+
+    return this.db.getPrimaryTableNames();
+
   }
+
+
+
+  @Post('server/columns')
+
+  getServerColumns(@Body('tableName') tableName: string) {
+
+    return this.db.getAllColumnsNames(tableName);
+
+  }
+
+
+
+  @Post('connect-client')
+
+  connectClient(@Body() config: any) {
+
+    return this.db.connect(config);
+
+  }
+
+
+
+  @Get('client/tables')
+
+  getClientTables() {
+
+    return this.db.getClientTableNames();
+
+  }
+
+
+
+  // @Get('client/diagnostic')
+
+  // getClientDiagnostic() {
+
+  //   return this.db.getClientDiagnostic();
+
+  // }
+
+
+
+  @Post('client/columns')
+
+  getClientColumns(@Body('tableName') tableName: string) {
+
+    return this.db.getClientColumns(tableName);
+
+  }
+
+
+
+  @Post('client/table-structure')
+
+  getTableStructure(@Body('tableName') tableName: string) {
+
+    return this.db.getTableStructure(tableName);
+
+  }
+
+
+
+  @Post('insert-data')
+
+  insertData(@Body() payload: any) {
+
+    return this.db.insertMappedData(payload);
+
+  }
+
 }
 
-
-  // @Post('connect')
-  // async connectDatabase(@Body() body: any) {
-  //     const { type, host, port, username, password, database } = body;
-  //     try {
-  //         const result = await this.databaseService.connect({
-  //             type,
-  //             host,
-  //             port: Number(port),
-  //             username,
-  //             password,
-  //             database,
-  //         });
-  //         return { success: true, message: result };
-  //     } catch (error) {
-  //         console.error('❌ Database connection failed:', error);
-  //         return { success: false, message: error.message };
-  //     }
-  // }
-//}
