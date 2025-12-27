@@ -11,8 +11,17 @@ import {
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { DbStateService } from '../../service/db-state.service';
-import { SettingsComponent } from '../settings/settings.component';                       
+import { SettingsComponent } from '../settings/settings.component';
 
+interface ClientDbConfig {
+  type: string;
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  database?: string;     // optional
+  serviceName?: string; // optional (Oracle)
+}
 
 @Component({
   selector: 'app-database',
@@ -60,9 +69,9 @@ export class DatabaseComponent implements OnInit {
   clientClassMap: { [key: string]: string } = {};
 
   loadingDatabases = false;
-  
+
   // ✅ ADDED: State for loading spinner
-  isConnecting = false; 
+  isConnecting = false;
 
   // =========================
   // MESSAGE BOX
@@ -242,14 +251,21 @@ export class DatabaseComponent implements OnInit {
         }
 
         // ✅ 4) CONNECT CLIENT
-        const clientConfig = {
+          const clientConfig: ClientDbConfig = {
           type: this.clientForm.value.type,
           host: this.clientForm.value.host,
           port: Number(this.clientForm.value.port),
           username: this.clientForm.value.username,
           password: this.clientForm.value.password,
-          database: this.clientForm.value.database
         };
+
+        // 🔁 SMART MAPPING
+        if (this.clientForm.value.type === 'oracle') {
+          clientConfig.serviceName = this.clientForm.value.database; // XEPDB1
+        } else {
+          clientConfig.database = this.clientForm.value.database; // postgres, mysql, mongo, mssql
+        }
+
 
         console.log('✅ CLIENT CONFIG SENT:', clientConfig);
 

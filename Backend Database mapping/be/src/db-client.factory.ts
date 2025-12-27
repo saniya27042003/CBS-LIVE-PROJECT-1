@@ -1,7 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import knex from 'knex';
 import { dbConfig } from './db.config';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+
+
+
+
+
+// db-client.factory.ts
+import * as oracledb from 'oracledb';
+
+export async function getOracleConnection() {
+  return await oracledb.getConnection({
+    user: process.env.ORACLE_USER,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: `${process.env.ORACLE_HOST}:${process.env.ORACLE_PORT}/${process.env.ORACLE_SERVICE}`,
+  });
+}
+
+
+
+
+
 
 export async function getSourceConnection() {
   const { host, port, user, password, database, options } = dbConfig.source;

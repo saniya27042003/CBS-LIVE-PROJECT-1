@@ -1,4 +1,9 @@
-/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/require-await */
 import {
   Injectable,
   InternalServerErrorException,
@@ -9,7 +14,6 @@ import { ManualSymbolMapper } from '../legacy-font/manual-symbol-maps';
 import Sanscript from '@indic-transliteration/sanscript';
 import { DatabaseService } from '../database/database.service';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const unidev = require('unidev');
 
 @Injectable()
@@ -64,25 +68,55 @@ export class DatabaseMappingService {
 
   /* ===================== CONNECTIONS ===================== */
   
-  async connect(config: any) {
-    if (this.clientDB?.isInitialized) await this.clientDB.destroy();
-    try {
-      this.clientDB = await this.dbService.createConnection(config);
-      return { success: true };
-    } catch (error) {
-      throw new InternalServerErrorException((error as Error).message);
-    }
+ async connect(config: any) {
+  if (this.clientDB?.isInitialized) {
+    await this.clientDB.destroy();
   }
 
-  async connectServer(config: any) {
-    if (this.serverDB?.isInitialized) await this.serverDB.destroy();
-    try {
-      this.serverDB = await this.dbService.createConnection(config);
-      return { success: true };
-    } catch (error) {
-      throw new InternalServerErrorException((error as Error).message);
-    }
+  try {
+    this.logger.log('🔌 CLIENT DB CONFIG RECEIVED:');
+    this.logger.log(JSON.stringify(config, null, 2));
+
+    this.clientDB = await this.dbService.createConnection(config);
+
+    this.logger.log('✅ CLIENT DATABASE CONNECTED SUCCESSFULLY');
+    return { success: true };
+  } catch (error: any) {
+    this.logger.error('❌ CLIENT DB CONNECTION FAILED');
+    this.logger.error(error?.message || error);
+    this.logger.error(error?.stack);
+
+    throw new InternalServerErrorException(
+      error?.message || 'Client DB connection failed',
+    );
   }
+}
+
+
+  async connectServer(config: any) {
+  if (this.serverDB?.isInitialized) {
+    await this.serverDB.destroy();
+  }
+
+  try {
+    this.logger.log('🔌 SERVER DB CONFIG RECEIVED:');
+    this.logger.log(JSON.stringify(config, null, 2));
+
+    this.serverDB = await this.dbService.createConnection(config);
+
+    this.logger.log('✅ SERVER DATABASE CONNECTED SUCCESSFULLY');
+    return { success: true };
+  } catch (error: any) {
+    this.logger.error('❌ SERVER DB CONNECTION FAILED');
+    this.logger.error(error?.message || error);
+    this.logger.error(error?.stack);
+
+    throw new InternalServerErrorException(
+      error?.message || 'Server DB connection failed',
+    );
+  }
+}
+
 
   /* ===================== METADATA ===================== */
   async getServerDatabases(config: any) { return await this.dbService.getDatabasesList(config); }
@@ -154,7 +188,6 @@ export class DatabaseMappingService {
 
   /* ===================== INSERTION LOGIC ===================== */
 
-  /* eslint-disable prettier/prettier */
 // ... (imports remain the same)
 
 
@@ -333,7 +366,7 @@ async insertMappedData(body: any) {
     await this.toggleConstraints(qr, serverDriver, serverTable, false);
 
     if (serverDriver === 'mssql') {
-      try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} ON`); } catch (e) {}
+      try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} ON`); } catch (e) { /* empty */ }
     }
 
     let inserted = 0;
@@ -381,7 +414,7 @@ async insertMappedData(body: any) {
       return { success: false, message: err.message, errors: [err.message] };
     } finally {
       if (serverDriver === 'mssql') {
-        try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} OFF`); } catch (e) {}
+        try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} OFF`); } catch (e) { /* empty */ }
       }
       await this.toggleConstraints(qr, serverDriver, serverTable, true);
       await qr.release();

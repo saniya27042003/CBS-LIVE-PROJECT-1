@@ -22,3 +22,13 @@ export const dbConfig = {
     database: process.env.TARGET_DBNAME,
   },
 };
+
+
+// orm.config.ts
+export default {
+  type: 'oracle',
+  username: process.env.ORACLE_USER,
+  password: process.env.ORACLE_PASSWORD,
+  connectString: `${process.env.ORACLE_HOST}:${process.env.ORACLE_PORT}/${process.env.ORACLE_SERVICE}`,
+  synchronize: false,
+};
