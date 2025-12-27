@@ -260,8 +260,17 @@ async insertMappedData(body: any) {
         else if (clientDriver === 'oracle') query = `SELECT ${selectStr} FROM ${safeTable} WHERE ROWNUM <= 10000 ORDER BY ${cqL}${sortCol}${cqR}`;
         else query = `SELECT ${selectStr} FROM ${safeTable} ORDER BY ${cqL}${sortCol}${cqR} LIMIT 10000`; // MySQL/Postgres
 
-        const rows = await client.query(query);
-        dataStore[table] = rows;
+        // const rows = await client.query(query);
+        // dataStore[table] = rows;
+
+        if (this.isMongo(client)) {
+          const docs = await this.getMongoDocuments(client, table, 10000);
+          dataStore[table] = docs;
+        } else {
+          const rows = await client.query(query);
+          dataStore[table] = rows;
+        }
+
 
       } catch (e) {
         this.logger.error(`Error fetching from ${table}: ${(e as Error).message}`);
@@ -339,6 +348,55 @@ async insertMappedData(body: any) {
 
     return { success: true, results };
   }
+/* ===================== MONGODB HELPERS ===================== */
+
+private isMongo(db: DataSource): boolean {
+  return db.options.type === 'mongodb';
+}
+
+private getMongoDb(db: DataSource): any {
+  const driver: any = db.driver;
+
+  const qr = driver?.queryRunner;
+  const connection = qr?.databaseConnection;
+
+  if (!connection) {
+    throw new Error('MongoDB client not initialized');
+  }
+
+  return connection.db(db.options.database as string);
+}
+
+
+private async getMongoDocuments(
+  db: DataSource,
+  collectionName: string,
+  limit = 10000,
+): Promise<any[]> {
+  if (!this.isMongo(db)) return [];
+
+  const mongoDb = this.getMongoDb(db);
+
+  return await mongoDb
+    .collection(collectionName)
+    .find({})
+    .limit(limit)
+    .toArray();
+}
+
+private async getMongoCount(
+  db: DataSource,
+  collectionName: string,
+): Promise<number> {
+  if (!this.isMongo(db)) return 0;
+
+  const mongoDb = this.getMongoDb(db);
+
+  return await mongoDb
+    .collection(collectionName)
+    .countDocuments();
+}
+
 
 
   // --- CORE INSERTION LOGIC (Per Table) ---

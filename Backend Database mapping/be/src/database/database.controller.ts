@@ -48,6 +48,22 @@ export class DatabaseController {
     return { message: 'MSSQL connected successfully' };
   }
 
+  // -------- MONGODB --------
+@Post('connect-mongodb')
+async connectMongoDB(@Body() dto: ConnectionDto) {
+  const result = await this.databaseService.connectMongoDB(dto);
+
+  if (!result.success) {
+    throw new HttpException(
+      result.message || 'MongoDB connection failed',
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+
+  return { message: 'MongoDB connected successfully' };
+}
+
+
   // -------- TABLES --------
   @Get('tables')
   async getTables() {
