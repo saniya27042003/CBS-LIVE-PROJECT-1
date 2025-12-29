@@ -208,7 +208,7 @@ export class DatabaseService {
         return [];
       }
     }
-    
+
     const rows = await ds.query(
       driver === 'mssql'
         ? `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`
@@ -385,3 +385,5 @@ export class DatabaseService {
     this.currentDbType = null;
   }
 }
+
+

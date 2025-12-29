@@ -92,7 +92,6 @@ export class DatabaseMappingService {
   }
 }
 
-
   async connectServer(config: any) {
   if (this.serverDB?.isInitialized) {
     await this.serverDB.destroy();
