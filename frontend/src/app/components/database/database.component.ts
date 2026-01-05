@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -9,7 +10,19 @@ import {
   Validators
 } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { DbStateService } from '../../service/db-state.service';
+import { SettingsComponent } from '../settings/settings.component';
+
+interface ClientDbConfig {
+  type: string;
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  database?: string;     // optional
+  serviceName?: string; // optional (Oracle)
+}
 
 @Component({
   selector: 'app-database',
@@ -33,23 +46,37 @@ export class DatabaseComponent implements OnInit {
   ];
 
   // =========================
-  // FORMS
+  // ✅ PRIMARY (SERVER) FORM
   // =========================
   primaryForm!: FormGroup;
+
+  // =========================
+  // ✅ CLIENT (TARGET) FORM
+  // =========================
   clientForm!: FormGroup;
 
   // =========================
-  // STATE
+  // ✅ Selected SERVER DB
   // =========================
   selectedDatabase: string = '';
+
+  // ✅ ✅ ✅ DATABASE LIST FROM SERVER
   databaseList: string[] = [];
-  
+
+  // =========================
+  // UI STATE
+  // =========================
   primaryClassMap: { [key: string]: string } = {};
   clientClassMap: { [key: string]: string } = {};
 
   loadingDatabases = false;
-  isConnecting = false; 
 
+  // ✅ ADDED: State for loading spinner
+  isConnecting = false;
+
+  // =========================
+  // MESSAGE BOX
+  // =========================
   messageBox = {
     visible: false,
     text: '',
@@ -70,7 +97,8 @@ export class DatabaseComponent implements OnInit {
   // INIT
   // =========================
   ngOnInit(): void {
-    // AUTH CHECK
+
+    // ✅ AUTH CHECK (your existing code)
     this.route.queryParams.subscribe(params => {
       const token = params['token'];
       if (token) {
@@ -83,7 +111,7 @@ export class DatabaseComponent implements OnInit {
       }
     });
 
-    // FORM INIT
+    // ✅ FORM INIT
     this.primaryForm = this.fb.group({
       host: ['', Validators.required],
       port: ['', Validators.required],
@@ -100,7 +128,7 @@ export class DatabaseComponent implements OnInit {
       database: ['', Validators.required],
     });
 
-    // RESTORE STATE
+    // ✅ ✅ ✅ RESTORE PREVIOUS STATE IF EXISTS
     if (this.dbState.primaryForm) {
       this.primaryForm.patchValue(this.dbState.primaryForm);
       this.clientForm.patchValue(this.dbState.clientForm);
@@ -112,6 +140,7 @@ export class DatabaseComponent implements OnInit {
       this.clientClassMap = this.dbState.clientClassMap;
     }
   }
+
 
   // =========================
   // UI SELECTIONS
@@ -125,6 +154,7 @@ export class DatabaseComponent implements OnInit {
     this.clientClassMap = {};
     this.clientClassMap[dbName] = 'ring-4 ring-green-400';
 
+    // ✅ CORRECT DRIVER MAPPING
     const typeMap: any = {
       MySQL: 'mysql',
       MsSQL: 'mssql',
@@ -140,9 +170,10 @@ export class DatabaseComponent implements OnInit {
   }
 
   // =========================
-  // LOAD SERVER DATABASES
+  // ✅ LOAD SERVER DATABASE LIST (FIXED — ONLY ONE VERSION)
   // =========================
   onOpenDatabaseDropdown() {
+
     if (this.primaryForm.invalid) {
       this.showMessage('Enter server credentials first', 'error');
       return;
@@ -174,10 +205,11 @@ export class DatabaseComponent implements OnInit {
   }
 
   // =========================
-  // CONNECT ACTION
+  // ✅ CONNECT BUTTON
   // =========================
   onOkClick() {
-    // 1) Validate Primary
+
+    // ✅ 1) Validate PRIMARY (SERVER)
     if (this.primaryForm.invalid) {
       this.showMessage('Fill ALL Primary (Server) credentials.', 'error');
       return;
@@ -188,15 +220,16 @@ export class DatabaseComponent implements OnInit {
       return;
     }
 
-    // 2) Validate Client
+    // ✅ 2) Validate CLIENT
     if (this.clientForm.invalid) {
       this.showMessage('Fill ALL Client database credentials.', 'error');
       return;
     }
 
+    // ✅ START LOADING
     this.isConnecting = true;
 
-    // 3) Connect Server
+    // ✅ 3) CONNECT SERVER
     const primaryConfig = {
       type: 'postgres',
       host: this.primaryForm.value.host,
@@ -211,28 +244,39 @@ export class DatabaseComponent implements OnInit {
       primaryConfig
     ).subscribe({
       next: (res: any) => {
+
         if (!res?.success) {
-          this.isConnecting = false;
+          this.isConnecting = false; // Stop loading
           this.showMessage('Server connection failed', 'error');
           return;
         }
 
-        // 4) Connect Client
-        const clientConfig = {
+        // ✅ 4) CONNECT CLIENT
+          const clientConfig: ClientDbConfig = {
           type: this.clientForm.value.type,
           host: this.clientForm.value.host,
           port: Number(this.clientForm.value.port),
           username: this.clientForm.value.username,
           password: this.clientForm.value.password,
-          database: this.clientForm.value.database
         };
+
+        // 🔁 SMART MAPPING
+        if (this.clientForm.value.type === 'oracle') {
+          clientConfig.serviceName = this.clientForm.value.database; // XEPDB1
+        } else {
+          clientConfig.database = this.clientForm.value.database; // postgres, mysql, mongo, mssql
+        }
+
+
+        console.log('✅ CLIENT CONFIG SENT:', clientConfig);
 
         this.http.post(
           'http://localhost:3000/database-mapping/connect-client',
           clientConfig
         ).subscribe({
           next: (res: any) => {
-            this.isConnecting = false;
+            this.isConnecting = false; // Stop loading
+
             if (res.success) {
               this.navigateAfterSuccess = true;
               this.showMessage(
@@ -240,18 +284,22 @@ export class DatabaseComponent implements OnInit {
                 'success'
               );
             } else {
-              this.showMessage('Client connection failed: ' + res.message, 'error');
+              this.showMessage(
+                'Client connection failed: ' + res.message,
+                'error'
+              );
             }
           },
           error: (err) => {
-            this.isConnecting = false;
+            this.isConnecting = false; // Stop loading
             console.error('Client connect error:', err);
             this.showMessage('Failed to connect Client database.', 'error');
           }
         });
+
       },
       error: (err) => {
-        this.isConnecting = false;
+        this.isConnecting = false; // Stop loading
         console.error('Server connect error:', err);
         this.showMessage('Failed to connect Server (source) database.', 'error');
       }
@@ -259,20 +307,22 @@ export class DatabaseComponent implements OnInit {
   }
 
   // =========================
-  // CANCEL / RESET
+  // CANCEL
   // =========================
   onCancelClick() {
     this.primaryForm.reset();
     this.clientForm.reset();
     this.selectedDatabase = '';
     this.databaseList = [];
+
     this.primaryClassMap = {};
     this.clientClassMap = {};
-    this.dbState.clear();
+
+    this.dbState.clear();   // ✅ CLEAR STORED STATE
   }
 
   // =========================
-  // MESSAGE BOX HELPER
+  // MESSAGE BOX
   // =========================
   showMessage(text: string, type: 'success' | 'error') {
     this.messageBox.text = text;
@@ -282,8 +332,10 @@ export class DatabaseComponent implements OnInit {
 
   closeMessageBox() {
     this.messageBox.visible = false;
+
     if (this.navigateAfterSuccess) {
       this.navigateAfterSuccess = false;
+
       this.router.navigate(['/table'], {
         queryParams: {
           primary: this.selectedDatabase,
@@ -291,5 +343,19 @@ export class DatabaseComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Read the current theme directly from the document so we stay in sync with Settings
+  get currentTheme(): string {
+    return document.documentElement.getAttribute('data-theme') || '';
+  }
+
+  get isLightTheme(): boolean {
+    const lightThemes = [
+      'light', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'retro', 
+      'cyberpunk', 'valentine', 'lofi', 'pastel', 'fantasy', 'wireframe', 
+      'cmyk', 'autumn', 'acid', 'lemonade', 'winter','garden'
+    ];
+    return lightThemes.includes(this.currentTheme);
   }
 }

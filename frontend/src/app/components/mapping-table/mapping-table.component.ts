@@ -20,10 +20,9 @@ export class MappingTableComponent implements OnInit {
   clientDatabaseName = '';
   isMigrating = false;
 
-  // ✅ ADDED: Variable to store the client columns list (ID -> Name reference)
+  // ✅ Client columns reference (ID → Name)
   clientSideColumns: any[] = [];
 
-  // Modal State
   showResultModal = false;
   migrationResultMessage = '';
   migrationHasErrors = false;
@@ -31,44 +30,17 @@ export class MappingTableComponent implements OnInit {
   constructor(
     private router: Router,
     private appService: AppService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    const navState: any = (history.state && Object.keys(history.state).length) ? history.state : null;
+    const navState: any = history.state && Object.keys(history.state).length ? history.state : null;
     const storedRaw = sessionStorage.getItem('mappingState');
-    const stored = storedRaw ? (() => { try { return JSON.parse(storedRaw); } catch (e) { console.warn('Invalid mappingState JSON', e); return null; } })() : null;
+    const stored = storedRaw ? JSON.parse(storedRaw) : null;
 
-    if (navState && (navState.mappingDataByTable || navState.selectedPrimaryTable)) {
-      this.mappingDataByTable = navState.mappingDataByTable || {};
-      this.selectedPrimaryTable = navState.selectedPrimaryTable || [];
-      this.selectedClientTable = Array.isArray(navState.selectedClientTable) ? navState.selectedClientTable : [navState.selectedClientTable];
-      this.primaryDatabaseName = navState.primaryDatabaseName || '';
-      this.clientDatabaseName = navState.clientDatabaseName || '';
-
-      // ✅ ADDED: Load client columns reference if passed from previous screen
-      this.clientSideColumns = navState.clientSideColumns || [];
-
-    } else if (stored && stored.mappingDataByTable) {
-      this.mappingDataByTable = stored.mappingDataByTable || {};
-      this.selectedPrimaryTable = stored.selectedPrimaryTable || [];
-      this.selectedClientTable = stored.selectedClientTable || [];
-      this.primaryDatabaseName = stored.primaryDatabaseName || '';
-      this.clientDatabaseName = stored.clientDatabaseName || '';
-
-      // ✅ ADDED: Load from session
-      this.clientSideColumns = stored.clientSideColumns || [];
-    } else {
-      this.mappingDataByTable = {};
-      this.selectedPrimaryTable = [];
-      this.selectedClientTable = [];
-    }
-
-    // Defensive prune
-    if (this.mappingDataByTable && this.selectedPrimaryTable && this.selectedPrimaryTable.length) {
-      const keep = new Set(this.selectedPrimaryTable);
-      Object.keys({ ...this.mappingDataByTable }).forEach(k => {
-        if (!keep.has(k)) delete this.mappingDataByTable[k];
-      });
+    if (navState?.mappingDataByTable) {
+      Object.assign(this, navState);
+    } else if (stored?.mappingDataByTable) {
+      Object.assign(this, stored);
     }
 
     this.updateSessionStorage();
@@ -78,142 +50,148 @@ export class MappingTableComponent implements OnInit {
     return this.mappingDataByTable[tableName] ?? [];
   }
 
- saveMapping() {
-    if (this.isMigrating || !this.selectedPrimaryTable.length) return;
+  
+  // ✅ GENERIC NAME SPLIT DETECTION (Add these methods to your component)
 
-    const tablesToMigrate = this.selectedPrimaryTable.filter(table =>
-      this.mappingDataByTable[table] && this.mappingDataByTable[table].length > 0
-    );
+// Detect if mapping needs splitting (works for any full-name column)
+isNameSplitMapping(clientCol: string, serverCol: string): boolean {
+  const clientUpper = clientCol.toUpperCase();
+  const serverUpper = serverCol.toUpperCase();
+  
+  // Generic full-name patterns
+  const fullNamePatterns = ['NAME', 'AC_NAME', 'FULL_NAME', 'COMPLETE_NAME'];
+  const splitNamePatterns = ['F_NAME', 'FIRST_NAME', 'M_NAME', 'MIDDLE_NAME', 'L_NAME', 'LAST_NAME'];
+  
+  return fullNamePatterns.some(pattern => clientUpper.includes(pattern)) &&
+         splitNamePatterns.some(pattern => serverUpper.includes(pattern));
+}
 
-    if (tablesToMigrate.length === 0) {
-      alert('No mappings found to save.');
-      return;
-    }
+// Get split type for any name column (FIRST/MIDDLE/LAST)
+getSplitType(serverCol: string): string {
+  const upper = serverCol.toUpperCase();
+  if (upper.includes('F_NAME') || upper.includes('FIRST_NAME')) return 'FIRST';
+  if (upper.includes('L_NAME') || upper.includes('LAST_NAME')) return 'LAST';
+  if (upper.includes('M_NAME') || upper.includes('MIDDLE_NAME')) return 'MIDDLE';
+  return 'FULL';
+}
 
-    this.isMigrating = true;
+// ✅ ENHANCED saveMapping() - Replace your existing saveMapping method completely
 
-    // ✅ NEW: Try to find a common "ID" column to use as a Join Key automatically
-    // This assumes your tables have a column like 'id', 'cityid', or 'no'.
-    const potentialJoinKeys = ['id', 'cityid', 'uuid', 'no', 'sr_no', 'row_id'];
-    let detectedJoinKey = '';
+saveMapping() {
+  if (this.isMigrating || !this.selectedPrimaryTable.length) return;
 
-    // Check the first client column available to see if it matches any standard ID name
-    if (this.clientSideColumns.length > 0) {
-        const found = this.clientSideColumns.find(c => 
-            potentialJoinKeys.includes((c.name || c.COLUMN_NAME || '').toLowerCase())
-        );
-        if (found) detectedJoinKey = found.name || found.COLUMN_NAME;
-    }
+  const tablesToMigrate = this.selectedPrimaryTable.filter(
+    t => this.mappingDataByTable[t]?.length
+  );
 
-    from(tablesToMigrate).pipe(
-      concatMap(serverTable => {
-        const rows = this.mappingDataByTable[serverTable];
-
-        const payload = {
-          serverTable: serverTable,
-          baseClientTable: this.selectedClientTable[0],
-          joinKey: detectedJoinKey, // ✅ SEND THE KEY to fix the relation conflict
-          mappings: rows.map((m: any) => {
-
-            let finalCols: string[] = [];
-            const rawInput = m.clientColumns;
-
-            if (rawInput) {
-              const inputs = String(rawInput).split(',').map(s => s.trim());
-              const resolvedNames: string[] = [];
-
-              inputs.forEach(inputItem => {
-                const match = this.clientSideColumns.find((col: any) => String(col.id) === inputItem || String(col.Id) === inputItem);
-
-                if (match) {
-                  // ✅ FIX: Trim whitespace to ensure clean names
-                  resolvedNames.push((match.name || match.Name || match.COLUMN_NAME).trim());
-                } else {
-                  resolvedNames.push(inputItem.trim());
-                }
-              });
-              finalCols = resolvedNames;
-            }
-
-            return {
-              serverColumn: m.serverColumn,
-              clientTable: m.clientTableName,
-              clientColumns: finalCols
-            };
-          })
-        };
-
-        console.log(`Migrating table: ${serverTable} with JoinKey: ${detectedJoinKey}`, payload);
-
-
-        return this.appService.insertData(payload).pipe(
-          map(result => ({ table: serverTable, success: true, result })),
-          catchError(err => of({ table: serverTable, success: false, error: err }))
-        );
-      }),
-      toArray()
-    ).subscribe({
-      next: (results) => {
-        this.isMigrating = false;
-
-        const successful = results.filter(r => r.success);
-        const failed = results.filter(r => !r.success);
-
-        successful.forEach(item => {
-          if (this.mappingDataByTable[item.table]) {
-            this.mappingDataByTable[item.table] =
-              this.mappingDataByTable[item.table].map(r => ({ ...r, mapped: true }));
-          }
-        });
-
-        this.updateSessionStorage();
-
-        let msg = `Migration Completed!\n\nSuccessful Tables: ${successful.length}\nFailed Tables: ${failed.length}`;
-        if (failed.length > 0) {
-          msg += `\n\nFailed: ${failed.map(f => f.table).join(', ')}`;
-        }
-
-        this.migrationResultMessage = msg;
-        this.migrationHasErrors = failed.length > 0;
-        this.showResultModal = true;
-      },
-      error: (err) => {
-        this.isMigrating = false;
-        console.error('Critical Migration Error:', err);
-        alert('A critical error stopped the migration process.');
-      }
-    });
+  if (!tablesToMigrate.length) {
+    alert('No mappings found');
+    return;
   }
 
+  this.isMigrating = true;
+
+  const potentialJoinKeys = ['id', 'cityid', 'uuid', 'no', 'sr_no', 'row_id'];
+  let detectedJoinKey = '';
+
+  const foundKey = this.clientSideColumns.find(c =>
+    potentialJoinKeys.includes((c.name || c.COLUMN_NAME || '').toLowerCase())
+  );
+  if (foundKey) detectedJoinKey = foundKey.name || foundKey.COLUMN_NAME;
+
+  from(tablesToMigrate).pipe(
+    concatMap(serverTable => {
+      // ✅ GENERIC MAPPING WITH AUTO-SPLIT DETECTION
+      const mappingsForTable = this.mappingDataByTable[serverTable].map(m => {
+        const rawCols = String(m.clientColumns || '').split(',').map(v => v.trim());
+        const finalCols = rawCols.map(val => {
+          const match = this.clientSideColumns.find(
+            c => String(c.id) === val || String(c.Id) === val
+          );
+          return (match?.name || match?.COLUMN_NAME || val).trim();
+        });
+
+        const serverCol = (m.serverColumn || '').toUpperCase();
+        const clientCol = finalCols[0]?.toUpperCase() || '';
+
+        const mappingPayload: any = {
+          serverColumn: m.serverColumn,
+          clientTable: m.clientTableName,
+          clientColumns: finalCols,
+          joinKey: detectedJoinKey,
+          splitRule: null
+        };
+
+        // ✅ AUTO-DETECT ANY NAME SPLITTING
+        if (this.isNameSplitMapping(clientCol, serverCol)) {
+          mappingPayload.splitRule = {
+            clientColumn: finalCols[0],
+            serverColumn: m.serverColumn,
+            splitType: this.getSplitType(m.serverColumn),
+            isAutoDetected: true
+          };
+        } else {
+          mappingPayload.isDirectMapping = true;
+        }
+
+        return mappingPayload;
+      });
+
+      const payload = {
+        serverTable,
+        baseClientTable: this.selectedClientTable[0],
+        joinKey: detectedJoinKey,
+        mappings: mappingsForTable
+      };
+
+      return this.appService.insertData(payload).pipe(
+        map(res => ({ table: serverTable, success: true, res })),
+        catchError(err => of({ table: serverTable, success: false, err }))
+      );
+    }),
+    toArray()
+  ).subscribe({
+    next: results => {
+      this.isMigrating = false;
+
+      const success = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+
+      // Mark successful mappings
+      success.forEach(s => {
+        this.mappingDataByTable[s.table] = this.mappingDataByTable[s.table]
+          .map(r => ({ ...r, mapped: true }));
+      });
+
+      this.updateSessionStorage();
+
+      this.migrationResultMessage = `Migration Completed\n\n✅ Success: ${success.length}\n❌ Failed: ${failed.length}`;
+      this.migrationHasErrors = failed.length > 0;
+      this.showResultModal = true;
+    },
+    error: () => {
+      this.isMigrating = false;
+      alert('Critical migration error');
+    }
+  });
+}
+
+
   updateSessionStorage() {
-    const mappingState = {
+    sessionStorage.setItem('mappingState', JSON.stringify({
       mappingDataByTable: this.mappingDataByTable,
       selectedPrimaryTable: this.selectedPrimaryTable,
       selectedClientTable: this.selectedClientTable,
-      primaryDatabaseName: this.primaryDatabaseName || '',
-      clientDatabaseName: this.clientDatabaseName || '',
-      clientSideColumns: this.clientSideColumns || [] // ✅ Persist client columns
-    };
-    sessionStorage.setItem('mappingState', JSON.stringify(mappingState));
+      primaryDatabaseName: this.primaryDatabaseName,
+      clientDatabaseName: this.clientDatabaseName,
+      clientSideColumns: this.clientSideColumns
+    }));
   }
 
   goBack() {
-    const navState = {
-      mappingDataByTable: this.mappingDataByTable,
-      selectedPrimaryTable: this.selectedPrimaryTable,
-      selectedClientTable: this.selectedClientTable,
-      primaryDatabaseName: this.primaryDatabaseName || '',
-      clientDatabaseName: this.clientDatabaseName || '',
-      clientSideColumns: this.clientSideColumns || [] // ✅ Pass back client columns
-    };
-
-    if (Object.keys(this.mappingDataByTable).length) {
-      sessionStorage.setItem('mappingState', JSON.stringify(navState));
-    } else {
-      sessionStorage.removeItem('mappingState');
-    }
-
-    this.router.navigate(['/table'], { state: navState });
+    this.router.navigate(['/table'], {
+      state: JSON.parse(sessionStorage.getItem('mappingState') || '{}')
+    });
   }
 
   closeModal() {

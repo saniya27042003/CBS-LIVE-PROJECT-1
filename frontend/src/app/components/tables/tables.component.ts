@@ -215,22 +215,32 @@ export class TablesComponent implements OnInit {
 
   /* ================= REBUILD (RESTORE INPUTS) ================= */
 
+  // ✅ UPDATED: Fetches ALL columns first, then fills in saved values.
   reconstructPrimaryTableData() {
     this.primaryTableData = [];
 
     this.selectedPrimaryTable.forEach(table => {
+      // 1. Get any saved mappings for this table
       const mapped = this.mappingDataByTable[table] || [];
 
+      // 2. ALWAYS fetch the full list of columns from server
       this.appService.getServerColumns(table).subscribe(cols => {
+        
+        // 3. Map full list of columns to UI rows
         const rows = (cols || []).map(c => {
+          // Check if we have saved data for this specific column
           const existingMap = mapped.find((m: any) => m.serverColumn === c);
+
           return {
             id: c,
             source: table,
+            // If mapping exists, restore 'clientId' (which holds your "5,6,7" string)
+            // If not, default to empty string so the row still appears
             position: existingMap ? existingMap.clientId : '',
             mappedTable: existingMap ? existingMap.clientTableName : null
           };
         });
+
         this.primaryTableData.push(...rows);
       });
     });
@@ -242,71 +252,78 @@ export class TablesComponent implements OnInit {
     if (this.activeClientTable) row.mappedTable = this.activeClientTable;
   }
 
-  onOkClick() {
-    this.mappingDataByTable = {};
+  /* ================= MAPPING (Updated) ================= */
+onOkClick() {
+  this.mappingDataByTable = {};
 
-    this.selectedPrimaryTable.forEach(serverTable => {
-      this.mappingDataByTable[serverTable] = [];
+  this.selectedPrimaryTable.forEach(serverTable => {
+    this.mappingDataByTable[serverTable] = [];
+    const rows = this.primaryTableData.filter(r => r.source === serverTable);
 
-      const rows = this.primaryTableData.filter(r => r.source === serverTable);
+    rows.forEach(r => {
+      const rawPos = r.position ? String(r.position).trim() : '';
+      if (!rawPos) return;
 
-      rows.forEach(r => {
-        const rawPos = r.position ? String(r.position).trim() : '';
-        if (!rawPos) return;
+      const clientTable = r.mappedTable || this.activeClientTable;
+      if (!clientTable) return;
 
-        const clientTable = r.mappedTable || this.activeClientTable;
-        if (!clientTable) return;
+      const clientRows = this.getClientRowsForTable(clientTable);
+      if (!clientRows || clientRows.length === 0) return;
 
-        const clientRows = this.getClientRowsForTable(clientTable);
-        if (!clientRows || clientRows.length === 0) return;
+      const inputParts = rawPos.split(',').map(s => s.trim());
+      const matchedIdsWithParts: string[] = []; 
+      const matchedNames: string[] = [];
 
-        const inputParts = rawPos.split(',').map(s => s.trim());
-        const matchedIds: string[] = [];
-        const matchedNames: string[] = [];
-
-        inputParts.forEach(part => {
-          const foundById = clientRows.find(c => String(c.id) === part);
-          
-          if (foundById) {
-            matchedIds.push(foundById.id);
-            matchedNames.push(foundById.name);
-          } else {
-            const idx = Number(part);
-            if (!isNaN(idx) && idx > 0 && clientRows[idx - 1]) {
-              matchedIds.push(clientRows[idx - 1].id);
-              matchedNames.push(clientRows[idx - 1].name);
-            }
+      inputParts.forEach(part => {
+        // Check for dash syntax: "2-1" (Column 2, Part 1)
+        const [colIdentifier, partIdx] = part.split('-');
+        
+        // Find the column by ID or by Index
+        let foundCol = clientRows.find(c => String(c.id) === colIdentifier);
+        if (!foundCol) {
+          const idx = Number(colIdentifier);
+          if (!isNaN(idx) && idx > 0 && clientRows[idx - 1]) {
+            foundCol = clientRows[idx - 1];
           }
-        });
+        }
 
-        if (matchedIds.length > 0) {
-          this.mappingDataByTable[serverTable].push({
-            serverColumn: r.id,
-            clientTableName: clientTable,
-            // ✅ FIX: Send ARRAY instead of joined string to match backend expectation
-            clientColumns: matchedIds, 
-            clientId: rawPos,
-            clientName: matchedNames.join(', ')
-          });
+        if (foundCol) {
+          // Encode as "ID:PART" so backend can decode it
+          // If no dash was used, we send "ID" or "ID:0"
+          const suffix = partIdx ? `:${partIdx}` : '';
+          matchedIdsWithParts.push(`${foundCol.id}${suffix}`);
+          
+          const nameLabel = partIdx ? `${foundCol.name}[Part ${partIdx}]` : foundCol.name;
+          matchedNames.push(nameLabel);
         }
       });
-    });
 
-    this.saveMappingState();
-
-    const allClientColumns = Object.values(this.clientTableDataMap).flat();
-
-    this.router.navigate(['/mapping-table'], { 
-      state: { 
-        mappingDataByTable: this.mappingDataByTable,
-        selectedPrimaryTable: this.selectedPrimaryTable,
-        selectedClientTable: this.selectedClientTable,
-        primaryDatabaseName: this.primaryDatabaseName,
-        clientDatabaseName: this.clientDatabaseName,
-        clientSideColumns: allClientColumns
+      if (matchedIdsWithParts.length > 0) {
+        this.mappingDataByTable[serverTable].push({
+          serverColumn: r.id,
+          clientTableName: clientTable,
+          clientColumns: matchedIdsWithParts.join(','), // Send encoded string to backend
+          clientId: rawPos,
+          clientName: matchedNames.join(', ')
+        });
       }
     });
-  }
+  });
+
+  this.saveMappingState();
+  const allClientColumns = Object.values(this.clientTableDataMap).flat();
+
+  this.router.navigate(['/mapping-table'], { 
+    state: { 
+      mappingDataByTable: this.mappingDataByTable,
+      selectedPrimaryTable: this.selectedPrimaryTable,
+      selectedClientTable: this.selectedClientTable,
+      primaryDatabaseName: this.primaryDatabaseName,
+      clientDatabaseName: this.clientDatabaseName,
+      clientSideColumns: allClientColumns
+    }
+  });
+}
 
   /* ================= UI HELPERS ================= */
 

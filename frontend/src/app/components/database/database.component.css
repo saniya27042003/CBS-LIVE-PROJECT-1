@@ -31,3 +31,80 @@ button{
 #primarydb{
     cursor:not-allowed;
 }
+
+/* Ensure button and label text is visible in light-like themes */
+:host-context([data-theme='light']),
+:host-context([data-theme='cupcake']),
+:host-context([data-theme='bumblebee']),
+:host-context([data-theme='emerald']),
+:host-context([data-theme='corporate']),
+:host-context([data-theme='retro']),
+:host-context([data-theme='valentine']),
+:host-context([data-theme='lofi']),
+:host-context([data-theme='pastel']),
+:host-context([data-theme='fantasy']),
+:host-context([data-theme='wireframe']),
+:host-context([data-theme='cmyk']),
+:host-context([data-theme='autumn']),
+:host-context([data-theme='acid']),
+:host-context([data-theme='lemonade']),
+:host-context([data-theme='winter']) {
+  --db-foreground-color: #111827; /* near-black */
+}
+
+:host-context([data-theme='light']) button,
+:host-context([data-theme='cupcake']) button,
+:host-context([data-theme='bumblebee']) button,
+:host-context([data-theme='emerald']) button,
+:host-context([data-theme='corporate']) button,
+:host-context([data-theme='garden']) button,
+:host-context([data-theme='cyberpunk']) button,
+:host-context([data-theme='retro']) button,
+:host-context([data-theme='valentine']) button,
+:host-context([data-theme='lofi']) button,
+:host-context([data-theme='pastel']) button,
+:host-context([data-theme='fantasy']) button,
+:host-context([data-theme='wireframe']) button,
+:host-context([data-theme='cmyk']) button,
+:host-context([data-theme='autumn']) button,
+:host-context([data-theme='acid']) button,
+:host-context([data-theme='lemonade']) button,
+:host-context([data-theme='winter']) button,
+:host-context([data-theme='light']) .btn,
+:host-context([data-theme='cupcake']) .btn,
+:host-context([data-theme='bumblebee']) .btn,
+:host-context([data-theme='emerald']) .btn,
+:host-context([data-theme='corporate']) .btn,
+:host-context([data-theme='retro']) .btn,
+:host-context([data-theme='valentine']) .btn,
+:host-context([data-theme='lofi']) .btn,
+:host-context([data-theme='pastel']) .btn,
+:host-context([data-theme='fantasy']) .btn,
+:host-context([data-theme='wireframe']) .btn,
+:host-context([data-theme='cmyk']) .btn,
+:host-context([data-theme='autumn']) .btn,
+:host-context([data-theme='acid']) .btn,
+:host-context([data-theme='lemonade']) .btn,
+:host-context([data-theme='winter']) .btn {
+  color: var(--db-foreground-color) !important;
+}
+
+/* Make labels readable */
+:host-context([data-theme='light']) label,
+:host-context([data-theme='cupcake']) label,
+:host-context([data-theme='bumblebee']) label,
+:host-context([data-theme='emerald']) label,
+:host-context([data-theme='corporate']) label,
+:host-context([data-theme='retro']) label,
+:host-context([data-theme='valentine']) label,
+:host-context([data-theme='lofi']) label,
+:host-context([data-theme='pastel']) label,
+:host-context([data-theme='fantasy']) label,
+:host-context([data-theme='wireframe']) label,
+:host-context([data-theme='cmyk']) label,
+:host-context([data-theme='autumn']) label,
+:host-context([data-theme='acid']) label,
+:host-context([data-theme='lemonade']) label,
+:host-context([data-theme='winter']) label {
+  color: var(--db-foreground-color) !important;
+}
