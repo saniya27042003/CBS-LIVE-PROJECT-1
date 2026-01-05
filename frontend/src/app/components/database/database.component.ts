@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -342,5 +343,19 @@ export class DatabaseComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Read the current theme directly from the document so we stay in sync with Settings
+  get currentTheme(): string {
+    return document.documentElement.getAttribute('data-theme') || '';
+  }
+
+  get isLightTheme(): boolean {
+    const lightThemes = [
+      'light', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'retro',
+      'cyberpunk', 'valentine', 'lofi', 'pastel', 'fantasy', 'wireframe',
+      'cmyk', 'autumn', 'acid', 'lemonade', 'winter'
+    ];
+    return lightThemes.includes(this.currentTheme);
   }
 }

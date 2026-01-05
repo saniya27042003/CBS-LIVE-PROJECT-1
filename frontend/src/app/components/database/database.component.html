@@ -4,7 +4,9 @@
     <div
       class="flex flex-col items-center justify-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[450px] w-[370px]">
 
-      <h2 class="text-lg font-bold text-gray-200 mb-6 tracking-wide">SOURCE DATABASE</h2>
+      <h2 class="text-lg font-bold mb-6 tracking-wide" [ngClass]="isLightTheme ? 'text-black' : 'text-white'">
+        SOURCE DATABASE
+      </h2>
 
       <div class="card bg-gray-700 w-28 h-28 ring-4 ring-green-400 shadow-[4px_4px_0px_#3b82f6]
         border border-blue-200 rounded-xl overflow-hidden flex items-center justify-center"
@@ -15,7 +17,9 @@
         </figure>
       </div>
 
-      <span class="mt-4 text-base font-medium text-gray-200">PostgreSQL</span>
+      <span class="mt-4 text-base font-medium" [ngClass]="isLightTheme ? 'text-black' : 'text-white'">
+        PostgreSQL
+      </span>
       <br>
 
       <form [formGroup]="primaryForm" class="w-full flex flex-col items-center gap-3">
@@ -77,20 +81,27 @@
       <div
         class="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-600 rounded-xl shadow-lg p-6 h-[500px] w-[500px]">
 
-        <h2 class="text-lg font-bold text-gray-200 mb-4 tracking-wide">TARGET CONFIGURATION</h2>
-
+        <h2 class="text-lg font-bold mb-4 tracking-wide" [ngClass]="isLightTheme ? 'text-black' : 'text-white'">
+          TARGET CONFIGURATION
+        </h2>
         <div class="grid grid-cols-3 gap-6 mb-4 w-full justify-items-center">
-          <div *ngFor="let db of databases" class="flex flex-col items-center">
-            <div class="card bg-gray border border-gray-200 w-20 h-20 shadow rounded-lg"
+          <div *ngFor="let db of databases" class="flex flex-col items-center group cursor-pointer">
+
+            <div
+              class="card bg-[#344054] border border-white-600 w-20 h-20 shadow rounded-lg overflow-hidden flex items-center justify-center transition-all duration-200"
               [ngClass]="clientClassMap[db.name]" (click)="selectClient(db.name)">
+
               <figure class="p-3 h-full w-full">
                 <img [src]="db.img" class="object-contain w-full h-full" />
               </figure>
             </div>
-            <span class="mt-2 text-xs font-medium text-gray-300">{{ db.name }}</span>
+
+            <span class="mt-2 text-xs font-medium transition-colors duration-200"
+              [ngClass]="clientForm.get('type')?.value === db.name ? 'text-green-400 font-bold' : 'text-base-content'">
+              {{ db.name }}
+            </span>
           </div>
         </div>
-
         <form [formGroup]="clientForm" class="w-full p-2 grid grid-cols-2 gap-4">
 
           <input class="input input-bordered input-xs h-8" formControlName="type" placeholder="Type" readonly>
@@ -109,10 +120,16 @@
       </div>
 
       <div class="flex space-x-4 w-[500px] mt-4">
-        <button class="btn btn-outline btn-info flex-1" (click)="onOkClick()">Connect</button>
-        <button class="btn btn-outline btn-error flex-1" (click)="onCancelClick()">Cancel</button>
-      </div>
 
+        <button class="btn btn-outline btn-info flex-1 text-base-content font-bold" (click)="onOkClick()">
+          Connect
+        </button>
+
+        <button class="btn btn-outline btn-error flex-1 text-base-content font-bold" (click)="onCancelClick()">
+          Cancel
+        </button>
+
+      </div>
     </div>
 
   </div>
@@ -143,8 +160,7 @@
         {{ messageBox.type === 'success' ? '✓' : '✕' }}
       </span>
 
-      <h3 class="text-lg font-bold mb-3"
-        [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
+      <h3 class="text-lg font-bold mb-3" [ngClass]="messageBox.type === 'success' ? 'text-green-400' : 'text-red-400'">
         {{ messageBox.type === 'success' ? 'Connection Successful' : 'Connection Failed' }}
       </h3>
 

@@ -92,6 +92,7 @@ export class DatabaseMappingService {
   }
 }
 
+
   async connectServer(config: any) {
   if (this.serverDB?.isInitialized) {
     await this.serverDB.destroy();
@@ -259,8 +260,17 @@ async insertMappedData(body: any) {
         else if (clientDriver === 'oracle') query = `SELECT ${selectStr} FROM ${safeTable} WHERE ROWNUM <= 10000 ORDER BY ${cqL}${sortCol}${cqR}`;
         else query = `SELECT ${selectStr} FROM ${safeTable} ORDER BY ${cqL}${sortCol}${cqR} LIMIT 10000`; // MySQL/Postgres
 
-        const rows = await client.query(query);
-        dataStore[table] = rows;
+        // const rows = await client.query(query);
+        // dataStore[table] = rows;
+
+        if (this.isMongo(client)) {
+          const docs = await this.getMongoDocuments(client, table, 10000);
+          dataStore[table] = docs;
+        } else {
+          const rows = await client.query(query);
+          dataStore[table] = rows;
+        }
+
 
       } catch (e) {
         this.logger.error(`Error fetching from ${table}: ${(e as Error).message}`);
@@ -338,6 +348,55 @@ async insertMappedData(body: any) {
 
     return { success: true, results };
   }
+/* ===================== MONGODB HELPERS ===================== */
+
+private isMongo(db: DataSource): boolean {
+  return db.options.type === 'mongodb';
+}
+
+private getMongoDb(db: DataSource): any {
+  const driver: any = db.driver;
+
+  const qr = driver?.queryRunner;
+  const connection = qr?.databaseConnection;
+
+  if (!connection) {
+    throw new Error('MongoDB client not initialized');
+  }
+
+  return connection.db(db.options.database as string);
+}
+
+
+private async getMongoDocuments(
+  db: DataSource,
+  collectionName: string,
+  limit = 10000,
+): Promise<any[]> {
+  if (!this.isMongo(db)) return [];
+
+  const mongoDb = this.getMongoDb(db);
+
+  return await mongoDb
+    .collection(collectionName)
+    .find({})
+    .limit(limit)
+    .toArray();
+}
+
+private async getMongoCount(
+  db: DataSource,
+  collectionName: string,
+): Promise<number> {
+  if (!this.isMongo(db)) return 0;
+
+  const mongoDb = this.getMongoDb(db);
+
+  return await mongoDb
+    .collection(collectionName)
+    .countDocuments();
+}
+
 
 
   // --- CORE INSERTION LOGIC (Per Table) ---
@@ -361,6 +420,10 @@ async insertMappedData(body: any) {
     const qr = server.createQueryRunner();
     await qr.connect();
 
+    if (serverDriver === 'postgres') {
+  await qr.query("SET client_encoding TO 'UTF8'");
+  }
+
     // 3. DISABLE CONSTRAINTS
     await this.toggleConstraints(qr, serverDriver, serverTable, false);
 
@@ -378,17 +441,45 @@ async insertMappedData(body: any) {
       for (let i = 0; i < rows.length; i++) {
         const sourceRow = rows[i];
         
-        const rowValues = validMappingsForTable.map((m) => {
-          const targetType = serverTypes[m.serverColumn.toLowerCase()];
-          const isStringTarget = ['character varying', 'text', 'varchar', 'char'].some((t) => (targetType || '').toLowerCase().includes(t));
-          
-          if (isStringTarget && m.clientColumns.length > 1) {
-            const parts = m.clientColumns.map((c: string) => this.transformValue(this.getValueCaseInsensitive(sourceRow, c)));
-            return parts.filter((p: any) => p && String(p).trim() !== '').join(' ');
-          }
-          const val = this.getValueCaseInsensitive(sourceRow, m.clientColumns[0]);
-          return this.convertValue(val, targetType);
-        });
+      // ✅ SPLIT FULL NAME ONCE PER ROW
+const fullNameRaw = this.getValueCaseInsensitive(sourceRow, 'AC_NAME');
+const fullName = this.transformValue(fullNameRaw);
+const split = this.splitFullNameBackend(fullName);
+
+const rowValues = validMappingsForTable.map((m) => {
+  const targetType = serverTypes[m.serverColumn.toLowerCase()];
+
+  // ✅ USE PRE-SPLIT VALUES
+  if (m.transform === 'SPLIT_FULL_NAME') {
+    switch (m.serverColumn.toUpperCase()) {
+      case 'F_NAME':
+        return split.f;
+      case 'M_NAME':
+        return split.m;
+      case 'L_NAME':
+        return split.l;
+      default:
+        return null;
+    }
+  }
+
+  // ✅ EXISTING MERGE LOGIC (unchanged)
+  const isStringTarget =
+    ['character varying', 'text', 'varchar', 'char']
+      .some((t) => (targetType || '').toLowerCase().includes(t));
+
+  if (isStringTarget && m.clientColumns.length > 1) {
+    const parts = m.clientColumns.map((c: string) =>
+      this.transformValue(this.getValueCaseInsensitive(sourceRow, c))
+    );
+    return parts.filter((p: any) => p && String(p).trim() !== '').join(' ');
+  }
+
+  // ✅ DEFAULT DIRECT MAP
+  const val = this.getValueCaseInsensitive(sourceRow, m.clientColumns[0]);
+  return this.convertValue(val, targetType);
+});
+
 
         const placeholders = rowValues.map((_, idx) => this.dbService.getParamPlaceholder(serverDriver, idx)).join(', ');
 
@@ -427,6 +518,24 @@ async insertMappedData(body: any) {
       errors: errors.length ? errors : undefined 
     };
   }
+
+
+
+  private splitFullNameBackend(fullName: string) {
+  if (!fullName) return { f: null, m: null, l: null };
+
+  const parts = fullName.replace(/\s+/g, ' ').trim().split(' ');
+
+  if (parts.length === 1) return { f: parts[0], m: null, l: null };
+  if (parts.length === 2) return { f: parts[0], m: null, l: parts[1] };
+
+  return {
+    f: parts[0],
+    m: parts[1],
+    l: parts.slice(2).join(' ')
+  };
+}
+
 
   async convertToUnicode2(inputText: string) {
     try {

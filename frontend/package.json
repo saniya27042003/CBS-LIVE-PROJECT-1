@@ -17,6 +17,7 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@fortawesome/fontawesome-free": "^7.1.0",
     "@nestjs/typeorm": "^11.0.0",
     "@tailwindcss/postcss": "^4.1.14",
     "daisyui": "^5.5.14",

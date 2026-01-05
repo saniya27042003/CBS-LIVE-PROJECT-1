@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import knex from 'knex';
+import { Client } from 'pg';
 import { dbConfig } from './db.config';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -20,6 +21,26 @@ export async function getOracleConnection() {
   });
 }
 
+
+
+export async function getPostgresConnection() {
+  const client = new Client({
+    host: process.env.PG_HOST,
+    port: Number(process.env.PG_PORT || 5432),
+    user: process.env.PG_USER,
+    password: process.env.PG_PASSWORD,
+    database: process.env.PG_DATABASE,
+  });
+
+  await client.connect();
+
+  // ✅ THIS IS THE LINE YOU WERE ASKING ABOUT
+  await client.query("SET client_encoding TO 'UTF8'");
+
+  console.log('✅ PostgreSQL Connected with UTF8 encoding');
+
+  return client;
+}
 
 
 
