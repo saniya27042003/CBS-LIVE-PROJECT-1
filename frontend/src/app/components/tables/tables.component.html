@@ -53,7 +53,18 @@
 
         <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
           <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
-            <h3 class="font-bold mb-1">Primary side Tables:</h3>
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold">Primary side Tables:</h3>
+
+                <span
+                  *ngIf="selectedPrimaryTable.length"
+                  class="cursor-pointer text-red-400 hover:text-red-600 text-lg font-bold"
+                  title="Close all primary tables"
+                  (click)="closeAllPrimaryTables()"
+                >
+                  ✕
+                </span>
+              </div>
             <div class="flex flex-wrap gap-1 mt-1">
               <span *ngFor="let table of selectedPrimaryTable"
                 (click)="activePrimaryTable = table"
@@ -184,7 +195,20 @@
 
         <div class="border border-gray-200 mt-4 ml-6 bg-gray-600 p-4 rounded-lg">
           <div class="mb-4 bg-gray-800 text-white p-2 rounded-md max-h-32 overflow-y-auto">
-            <h3 class="font-bold mb-1">Client side Tables:</h3>
+           <div class="flex items-center justify-between">
+              <h3 class="font-bold">Client side Tables:</h3>
+
+              <span
+                *ngIf="selectedClientTable.length"
+                class="cursor-pointer text-red-400 hover:text-red-600 text-lg font-bold"
+                title="Close all client tables"
+                (click)="closeAllClientTables()"
+              >
+                ✕
+              </span>
+            </div>
+
+
             <div class="flex flex-wrap gap-1 mt-1">
               <span *ngFor="let table of selectedClientTable"
                 (click)="clientDatabaseName && (activeClientTable = table)"

@@ -129,6 +129,37 @@ applyAutoMapping() {
   });
 }
 
+
+
+//=======================================================================
+// clear table
+//=======================================================================
+closeAllPrimaryTables() {
+  this.selectedPrimaryTable = [];
+  this.primaryTableData = [];
+  this.childTablesByParent = {};
+  this.selectedChildTables = {};
+  this.autoSelectedChildTables = [];
+  this.activePrimaryTable = null;
+
+  this.saveMappingState();
+  this.saveTablesComponentState();
+}
+
+closeAllClientTables() {
+  this.selectedClientTable = [];
+  this.clientTableDataMap = {};
+  this.activeClientTable = null;
+
+  this.saveMappingState();
+  this.saveTablesComponentState();
+}
+
+
+
+
+
+
 // ================= CHILD TABLES (FK) =================
 childTablesByParent: Record<string, any[]> = {};
 autoSelectedChildTables: string[] = [];
