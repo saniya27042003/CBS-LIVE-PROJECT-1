@@ -1,9 +1,9 @@
 <div class="relative w-full h-[calc(100vh-64px)] overflow-hidden bg-base-100">
 
   <div class="w-full h-full overflow-y-auto p-4 pb-20">
-    
+
     <div class="flex w-full">
-      
+
       <div class="flex-col w-1/2">
         <div class="flex space-x-4 p-4 h-40">
           <div>
@@ -70,6 +70,43 @@
               </span>
             </div>
           </div>
+
+          <!-- 🔗 Child Tables (FK based) -->
+<div
+  *ngIf="childTablesByParent[activePrimaryTable || '']?.length"
+  class="mb-4 bg-gray-700 text-white p-3 rounded-md"
+>
+  <h4 class="font-bold mb-2">
+    Child Tables (Auto-detected)
+  </h4>
+
+  <ul class="space-y-1">
+    <li
+      *ngFor="let c of childTablesByParent[activePrimaryTable || '']"
+      class="flex items-center space-x-2"
+    >
+
+    <input
+  #chk
+  type="checkbox"
+  class="checkbox checkbox-sm"
+  [checked]="selectedChildTables[c.child_table] || selectedPrimaryTable.includes(c.child_table)"
+  (change)="onChildTableToggle(c.child_table, chk.checked)"
+/>
+
+
+
+      <span class="font-medium">
+        {{ c.child_table }}
+      </span>
+
+      <span class="text-xs opacity-70">
+        ({{ c.child_column }} → {{ c.parent_column }})
+      </span>
+    </li>
+  </ul>
+</div>
+
 
           <div class="max-h-70 overflow-y-auto overflow-x-hidden border border-base-content/5 bg-base-100 table-scroll">
             <table class="table min-w-full">

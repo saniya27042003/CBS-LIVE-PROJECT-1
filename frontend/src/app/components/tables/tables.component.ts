@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppService } from '../../service/app.service';
+import { AutoMapperUtil } from "../../utils/automapper.utils";
 
 @Pipe({ name: 'filter', standalone: true })
 export class FilterPipe implements PipeTransform {
@@ -89,6 +90,121 @@ export class TablesComponent implements OnInit {
     return raw ? JSON.parse(raw) : null;
   }
 
+
+ // In tables.component.ts
+
+applyAutoMapping() {
+  // 1. If no client tables are selected, exit
+  if (this.selectedClientTable.length === 0) return;
+
+  // 2. Loop through every row in the Primary Table list
+  this.primaryTableData.forEach(row => {
+
+    // Skip if already mapped manually
+    if (row.position && row.position !== '') return;
+
+    // --- STRICT RULE: TABLE NAMES MUST MATCH ---
+    // Find a selected client table that matches the current row's server table name
+    // row.source = The Server Table Name (e.g., 'citymaster')
+    const matchingClientTable = this.selectedClientTable.find(
+      ct => ct.toLowerCase() === row.source.toLowerCase()
+    );
+
+    // If NO client table has the same name, DO NOT map anything for this row.
+    if (!matchingClientTable) return;
+
+    // --- IF TABLE NAME MATCHES, CHECK COLUMNS ---
+    const clientRows = this.getClientRowsForTable(matchingClientTable);
+
+    // If columns for that table haven't loaded yet, skip for now
+    if (!clientRows || clientRows.length === 0) return;
+
+    // Try to find the matching column inside that specific table
+    const match = AutoMapperUtil.getAutoMapPosition(row.id, clientRows);
+
+    if (match) {
+      row.position = match;
+      row.mappedTable = matchingClientTable; // Explicitly link to the matching table
+    }
+  });
+}
+
+// ================= CHILD TABLES (FK) =================
+childTablesByParent: Record<string, any[]> = {};
+autoSelectedChildTables: string[] = [];
+// Track checkbox selection for child tables
+selectedChildTables: Record<string, boolean> = {};
+
+
+onChildTableToggle(childTable: string, checked: boolean) {
+  this.selectedChildTables[childTable] = checked;
+
+  if (checked) {
+    // ➕ Add child table
+    if (!this.selectedPrimaryTable.includes(childTable)) {
+      this.selectedPrimaryTable.push(childTable);
+      this.loadPrimaryTableColumns(childTable); // ✅ REQUIRED
+
+    }
+  } else {
+    // ➖ Remove child table
+    this.selectedPrimaryTable = this.selectedPrimaryTable.filter(
+      t => t !== childTable
+    );
+  }
+}
+fetchChildTables(parentTable: string) {
+  if (this.childTablesByParent[parentTable]) return;
+
+  this.appService.getChildTables(parentTable).subscribe({
+    next: (rows) => {
+      this.childTablesByParent[parentTable] = rows || [];
+
+      const childTableNames = [...new Set(
+        rows.map(r => r.child_table)
+      )];
+
+      childTableNames.forEach(ct => {
+        if (!this.selectedPrimaryTable.includes(ct)) {
+          this.selectedPrimaryTable.push(ct);
+
+          // ✅ LOAD CHILD TABLE COLUMNS
+          this.loadPrimaryTableColumns(ct);
+
+          // ✅ AUTO-SELECT CLIENT TABLE FOR CHILD
+          this.autoSelectClientTableIfExists(ct);
+        }
+      });
+
+      // ✅ FORCE AUTO-MAPPING AFTER CHILD TABLES LOAD
+      this.applyAutoMapping();
+    },
+    error: (err) => {
+      console.error('Failed to load child tables for', parentTable, err);
+    }
+  });
+}
+
+
+private loadPrimaryTableColumns(table: string) {
+  // Prevent duplicate loading
+  if (this.mappingDataByTable[table]?.length) return;
+
+  const activeClientRows =
+    this.selectedClientTable.length > 0
+      ? this.getClientRowsForTable(this.selectedClientTable[0])
+      : [];
+
+  this.appService.getServerColumns(table).subscribe(cols => {
+    this.mappingDataByTable[table] = (cols || []).map(c => ({
+      id: c,
+      source: table,
+      position: AutoMapperUtil.getAutoMapPosition(c, activeClientRows),
+      mappedTable: null,
+    }));
+  });
+}
+
   private saveMappingState() {
     sessionStorage.setItem('mappingState', JSON.stringify({
       mappingDataByTable: this.mappingDataByTable,
@@ -128,6 +244,11 @@ export class TablesComponent implements OnInit {
 
     this.selectedClientTable.forEach(t => this.ensureClientColumnsLoaded(t));
     this.reconstructPrimaryTableData();
+
+    // ✅ RESTORE CHILD TABLES
+this.selectedPrimaryTable.forEach(pt => {
+  this.fetchChildTables(pt);
+});
   }
 
   /* ================= PRIMARY ================= */
@@ -138,22 +259,40 @@ export class TablesComponent implements OnInit {
     });
   }
 
-  onSelectPrimaryTable(table: string) {
-    if (!this.selectedPrimaryTable.includes(table)) {
-      this.selectedPrimaryTable.push(table);
-      this.appService.getServerColumns(table).subscribe(cols => {
-        this.primaryTableData.push(
-          ...(cols || []).map(c => ({
-            id: c,
-            source: table,
-            position: '',
-            mappedTable: null
-          }))
-        );
-      });
-    }
-    this.activePrimaryTable = table;
+ // In tables.component.ts
+
+onSelectPrimaryTable(table: string) {
+  if (!this.selectedPrimaryTable.includes(table)) {
+    this.selectedPrimaryTable.push(table);
+    this.loadPrimaryTableColumns(table); // ✅ ADD THIS
+
+
+    // ✅ NEW: fetch child tables automatically
+    this.fetchChildTables(table);
+
+    const activeClientRows = this.selectedClientTable.length > 0
+      ? this.getClientRowsForTable(this.selectedClientTable[0])
+      : [];
+
+    this.appService.getServerColumns(table).subscribe(cols => {
+      this.primaryTableData.push(
+        ...(cols || []).map(c => ({
+          id: c,
+          source: table,
+          position: AutoMapperUtil.getAutoMapPosition(c, activeClientRows),
+          mappedTable: null
+        }))
+      );
+      this.applyAutoMapping();
+
+
+    // ✅ AUTO-SELECT CLIENT TABLE
+    this.autoSelectClientTableIfExists(table);
+    });
   }
+  this.activePrimaryTable = table;
+}
+
 
   getRowsForTable(table: string | null) {
     return table ? this.primaryTableData.filter(r => r.source === table) : [];
@@ -172,23 +311,54 @@ export class TablesComponent implements OnInit {
 
   /* ================= CLIENT ================= */
 
+private autoSelectClientTableIfExists(serverTable: string) {
+  // Find matching client table (case-insensitive)
+  const matchingClientTable = this.dropdownItemsClient.find(
+    ct => ct.toLowerCase() === serverTable.toLowerCase()
+  );
+
+  if (!matchingClientTable) return;
+
+  // If already selected, just activate it
+  if (!this.selectedClientTable.includes(matchingClientTable)) {
+    this.selectedClientTable.push(matchingClientTable);
+  }
+
+  this.activeClientTable = matchingClientTable;
+
+  // Ensure columns are loaded
+  this.ensureClientColumnsLoaded(matchingClientTable);
+}
+
+
   getClientTables() {
-    this.appService.getClientTables().subscribe(res => {
-      this.dropdownItemsClient = res || [];
-    });
+  this.appService.getClientTables().subscribe(res => {
+    this.dropdownItemsClient = res || [];
+
+    // ✅ Auto-select client tables for already selected primary tables
+    this.selectedPrimaryTable.forEach(pt =>
+      this.autoSelectClientTableIfExists(pt)
+    );
+  });
+}
+
+
+ensureClientColumnsLoaded(tableName: string) {
+  if (this.clientTableDataMap[tableName]) {
+      this.applyAutoMapping(); // <-- ADD THIS
+      return;
   }
 
-  ensureClientColumnsLoaded(tableName: string) {
-    if (this.clientTableDataMap[tableName]) return;
+  this.appService.getClientColumns(tableName).subscribe(res => {
+    this.clientTableDataMap[tableName] = (res || []).map((r: any) => ({
+      id: typeof r === 'string' ? r : r?.id ?? r?.name,
+      name: typeof r === 'string' ? r : r?.name ?? r?.id,
+      tableName
+    }));
 
-    this.appService.getClientColumns(tableName).subscribe(res => {
-      this.clientTableDataMap[tableName] = (res || []).map((r: any) => ({
-        id: typeof r === 'string' ? r : r?.id ?? r?.name,
-        name: typeof r === 'string' ? r : r?.name ?? r?.id,
-        tableName
-      }));
-    });
-  }
+    this.applyAutoMapping(); // <-- ADD THIS (Triggers map update when data arrives)
+  });
+}
 
   getClientRowsForTable(table: string | null) {
     return table ? this.clientTableDataMap[table] || [] : [];
@@ -216,35 +386,37 @@ export class TablesComponent implements OnInit {
   /* ================= REBUILD (RESTORE INPUTS) ================= */
 
   // ✅ UPDATED: Fetches ALL columns first, then fills in saved values.
-  reconstructPrimaryTableData() {
-    this.primaryTableData = [];
+// In tables.component.ts
 
-    this.selectedPrimaryTable.forEach(table => {
-      // 1. Get any saved mappings for this table
-      const mapped = this.mappingDataByTable[table] || [];
+reconstructPrimaryTableData() {
+  this.primaryTableData = [];
 
-      // 2. ALWAYS fetch the full list of columns from server
-      this.appService.getServerColumns(table).subscribe(cols => {
-        
-        // 3. Map full list of columns to UI rows
-        const rows = (cols || []).map(c => {
-          // Check if we have saved data for this specific column
-          const existingMap = mapped.find((m: any) => m.serverColumn === c);
+  this.selectedPrimaryTable.forEach(table => {
+    const mapped = this.mappingDataByTable[table] || [];
 
-          return {
-            id: c,
-            source: table,
-            // If mapping exists, restore 'clientId' (which holds your "5,6,7" string)
-            // If not, default to empty string so the row still appears
-            position: existingMap ? existingMap.clientId : '',
-            mappedTable: existingMap ? existingMap.clientTableName : null
-          };
-        });
+    this.appService.getServerColumns(table).subscribe(cols => {
+      const rows = (cols || []).map(c => {
+        const existingMap = mapped.find((m: any) => m.serverColumn === c);
 
-        this.primaryTableData.push(...rows);
+        return {
+          id: c,
+          source: table,
+          // If we have a saved mapping, use it. Otherwise leave empty.
+          // applyAutoMapping() will handle the empty ones in a moment.
+          position: existingMap ? existingMap.clientId : '',
+          mappedTable: existingMap ? existingMap.clientTableName : null
+        };
       });
+
+      this.primaryTableData.push(...rows);
+
+      // ✅ AUTO-SELECT CLIENT TABLE IF EXISTS
+this.autoSelectClientTableIfExists(table);
+
+      this.applyAutoMapping(); // <-- ADD THIS (Triggers map update after rows are built)
     });
-  }
+  });
+}
 
   /* ================= MAPPING ================= */
 
@@ -252,70 +424,80 @@ export class TablesComponent implements OnInit {
     if (this.activeClientTable) row.mappedTable = this.activeClientTable;
   }
 
-  onOkClick() {
-    this.mappingDataByTable = {};
+  /* ================= MAPPING (Updated) ================= */
 
-    this.selectedPrimaryTable.forEach(serverTable => {
-      this.mappingDataByTable[serverTable] = [];
+onOkClick() {
+  this.mappingDataByTable = {};
 
-      const rows = this.primaryTableData.filter(r => r.source === serverTable);
+  this.selectedPrimaryTable.forEach(serverTable => {
+    this.mappingDataByTable[serverTable] = [];
+    const rows = this.primaryTableData.filter(r => r.source === serverTable);
 
-      rows.forEach(r => {
-        const rawPos = r.position ? String(r.position).trim() : '';
-        if (!rawPos) return;
+    rows.forEach(r => {
+      const rawPos = r.position ? String(r.position).trim() : '';
+      if (!rawPos) return;
 
-        const clientTable = r.mappedTable || this.activeClientTable;
-        if (!clientTable) return;
+      const clientTable = r.mappedTable || this.activeClientTable;
+      if (!clientTable) return;
 
-        const clientRows = this.getClientRowsForTable(clientTable);
-        if (!clientRows || clientRows.length === 0) return;
+      const clientRows = this.getClientRowsForTable(clientTable);
+      if (!clientRows || clientRows.length === 0) return;
 
-        const inputParts = rawPos.split(',').map(s => s.trim());
-        const matchedIds: string[] = [];
-        const matchedNames: string[] = [];
+      const inputParts = rawPos.split(',').map(s => s.trim());
+      const matchedIdsWithParts: string[] = [];
+      const matchedNames: string[] = [];
 
-        inputParts.forEach(part => {
-          const foundById = clientRows.find(c => String(c.id) === part);
-          
-          if (foundById) {
-            matchedIds.push(foundById.id);
-            matchedNames.push(foundById.name);
-          } else {
-            const idx = Number(part);
-            if (!isNaN(idx) && idx > 0 && clientRows[idx - 1]) {
-              matchedIds.push(clientRows[idx - 1].id);
-              matchedNames.push(clientRows[idx - 1].name);
-            }
+      inputParts.forEach(part => {
+        // Check for dash syntax: "2-1" (Column 2, Part 1)
+        const [colIdentifier, partIdx] = part.split('-');
+
+        // Find the column by ID or by Index
+        let foundCol = clientRows.find(c => String(c.id) === colIdentifier);
+        if (!foundCol) {
+          const idx = Number(colIdentifier);
+          if (!isNaN(idx) && idx > 0 && clientRows[idx - 1]) {
+            foundCol = clientRows[idx - 1];
           }
-        });
+        }
 
-        if (matchedIds.length > 0) {
-          this.mappingDataByTable[serverTable].push({
-            serverColumn: r.id,
-            clientTableName: clientTable,
-            clientColumns: matchedIds.join(','),
-            clientId: rawPos,
-            clientName: matchedNames.join(', ')
-          });
+        if (foundCol) {
+          // Encode as "ID:PART" so backend can decode it
+          // If no dash was used, we send "ID" or "ID:0"
+          const suffix = partIdx ? `:${partIdx}` : '';
+          matchedIdsWithParts.push(`${foundCol.id}${suffix}`);
+
+          const nameLabel = partIdx ? `${foundCol.name}[Part ${partIdx}]` : foundCol.name;
+          matchedNames.push(nameLabel);
         }
       });
-    });
 
-    this.saveMappingState();
-
-    const allClientColumns = Object.values(this.clientTableDataMap).flat();
-
-    this.router.navigate(['/mapping-table'], { 
-      state: { 
-        mappingDataByTable: this.mappingDataByTable,
-        selectedPrimaryTable: this.selectedPrimaryTable,
-        selectedClientTable: this.selectedClientTable,
-        primaryDatabaseName: this.primaryDatabaseName,
-        clientDatabaseName: this.clientDatabaseName,
-        clientSideColumns: allClientColumns
+      if (matchedIdsWithParts.length > 0) {
+        this.mappingDataByTable[serverTable].push({
+          serverColumn: r.id,
+          clientTableName: clientTable,
+          clientColumns: matchedIdsWithParts.join(','), // Send encoded string to backend
+          clientId: rawPos,
+          clientName: matchedNames.join(', ')
+        });
       }
     });
-  }
+  });
+
+  this.saveMappingState();
+  const allClientColumns = Object.values(this.clientTableDataMap).flat();
+
+  this.router.navigate(['/mapping-table'], {
+    state: {
+      mappingDataByTable: this.mappingDataByTable,
+      selectedPrimaryTable: this.selectedPrimaryTable,
+      selectedClientTable: this.selectedClientTable,
+      primaryDatabaseName: this.primaryDatabaseName,
+      clientDatabaseName: this.clientDatabaseName,
+      clientSideColumns: allClientColumns,
+      childTablesByParent: this.childTablesByParent   // ✅ NEW
+    }
+  });
+}
 
   /* ================= UI HELPERS ================= */
 

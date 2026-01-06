@@ -354,7 +354,7 @@ export class DatabaseComponent implements OnInit {
     const lightThemes = [
       'light', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'retro',
       'cyberpunk', 'valentine', 'lofi', 'pastel', 'fantasy', 'wireframe',
-      'cmyk', 'autumn', 'acid', 'lemonade', 'winter'
+      'cmyk', 'autumn', 'acid', 'lemonade', 'winter','garden'
     ];
     return lightThemes.includes(this.currentTheme);
   }

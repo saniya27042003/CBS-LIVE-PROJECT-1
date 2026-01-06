@@ -1,10 +1,15 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { DatabaseMappingService } from './database-mapping.service';
+
 
 @Controller('database-mapping')
 export class DatabaseMappingController {
-  constructor(private readonly db: DatabaseMappingService) {}
 
+
+
+  constructor(
+    private readonly db: DatabaseMappingService,
+  ) {}
   @Post('connect-server')
   connectServer(@Body() config: any) {
     return this.db.connectServer(config);
@@ -50,6 +55,11 @@ export class DatabaseMappingController {
   getTableStructure(@Body('tableName') tableName: string) {
     return this.db.getTableStructure(tableName);
   }
+
+  @Get('child-tables/:parentTable')
+getChildTables(@Param('parentTable') parentTable: string) {
+return this.db.getChildTables(parentTable);
+}
 
   @Post('insert-data')
   insertData(@Body() payload: any) {

@@ -57,6 +57,8 @@ button{
 :host-context([data-theme='bumblebee']) button,
 :host-context([data-theme='emerald']) button,
 :host-context([data-theme='corporate']) button,
+:host-context([data-theme='garden']) button,
+:host-context([data-theme='cyberpunk']) button,
 :host-context([data-theme='retro']) button,
 :host-context([data-theme='valentine']) button,
 :host-context([data-theme='lofi']) button,

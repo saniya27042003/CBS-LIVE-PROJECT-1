@@ -1,19 +1,14 @@
-// import { Module } from '@nestjs/common';
-// import { DatabaseService } from './database.service';
-// import { DatabaseController } from './database.controller';
-
-// @Module({
-//   providers: [DatabaseService],
-//   controllers: [DatabaseController]
-// })
-// export class DatabaseModule {}
 import { Module } from '@nestjs/common';
 import { DatabaseService } from './database.service';
+import { DatabaseMappingService } from '../database-mapping/database-mapping.service';
 import { DatabaseController } from './database.controller';
 
 @Module({
   controllers: [DatabaseController],
-  providers: [DatabaseService],
-  exports: [DatabaseService], // 👈 ADD THIS: Allows other modules to use this service
+  providers: [
+    DatabaseService, 
+    DatabaseMappingService  // 2. Add this line here!
+  ],
+  exports: [DatabaseService]
 })
 export class DatabaseModule {}

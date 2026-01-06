@@ -9,7 +9,7 @@ export class AppService {
   private http = inject(HttpClient);
 
   // ✅ MUST END WITH /
-  // private BASE_URL = env.apiBaseUrl; 
+  // private BASE_URL = env.apiBaseUrl;
   //  Example: http://localhost:3000/database-mapping/
 private BASE_URL = 'http://localhost:3000/database-mapping/';
   constructor() {}
@@ -37,6 +37,8 @@ getServerColumns(tableName: string) {
     { tableName }
   );
 }
+
+
 
 
 
@@ -84,6 +86,14 @@ insertData(payload: {
 }
 
 
+// =====================================
+// ✅ FETCH CHILD TABLES (POSTGRES FK)
+// =====================================
+getChildTables(parentTable: string) {
+  return this.http.get<any[]>(
+    this.BASE_URL + 'child-tables/' + parentTable
+  );
+}
 
 
 // =====================================

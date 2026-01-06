@@ -19,6 +19,8 @@ export class MappingTableComponent implements OnInit {
   primaryDatabaseName = '';
   clientDatabaseName = '';
   isMigrating = false;
+  childTablesByParent: Record<string, any[]> = {};
+
 
   // ✅ Client columns reference (ID → Name)
   clientSideColumns: any[] = [];
@@ -43,20 +45,77 @@ export class MappingTableComponent implements OnInit {
       Object.assign(this, stored);
     }
 
+     if (navState?.childTablesByParent) {
+  this.childTablesByParent = navState.childTablesByParent;
+}
+
     this.updateSessionStorage();
   }
+
+
 
   getMappingRows(tableName: string): any[] {
     return this.mappingDataByTable[tableName] ?? [];
   }
 
+  private sortTablesByRelations(tables: string[]): string[] {
+  const ordered: string[] = [];
+  const visited = new Set<string>();
 
-  saveMapping() {
+  const visit = (table: string) => {
+    if (visited.has(table)) return;
+    visited.add(table);
+
+    // Find parents of this table
+    Object.entries(this.childTablesByParent).forEach(([parent, children]) => {
+      const isChild = children?.some(c => c.child_table === table);
+      if (isChild) {
+        visit(parent);
+      }
+    });
+
+    ordered.push(table);
+  };
+
+  tables.forEach(visit);
+  return [...new Set(ordered)];
+}
+
+
+  // ✅ GENERIC NAME SPLIT DETECTION (Add these methods to your component)
+
+// Detect if mapping needs splitting (works for any full-name column)
+isNameSplitMapping(clientCol: string, serverCol: string): boolean {
+  const clientUpper = clientCol.toUpperCase();
+  const serverUpper = serverCol.toUpperCase();
+
+  // Generic full-name patterns
+  const fullNamePatterns = ['NAME', 'AC_NAME', 'FULL_NAME', 'COMPLETE_NAME'];
+  const splitNamePatterns = ['F_NAME', 'FIRST_NAME', 'M_NAME', 'MIDDLE_NAME', 'L_NAME', 'LAST_NAME'];
+
+  return fullNamePatterns.some(pattern => clientUpper.includes(pattern)) &&
+         splitNamePatterns.some(pattern => serverUpper.includes(pattern));
+}
+
+// Get split type for any name column (FIRST/MIDDLE/LAST)
+getSplitType(serverCol: string): string {
+  const upper = serverCol.toUpperCase();
+  if (upper.includes('F_NAME') || upper.includes('FIRST_NAME')) return 'FIRST';
+  if (upper.includes('L_NAME') || upper.includes('LAST_NAME')) return 'LAST';
+  if (upper.includes('M_NAME') || upper.includes('MIDDLE_NAME')) return 'MIDDLE';
+  return 'FULL';
+}
+
+// ✅ ENHANCED saveMapping() - Replace your existing saveMapping method completely
+
+saveMapping() {
   if (this.isMigrating || !this.selectedPrimaryTable.length) return;
 
-  const tablesToMigrate = this.selectedPrimaryTable.filter(
+  const tablesToMigrate = this.sortTablesByRelations(
+  this.selectedPrimaryTable.filter(
     t => this.mappingDataByTable[t]?.length
-  );
+  )
+);
 
   if (!tablesToMigrate.length) {
     alert('No mappings found');
@@ -75,10 +134,9 @@ export class MappingTableComponent implements OnInit {
 
   from(tablesToMigrate).pipe(
     concatMap(serverTable => {
-
+      // ✅ GENERIC MAPPING WITH AUTO-SPLIT DETECTION
       const mappingsForTable = this.mappingDataByTable[serverTable].map(m => {
         const rawCols = String(m.clientColumns || '').split(',').map(v => v.trim());
-
         const finalCols = rawCols.map(val => {
           const match = this.clientSideColumns.find(
             c => String(c.id) === val || String(c.Id) === val
@@ -87,26 +145,26 @@ export class MappingTableComponent implements OnInit {
         });
 
         const serverCol = (m.serverColumn || '').toUpperCase();
+        const clientCol = finalCols[0]?.toUpperCase() || '';
 
         const mappingPayload: any = {
           serverColumn: m.serverColumn,
           clientTable: m.clientTableName,
           clientColumns: finalCols,
-          value: '' // will hold actual transformed value
+          joinKey: detectedJoinKey,
+          splitRule: null
         };
 
-        // ✅ GENERIC FULL-NAME SPLIT LOGIC
-        if (finalCols.length === 1 && finalCols[0].toUpperCase().includes('NAME')) {
-          // Apply split if server column looks like F/M/L
-          mappingPayload.value = (fullName: string) => {
-            if (!fullName) return '';
-            const parts = fullName.trim().split(/\s+/);
-
-            if (serverCol.includes('F_NAME')) return parts[0] || '';
-            if (serverCol.includes('L_NAME')) return parts.length > 1 ? parts[parts.length - 1] : '';
-            if (serverCol.includes('M_NAME')) return parts.length > 2 ? parts.slice(1, parts.length - 1).join(' ') : '';
-            return fullName; // fallback
+        // ✅ AUTO-DETECT ANY NAME SPLITTING
+        if (this.isNameSplitMapping(clientCol, serverCol)) {
+          mappingPayload.splitRule = {
+            clientColumn: finalCols[0],
+            serverColumn: m.serverColumn,
+            splitType: this.getSplitType(m.serverColumn),
+            isAutoDetected: true
           };
+        } else {
+          mappingPayload.isDirectMapping = true;
         }
 
         return mappingPayload;
@@ -118,14 +176,6 @@ export class MappingTableComponent implements OnInit {
         joinKey: detectedJoinKey,
         mappings: mappingsForTable
       };
-
-      // Apply the value transform for each row before sending
-      payload.mappings.forEach(mapping => {
-        if (mapping.value) {
-          // Example: here you should apply this on each row of actual client data
-          // For demo: just leaving it in payload
-        }
-      });
 
       return this.appService.insertData(payload).pipe(
         map(res => ({ table: serverTable, success: true, res })),
@@ -140,15 +190,15 @@ export class MappingTableComponent implements OnInit {
       const success = results.filter(r => r.success);
       const failed = results.filter(r => !r.success);
 
+      // Mark successful mappings
       success.forEach(s => {
-        this.mappingDataByTable[s.table] =
-          this.mappingDataByTable[s.table].map(r => ({ ...r, mapped: true }));
+        this.mappingDataByTable[s.table] = this.mappingDataByTable[s.table]
+          .map(r => ({ ...r, mapped: true }));
       });
 
       this.updateSessionStorage();
 
-      this.migrationResultMessage =
-        `Migration Completed\n\nSuccess: ${success.length}\nFailed: ${failed.length}`;
+      this.migrationResultMessage = `Migration Completed\n\n✅ Success: ${success.length}\n❌ Failed: ${failed.length}`;
       this.migrationHasErrors = failed.length > 0;
       this.showResultModal = true;
     },

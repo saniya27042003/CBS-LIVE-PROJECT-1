@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
@@ -20,7 +16,9 @@ export interface DbTableResult {
 export class DatabaseService {
   private dataSource: DataSource | null = null;
   private currentDbName: string | null = null;
-  private currentDbType: 'mysql' | 'mssql' | 'mariadb' | null = null;
+  private currentDbType: 'mysql' | 'mssql' | 'mariadb' | 'mongodb' | null = null;
+
+  private mongoDataSource: DataSource | null = null;
 
   // =================================================================
   // 1. GENERIC HELPERS
@@ -94,7 +92,8 @@ export class DatabaseService {
       password: String(config.password || ''),
       database: config.database,
       sid: isOracle ? config.database : undefined,
-      authSource: isMongo ? 'admin' : undefined,
+      //authSource: isMongo ? 'admin' : undefined,
+      authSource: isMongo ? config.authSource || 'admin' : undefined,
       synchronize: false,
       logging: false,
     };
@@ -163,12 +162,18 @@ export class DatabaseService {
           `SELECT username FROM all_users WHERE oracle_maintained = 'N'`,
         );
         rows = rows.map((r) => r.USERNAME);
-      } else if (isMongo) {
-        const mongoDriver = ds.driver as any;
-        const admin = mongoDriver.queryRunner.databaseConnection.db('admin').admin();
-        const result = await admin.listDatabases();
-        rows = result.databases.map((d: any) => d.name);
-      } else {
+     } else if (isMongo) {
+  const mongoDriver = ds.driver as any;
+
+  if (!mongoDriver?.queryRunner?.databaseConnection) {
+    return [];
+  }
+
+  const admin = mongoDriver.queryRunner.databaseConnection.db('admin').admin();
+  const result = await admin.listDatabases();
+  rows = result.databases.map((d: any) => d.name);
+}
+else {
         rows = await ds.query(
           `SELECT datname FROM pg_database WHERE datistemplate = false`,
         );
@@ -196,19 +201,44 @@ export class DatabaseService {
       return rows.map((r: any) => r.TABLE_NAME);
     }
 
+  //   if (driver === 'mongodb') {
+  //     const mongoDriver = ds.driver as any;
+  //     try {
+  //       const collections = await mongoDriver.queryRunner.databaseConnection
+  //         .db(dbName)
+  //         .listCollections()
+  //         .toArray();
+  //       return collections.map((c: any) => c.name);
+  //     } catch (e) {
+  //       return [];
+  //     }
+  //   }
+
+  //   const rows = await ds.query(
+  //     driver === 'mssql'
+  //       ? `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`
+  //       : `SHOW TABLES`,
+  //   );
+
+  //   return rows
+  //     .map((r: any) => this.extractTableName(r, dbName || undefined))
+  //     .filter(Boolean);
+  // }
+
+  
     if (driver === 'mongodb') {
       const mongoDriver = ds.driver as any;
-      try {
-        const collections = await mongoDriver.queryRunner.databaseConnection
-          .db(dbName)
-          .listCollections()
-          .toArray();
-        return collections.map((c: any) => c.name);
-      } catch (e) {
-        return [];
-      }
-    }
 
+      if (!mongoDriver?.queryRunner?.databaseConnection) return [];
+
+      const collections = await mongoDriver.queryRunner.databaseConnection
+        .db(dbName)
+        .listCollections()
+        .toArray();
+
+      return collections.map((c: any) => c.name);
+    }
+    
     const rows = await ds.query(
       driver === 'mssql'
         ? `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'`
@@ -216,54 +246,78 @@ export class DatabaseService {
     );
 
     return rows
-      .map((r: any) => this.extractTableName(r, dbName || undefined))
+      .map((r: any) => this.extractTableName(r, dbName))
       .filter(Boolean);
   }
 
   async getColumnNames(ds: DataSource, tableName: string): Promise<string[]> {
-    const driver = ds.options.type;
-    const dbName = ds.options.database as string;
-    let actualTableName = tableName;
-    if (tableName.includes('.')) actualTableName = tableName.split('.')[1];
+  const driver = ds.options.type;
+  const dbName = ds.options.database as string;
+  let actualTableName = tableName;
 
-    if (driver === 'postgres') {
-      const rows = await ds.query(
-        `SELECT column_name FROM information_schema.columns WHERE table_name = '${actualTableName}'`,
-      );
-      return rows.map((r: any) => r.column_name);
-    }
-
-    if (driver === 'oracle') {
-      const rows = await ds.query(
-        `SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '${actualTableName}' ORDER BY COLUMN_ID`,
-      );
-      return rows.map((r: any) => r.COLUMN_NAME);
-    }
-
-    if (driver === 'mongodb') {
-      const mongoDriver = ds.driver as any;
-      try {
-        const collection = mongoDriver.queryRunner.databaseConnection
-          .db()
-          .collection(actualTableName);
-        const doc = await collection.findOne({});
-        return doc ? Object.keys(doc) : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    if (driver === 'mssql') {
-      const rows = await ds.query(
-        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @0 AND TABLE_CATALOG = @1`,
-        [actualTableName, dbName],
-      );
-      return rows.map((r: any) => r.COLUMN_NAME);
-    } else {
-      const rows = await ds.query(`SHOW COLUMNS FROM \`${actualTableName}\``);
-      return rows.map((r: any) => r.COLUMN_NAME || r.Field || r.column_name);
-    }
+  if (tableName.includes('.')) {
+    actualTableName = tableName.split('.')[1];
   }
+
+  // =======================
+  // ✅ MONGODB (FIX)
+  // =======================
+  if (driver === 'mongodb') {
+    const mongoDriver = ds.driver as any;
+
+    if (!mongoDriver?.queryRunner?.databaseConnection) {
+      return [];
+    }
+
+    const collection = mongoDriver.queryRunner.databaseConnection
+      .db(dbName)
+      .collection(actualTableName);
+
+    const doc = await collection.findOne({});
+
+    // MongoDB has no schema → derive columns from document keys
+    return doc ? Object.keys(doc) : [];
+  }
+
+  // =======================
+  // POSTGRES
+  // =======================
+  if (driver === 'postgres') {
+    const rows = await ds.query(
+      `SELECT column_name 
+       FROM information_schema.columns 
+       WHERE table_name = '${actualTableName}'`,
+    );
+    return rows.map((r: any) => r.column_name);
+  }
+
+  // =======================
+  // ORACLE
+  // =======================
+  if (driver === 'oracle') {
+    const rows = await ds.query(
+      `SELECT COLUMN_NAME 
+       FROM USER_TAB_COLUMNS 
+       WHERE TABLE_NAME = '${actualTableName}' 
+       ORDER BY COLUMN_ID`,
+    );
+    return rows.map((r: any) => r.COLUMN_NAME);
+  }
+
+  // =======================
+  // MSSQL / MYSQL
+  // =======================
+  const rows = await ds.query(
+    driver === 'mssql'
+      ? `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${actualTableName}'`
+      : `SHOW COLUMNS FROM ${actualTableName}`,
+  );
+
+  return rows.map((r: any) =>
+    r.COLUMN_NAME || r.Field,
+  );
+}
+
 
   async getColumnTypes(ds: DataSource, tableName: string): Promise<Record<string, string>> {
     const driver = ds.options.type;
@@ -310,6 +364,9 @@ export class DatabaseService {
 
     if (driver === 'mongodb') {
         const mongoDriver = ds.driver as any;
+        if (!mongoDriver?.queryRunner?.databaseConnection) {
+          throw new Error('MongoDB client not initialized');
+        }
         const collection = mongoDriver.queryRunner.databaseConnection.db().collection(tableName);
         const rows = await collection.find({}).limit(50).toArray();
         const fixedRows = rows.map((r: any) => {
@@ -352,6 +409,41 @@ export class DatabaseService {
     }
   }
 
+ async connectMongoDB(cfg: any): Promise<DbConnectionResult> {
+  try {
+    // Keep SQL connection intact; Mongo has its own datasource
+    if (this.mongoDataSource?.isInitialized) {
+      return { success: true };
+    }
+
+    this.mongoDataSource = await this.createConnection({
+      type: 'mongodb',
+      host: cfg.host,
+      port: cfg.port || 27017,
+      username: cfg.username,
+      password: cfg.password,
+      database: cfg.database,
+      authSource: cfg.authSource || 'admin',
+    });
+
+    this.currentDbName = cfg.database;
+    this.currentDbType = 'mongodb';
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: (err as Error).message };
+  }
+}
+
+getMongoDataSource(): DataSource {
+  if (!this.mongoDataSource || !this.mongoDataSource.isInitialized) {
+    throw new Error('MongoDB client not initialized');
+  }
+  return this.mongoDataSource;
+}
+
+
+
   async connectMSSQL(cfg: any): Promise<DbConnectionResult> {
     try {
       await this.resetConnection();
@@ -365,16 +457,23 @@ export class DatabaseService {
   }
 
   async getTables(): Promise<DbTableResult> {
-    if (!this.dataSource || !this.dataSource.isInitialized) {
+  try {
+    const ds =
+      this.currentDbType === 'mongodb'
+        ? this.getMongoDataSource()
+        : this.dataSource;
+
+    if (!ds || !ds.isInitialized) {
       return { success: false, message: 'No database connection established' };
     }
-    try {
-      const tables = await this.getTableNames(this.dataSource);
-      return { success: true, tables };
-    } catch (err) {
-      return { success: false, message: (err as Error).message };
-    }
+
+    const tables = await this.getTableNames(ds);
+    return { success: true, tables };
+  } catch (err) {
+    return { success: false, message: (err as Error).message };
   }
+}
+
 
   private async resetConnection() {
     if (this.dataSource?.isInitialized) {
@@ -385,5 +484,3 @@ export class DatabaseService {
     this.currentDbType = null;
   }
 }
-
-
