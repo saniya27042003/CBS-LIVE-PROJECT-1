@@ -441,6 +441,11 @@ private async getMongoCount(
       return { success: false, message: `Skipped ${serverTable}: No matching columns found in DB schema.` };
     }
 
+const isMongoSource = this.isMongo(this.clientDB!);
+const isSqlTarget = serverDriver !== 'mongodb';
+
+
+
     const [sqL, sqR] = this.dbService.getQuoteChar(serverDriver);
     const safeServerTable = this.dbService.getQualifiedTableName(serverDriver, serverTable);
     const serverColsList = validMappingsForTable.map((m) => `${sqL}${m.serverColumn}${sqR}`).join(', ');
@@ -466,16 +471,61 @@ private async getMongoCount(
     try {
       await qr.startTransaction();
 
+
+      // 🔑 MongoDB PK counter (ONLY ONCE)
+let mongoPkCounter = 1;
+
+if (this.isMongo(this.clientDB!)) {
+  try {
+    const res = await server.query(
+      `SELECT MAX(id) AS max FROM ${safeServerTable}`
+    );
+    mongoPkCounter = (res?.[0]?.max || 0) + 1;
+  } catch {
+    mongoPkCounter = 1;
+  }
+}
+
+
       for (let i = 0; i < rows.length; i++) {
         const sourceRow = rows[i];
+
+
+
+
+
+
+
+
+
+
         
-      // ✅ SPLIT FULL NAME ONCE PER ROW
+// ✅ SPLIT FULL NAME ONCE PER ROW
 const fullNameRaw = this.getValueCaseInsensitive(sourceRow, 'AC_NAME');
 const fullName = this.transformValue(fullNameRaw);
 const split = this.splitFullNameBackend(fullName);
 
+
 const rowValues = validMappingsForTable.map((m) => {
   const targetType = serverTypes[m.serverColumn.toLowerCase()];
+
+  
+  // 🚫 ORACLE → let DB handle ID
+  if (
+    serverDriver === 'oracle' &&
+    m.serverColumn.toLowerCase() === 'id'
+  ) {
+    return null;
+  }
+
+  // 🚫 MONGODB CLIENT → generate numeric PK for SQL
+  if (
+    this.isMongo(this.clientDB!) &&
+    m.serverColumn.toLowerCase() === 'id'
+  ) {
+    return mongoPkCounter++;
+  }
+
 
   // ✅ USE PRE-SPLIT VALUES
   if (m.transform === 'SPLIT_FULL_NAME') {
@@ -546,6 +596,9 @@ const rowValues = validMappingsForTable.map((m) => {
       errors: errors.length ? errors : undefined 
     };
   }
+
+
+  
 
 
 

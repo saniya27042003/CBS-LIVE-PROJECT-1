@@ -8,8 +8,11 @@
              hover:ring hover:ring-gray-500 transition-all duration-200">
 
       <!-- IMAGE -->
-      <img *ngIf="showImage" [src]="profilePic!" (error)="onImageError()" class="w-10 h-10 rounded-full object-cover"
-        alt="User Avatar" />
+      <img *ngIf="showImage"
+           [src]="profilePic!"
+           (error)="onImageError()"
+           class="w-10 h-10 rounded-full object-cover"
+           alt="User Avatar" />
 
       <!-- INITIAL LETTER -->
       <span *ngIf="!showImage" class="text-[17px] leading-none select-none">
@@ -30,16 +33,25 @@
         <div class="w-10 h-10 rounded-full flex items-center justify-center
                  bg-purple-600 text-white">
 
-          <img *ngIf="showImage" [src]="profilePic!" (error)="onImageError()"
-            class="w-10 h-10 rounded-full object-cover" />
+          <img *ngIf="showImage"
+               [src]="profilePic!"
+               (error)="onImageError()"
+               class="w-10 h-10 rounded-full object-cover" />
 
           <span *ngIf="!showImage" class="text-[17px] leading-none select-none">
             {{ initialLetter }}
           </span>
 
         </div>
-        <div class="flex flex-col gap-0.5"> <span class="text-sm font-semibold text-base-content"> {{ username }}
-          </span> <span class="text-xs text-base-content/70"> {{ email }} </span> </div>
+
+        <div class="flex flex-col gap-0.5">
+          <span class="text-sm font-semibold text-base-content">
+            {{ username }}
+          </span>
+          <span class="text-xs text-base-content/70">
+            {{ email }}
+          </span>
+        </div>
 
       </div>
     </li>
@@ -50,19 +62,47 @@
 
     <!-- GOOGLE ACCOUNT -->
     <li>
-      <button class="py-3 flex items-center gap-3 w-full text-left" [disabled]="!isGoogleUser"
-        [ngClass]="{ 'opacity-50 cursor-not-allowed': !isGoogleUser }" (click)="openGoogleAccount()">
+      <button
+        class="py-3 flex items-center gap-3 w-full text-left"
+        [disabled]="!isGoogleUser"
+        [ngClass]="{ 'opacity-50 cursor-not-allowed': !isGoogleUser }"
+        (click)="openGoogleAccount()">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" />
         <span>Google Account</span>
       </button>
     </li>
 
+    <!-- ADMIN ONLY CHECKBOX -->
+   <li *ngIf="isAdmin">
+      <label class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-base-200">
+
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm checkbox-primary"
+          [checked]="adminCheckbox"
+          (change)="onAdminCheckboxChange($event)" />
+
+        <span class="text-sm">Enable Automapping</span>
+
+      </label>
+    </li>
+
+    <li *ngIf="isAdmin">
+      <div class="divider my-0 py-0 h-px bg-base-200"></div>
+    </li>
+
     <!-- SIGN OUT -->
-   <li>
+    <li>
       <a (click)="onLogout()" class="py-3 flex items-center gap-3 cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-5 h-5"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+          <path stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
         Sign out
       </a>

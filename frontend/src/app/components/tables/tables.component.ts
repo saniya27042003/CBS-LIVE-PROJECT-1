@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppService } from '../../service/app.service';
 import { AutoMapperUtil } from "../../utils/automapper.utils";
+import { ChangeDetectorRef } from '@angular/core';
 
 @Pipe({ name: 'filter', standalone: true })
 export class FilterPipe implements PipeTransform {
@@ -69,8 +70,11 @@ export class TablesComponent implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private appService: AppService
+    private appService: AppService,
+    private cdr: ChangeDetectorRef   // ✅ ADD
+
   ) {}
+
 
   /* ================= STATE ================= */
 
@@ -94,6 +98,17 @@ export class TablesComponent implements OnInit {
  // In tables.component.ts
 
 applyAutoMapping() {
+
+
+  const userRaw = localStorage.getItem('user');
+    const user = userRaw ? JSON.parse(userRaw) : null;
+    const isAdmin = user?.role === 'admin';
+    const isAutoMapEnabled = localStorage.getItem('adminAutoMapEnabled') === 'true';
+
+    if (!isAdmin || !isAutoMapEnabled) return;
+    if (this.selectedClientTable.length === 0) return;
+
+
   // 1. If no client tables are selected, exit
   if (this.selectedClientTable.length === 0) return;
 
@@ -120,12 +135,34 @@ applyAutoMapping() {
     if (!clientRows || clientRows.length === 0) return;
 
     // Try to find the matching column inside that specific table
-    const match = AutoMapperUtil.getAutoMapPosition(row.id, clientRows);
+const dbType = this.getClientDbType();
+if (AutoMapperUtil.normalize(row.id) === 'id') {
+  if (dbType === 'mongo') {
+    row.position = '2';
+    row.mappedTable = matchingClientTable;
+    return; // ✅ only Mongo exits
+  }
 
-    if (match) {
-      row.position = match;
-      row.mappedTable = matchingClientTable; // Explicitly link to the matching table
-    }
+  if (dbType === 'oracle') {
+    return; // ✅ Oracle skips id
+  }
+
+  // ✅ SQL databases → continue to normal mapping
+}
+
+
+
+const match = AutoMapperUtil.getAutoMapPosition(row.id, clientRows);
+
+if (match) {
+  row.position = match;
+  row.mappedTable = matchingClientTable;
+}
+
+    // if (match) {
+    //   row.position = match;
+    //   row.mappedTable = matchingClientTable; // Explicitly link to the matching table
+    // }
   });
 }
 
@@ -154,10 +191,6 @@ closeAllClientTables() {
   this.saveMappingState();
   this.saveTablesComponentState();
 }
-
-
-
-
 
 
 // ================= CHILD TABLES (FK) =================
@@ -208,7 +241,11 @@ fetchChildTables(parentTable: string) {
       });
 
       // ✅ FORCE AUTO-MAPPING AFTER CHILD TABLES LOAD
+      this.reconstructPrimaryTableData();
       this.applyAutoMapping();
+
+      this.cdr.detectChanges();
+
     },
     error: (err) => {
       console.error('Failed to load child tables for', parentTable, err);
@@ -227,12 +264,26 @@ private loadPrimaryTableColumns(table: string) {
       : [];
 
   this.appService.getServerColumns(table).subscribe(cols => {
-    this.mappingDataByTable[table] = (cols || []).map(c => ({
-      id: c,
-      source: table,
-      position: AutoMapperUtil.getAutoMapPosition(c, activeClientRows),
-      mappedTable: null,
-    }));
+    this.mappingDataByTable[table] = (cols || []).map(c => {
+  let position = '';
+  const dbType = this.getClientDbType();
+
+  if (AutoMapperUtil.normalize(c) === 'id') {
+    if (dbType === 'mongo') position = '2';
+    else if (dbType === 'oracle') position = '';
+    else position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+  } else {
+    position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+  }
+
+  return {
+    id: c,
+    source: table,
+    position,
+    mappedTable: null,
+  };
+});
+
   });
 }
 
@@ -307,13 +358,27 @@ onSelectPrimaryTable(table: string) {
 
     this.appService.getServerColumns(table).subscribe(cols => {
       this.primaryTableData.push(
-        ...(cols || []).map(c => ({
-          id: c,
-          source: table,
-          position: AutoMapperUtil.getAutoMapPosition(c, activeClientRows),
-          mappedTable: null
-        }))
-      );
+  ...(cols || []).map(c => {
+    let position = '';
+    const dbType = this.getClientDbType();
+
+    if (AutoMapperUtil.normalize(c) === 'id') {
+      if (dbType === 'mongo') position = '2';
+      else if (dbType === 'oracle') position = '';
+      else position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+    } else {
+      position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+    }
+
+    return {
+      id: c,
+      source: table,
+      position,
+      mappedTable: null
+    };
+  })
+);
+
       this.applyAutoMapping();
 
 
@@ -529,6 +594,29 @@ onOkClick() {
     }
   });
 }
+
+
+
+
+private getClientDbType(): 'mongo' | 'oracle' | 'sql' {
+  const allClientCols = Object.values(this.clientTableDataMap).flat();
+
+  // ✅ MongoDB detection (raw column name)
+  const hasMongoId = allClientCols.some(c => {
+    const raw = String(c.name || c.id);
+    return raw === '_id';
+  });
+
+  if (hasMongoId) return 'mongo';
+
+  const name = (this.clientDatabaseName || '').toLowerCase();
+  if (name.includes('oracle')) return 'oracle';
+
+  return 'sql'; // mysql, mariadb, mssql, postgres
+}
+
+
+
 
   /* ================= UI HELPERS ================= */
 

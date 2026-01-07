@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { AppService } from '../../service/app.service';
 import { from, of } from 'rxjs';
 import { concatMap, map, catchError, toArray } from 'rxjs/operators';
-
 @Component({
   selector: 'app-mapping-table',
   standalone: true,
@@ -51,8 +50,6 @@ export class MappingTableComponent implements OnInit {
 
     this.updateSessionStorage();
   }
-
-
 
   getMappingRows(tableName: string): any[] {
     return this.mappingDataByTable[tableName] ?? [];

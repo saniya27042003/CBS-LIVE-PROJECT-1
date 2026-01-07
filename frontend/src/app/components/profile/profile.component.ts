@@ -19,8 +19,11 @@ export class ProfileComponent implements OnInit {
 
   isGoogleUser = false;
 
-  // ⭐ NEW FLAG
   showImage = false;
+
+  // ⭐ ADMIN FLAGS
+  isAdmin = false;
+  adminCheckbox = false;
 
   constructor(private router: Router) {}
 
@@ -40,21 +43,41 @@ export class ProfileComponent implements OnInit {
     this.profilePic = user?.picture || null;
     this.initialLetter = this.username.charAt(0).toUpperCase();
 
-    // show image only if URL exists
     this.showImage = !!this.profilePic;
 
     this.isGoogleUser = localStorage.getItem('isGoogleUser') === '1';
+
+    // ⭐ CHECK ADMIN ROLE
+    this.isAdmin = user?.role === 'admin';
+
+    // ⭐ RESTORE CHECKBOX STATE
+    // If user is admin, check if they enabled auto-mapping previously
+    if (this.isAdmin) {
+      this.adminCheckbox = localStorage.getItem('adminAutoMapEnabled') === 'true';
+    }
   }
 
-  // 🔥 CRITICAL FIX
   onImageError(): void {
-    this.showImage = false; // fallback to initials
+    this.showImage = false;
   }
 
   openGoogleAccount(): void {
     if (this.isGoogleUser) {
       window.open('https://myaccount.google.com', '_blank');
     }
+  }
+
+    onAdminCheckboxChange(event: Event): void {
+    this.adminCheckbox = (event.target as HTMLInputElement).checked;
+    console.log('Admin checkbox:', this.adminCheckbox);
+
+    // ⭐ SAVE CHECKBOX STATE TO LOCAL STORAGE
+    if (this.adminCheckbox) {
+      localStorage.setItem('adminAutoMapEnabled', 'true');
+    } else {
+      localStorage.setItem('adminAutoMapEnabled', 'false');
+    }
+    window.location.reload();
   }
 
   onLogout(): void {
