@@ -62,6 +62,7 @@ export class TablesComponent implements OnInit {
     if (v) this.ensureClientColumnsLoaded(v);
     this.saveTablesComponentState();
   }
+  
 
   /* ================= UI ================= */
   isPrimaryDropdownOpen = false;
@@ -93,6 +94,9 @@ export class TablesComponent implements OnInit {
     const raw = sessionStorage.getItem('tablesComponentState');
     return raw ? JSON.parse(raw) : null;
   }
+
+
+  clientDatabaseType: 'oracle' | 'sql' | 'mongo' | '' = '';
 
 
  // In tables.component.ts
@@ -231,27 +235,21 @@ fetchChildTables(parentTable: string) {
       childTableNames.forEach(ct => {
         if (!this.selectedPrimaryTable.includes(ct)) {
           this.selectedPrimaryTable.push(ct);
-
-          // ✅ LOAD CHILD TABLE COLUMNS
           this.loadPrimaryTableColumns(ct);
-
-          // ✅ AUTO-SELECT CLIENT TABLE FOR CHILD
           this.autoSelectClientTableIfExists(ct);
         }
       });
 
-      // ✅ FORCE AUTO-MAPPING AFTER CHILD TABLES LOAD
       this.reconstructPrimaryTableData();
       this.applyAutoMapping();
-
       this.cdr.detectChanges();
-
     },
     error: (err) => {
       console.error('Failed to load child tables for', parentTable, err);
     }
   });
 }
+
 
 
 private loadPrimaryTableColumns(table: string) {
@@ -293,9 +291,16 @@ private loadPrimaryTableColumns(table: string) {
       selectedPrimaryTable: this.selectedPrimaryTable,
       selectedClientTable: this.selectedClientTable,
       primaryDatabaseName: this.primaryDatabaseName,
-      clientDatabaseName: this.clientDatabaseName
+      clientDatabaseName: this.clientDatabaseName,
+      clientDatabaseType: this.clientDatabaseType,
     }));
   }
+
+
+  private isOracleClient(): boolean {
+  return this.clientDatabaseType === 'oracle';
+}
+
 
   /* ================= INIT ================= */
 
@@ -303,6 +308,13 @@ private loadPrimaryTableColumns(table: string) {
     const params = this.route.snapshot.queryParams;
     const compState = this.loadTablesComponentState();
     const stored = JSON.parse(sessionStorage.getItem('mappingState') || 'null');
+    this.clientDatabaseType =
+  compState?.clientDatabaseType ||
+  stored?.clientDatabaseType ||
+  params['clientType'] || '';
+  console.log('clientType from params =', params['clientType']);
+  console.log('resolved clientDatabaseType =', this.clientDatabaseType);
+
 
     this.primaryDatabaseName =
       compState?.primaryDatabaseName || stored?.primaryDatabaseName || params['primary'] || '';
@@ -328,9 +340,11 @@ private loadPrimaryTableColumns(table: string) {
     this.reconstructPrimaryTableData();
 
     // ✅ RESTORE CHILD TABLES
-this.selectedPrimaryTable.forEach(pt => {
-  this.fetchChildTables(pt);
-});
+if (this.isOracleClient()) {
+  this.selectedPrimaryTable.forEach(pt => {
+    this.fetchChildTables(pt);
+  });
+}
   }
 
   /* ================= PRIMARY ================= */
@@ -350,8 +364,9 @@ onSelectPrimaryTable(table: string) {
 
 
     // ✅ NEW: fetch child tables automatically
-    this.fetchChildTables(table);
-
+if (this.isOracleClient()) {
+  this.fetchChildTables(table);
+}
     const activeClientRows = this.selectedClientTable.length > 0
       ? this.getClientRowsForTable(this.selectedClientTable[0])
       : [];

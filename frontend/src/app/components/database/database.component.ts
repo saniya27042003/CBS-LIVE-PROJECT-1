@@ -337,11 +337,12 @@ export class DatabaseComponent implements OnInit {
       this.navigateAfterSuccess = false;
 
       this.router.navigate(['/table'], {
-        queryParams: {
-          primary: this.selectedDatabase,
-          client: this.clientForm.value.database
-        }
-      });
+  queryParams: {
+    primary: this.selectedDatabase,
+    client: this.clientForm.value.database,
+    clientType: this.clientForm.value.type   // ✅ ADD THIS LINE
+  }
+});
     }
   }
 
