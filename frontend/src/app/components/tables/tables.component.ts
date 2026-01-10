@@ -27,7 +27,12 @@ export class FilterPipe implements PipeTransform {
   styleUrls: ['./tables.component.css'],
   imports: [CommonModule, FormsModule, FilterPipe]
 })
+
+
 export class TablesComponent implements OnInit {
+
+  // ✅ Track ONLY the user-selected parent table
+  explicitParentTable: string | null = null;
 
   /* ================= PRIMARY ================= */
   dropdownItemsPrimary: string[] = [];
@@ -104,6 +109,8 @@ export class TablesComponent implements OnInit {
 applyAutoMapping() {
 
 
+  
+
   const userRaw = localStorage.getItem('user');
     const user = userRaw ? JSON.parse(userRaw) : null;
     const isAdmin = user?.role === 'admin';
@@ -159,9 +166,16 @@ if (AutoMapperUtil.normalize(row.id) === 'id') {
 const match = AutoMapperUtil.getAutoMapPosition(row.id, clientRows);
 
 if (match) {
+  this.enforceUniqueClientMapping(
+    row.source,
+    match,
+    row
+  );
+
   row.position = match;
   row.mappedTable = matchingClientTable;
 }
+
 
     // if (match) {
     //   row.position = match;
@@ -221,22 +235,33 @@ onChildTableToggle(childTable: string, checked: boolean) {
     );
   }
 }
+
+
 fetchChildTables(parentTable: string) {
+
+  // 🚫 HARD STOP: only allow for explicitly clicked parent
+  if (this.explicitParentTable !== parentTable) return;
+
+  // 🚫 Do not refetch again
   if (this.childTablesByParent[parentTable]) return;
 
   this.appService.getChildTables(parentTable).subscribe({
     next: (rows) => {
       this.childTablesByParent[parentTable] = rows || [];
 
-      const childTableNames = [...new Set(
+      const directChildren = [...new Set(
         rows.map(r => r.child_table)
       )];
 
-      childTableNames.forEach(ct => {
+      directChildren.forEach(ct => {
         if (!this.selectedPrimaryTable.includes(ct)) {
           this.selectedPrimaryTable.push(ct);
+
+          // ⚠️ IMPORTANT: load columns ONLY
           this.loadPrimaryTableColumns(ct);
-          this.autoSelectClientTableIfExists(ct);
+
+          // ❌ DO NOT fetch children of this child
+          // ❌ DO NOT call fetchChildTables(ct)
         }
       });
 
@@ -249,6 +274,7 @@ fetchChildTables(parentTable: string) {
     }
   });
 }
+
 
 
 
@@ -340,11 +366,11 @@ private loadPrimaryTableColumns(table: string) {
     this.reconstructPrimaryTableData();
 
     // ✅ RESTORE CHILD TABLES
-if (this.isOracleClient()) {
-  this.selectedPrimaryTable.forEach(pt => {
-    this.fetchChildTables(pt);
-  });
-}
+// if (this.isOracleClient()) {
+//   this.selectedPrimaryTable.forEach(pt => {
+//     this.fetchChildTables(pt);
+//   });
+// }
   }
 
   /* ================= PRIMARY ================= */
@@ -364,9 +390,13 @@ onSelectPrimaryTable(table: string) {
 
 
     // ✅ NEW: fetch child tables automatically
+// ✅ ONLY user-selected table becomes parent
+this.explicitParentTable = table;
+
 if (this.isOracleClient()) {
   this.fetchChildTables(table);
 }
+
     const activeClientRows = this.selectedClientTable.length > 0
       ? this.getClientRowsForTable(this.selectedClientTable[0])
       : [];
@@ -531,9 +561,42 @@ this.autoSelectClientTableIfExists(table);
 
   /* ================= MAPPING ================= */
 
-  onMappingChange(row: any) {
-    if (this.activeClientTable) row.mappedTable = this.activeClientTable;
-  }
+ onMappingChange(row: any) {
+  if (!row.position || !this.activeClientTable) return;
+
+  const pos = String(row.position).trim();
+
+  this.enforceUniqueClientMapping(
+    row.source,   // server table
+    pos,          // client column ID
+    row
+  );
+
+  row.mappedTable = this.activeClientTable;
+}
+
+
+  // 🔒 Enforce: server column can be mapped only once
+//   const duplicates = this.primaryTableData.filter(r =>
+//     r !== row &&
+//     r.source === row.source &&
+//     r.id === row.id &&
+//     r.position &&
+//     row.position
+//   );
+
+//   if (duplicates.length > 0) {
+//     // ❌ rollback the change
+//     row.position = '';
+//     row.mappedTable = null;
+
+//     alert(`Column "${row.id}" is already mapped. A server column can be mapped only once.`);
+//     return;
+//   }
+
+//   row.mappedTable = this.activeClientTable;
+// }
+
 
   /* ================= MAPPING (Updated) ================= */
 
@@ -597,6 +660,25 @@ onOkClick() {
   this.saveMappingState();
   const allClientColumns = Object.values(this.clientTableDataMap).flat();
 
+
+  // 🔒 FINAL VALIDATION: no duplicate server columns per table
+for (const table of this.selectedPrimaryTable) {
+  const mappings = this.mappingDataByTable[table] || [];
+
+  const seen = new Set<string>();
+  for (const m of mappings) {
+    const col = m.serverColumn.toLowerCase();
+    if (seen.has(col)) {
+      alert(
+        `Invalid mapping in table "${table}". Column "${m.serverColumn}" is mapped more than once.`
+      );
+      return; // ❌ STOP submission
+    }
+    seen.add(col);
+  }
+}
+
+
   this.router.navigate(['/mapping-table'], {
     state: {
       mappingDataByTable: this.mappingDataByTable,
@@ -606,6 +688,23 @@ onOkClick() {
       clientDatabaseName: this.clientDatabaseName,
       clientSideColumns: allClientColumns,
       childTablesByParent: this.childTablesByParent   // ✅ NEW
+    }
+  });
+}
+
+private enforceUniqueClientMapping(
+  serverTable: string,
+  clientColumnId: string,
+  currentRow: any
+) {
+  this.primaryTableData.forEach(r => {
+    if (
+      r !== currentRow &&
+      r.source === serverTable &&
+      String(r.position) === String(clientColumnId)
+    ) {
+      r.position = '';        // 🔥 auto-unmap
+      r.mappedTable = null;
     }
   });
 }

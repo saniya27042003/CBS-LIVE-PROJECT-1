@@ -13,6 +13,11 @@ import { DataSource, QueryRunner } from 'typeorm';
 import { ManualSymbolMapper } from '../legacy-font/manual-symbol-maps';
 import Sanscript from '@indic-transliteration/sanscript';
 import { DatabaseService } from '../database/database.service';
+// import { CUSTOMERADDRESS } from '../entity/customer-address.entity';
+// import { DPMASTER } from '../entity/dpmaster.entity';
+import { CATEGORYMASTER } from '../entity/category-master.entity';
+import { STATIC_CHILD_MAP } from './static-child-map';
+
 
 const unidev = require('unidev');
 
@@ -22,7 +27,7 @@ export class DatabaseMappingService {
   private clientDB: DataSource | null = null;
   private serverDB: DataSource | null = null;
 
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(private readonly dbService: DatabaseService) { }
 
   /* ===================== HELPERS ===================== */
 
@@ -51,12 +56,12 @@ export class DatabaseMappingService {
     try {
       if (driver === 'mysql' || driver === 'mariadb') {
         await qr.query(`SET FOREIGN_KEY_CHECKS = ${enable ? 1 : 0}`);
-      } 
+      }
       else if (driver === 'postgres') {
         // Postgres: Use session_replication_role to bypass all checks/triggers
         const setting = enable ? 'origin' : 'replica';
         await qr.query(`SET session_replication_role = '${setting}';`);
-      } 
+      }
       else if (driver === 'mssql') {
         const action = enable ? 'WITH CHECK CHECK' : 'NOCHECK';
         await qr.query(`ALTER TABLE ${safeTable} ${action} CONSTRAINT ALL`);
@@ -67,55 +72,55 @@ export class DatabaseMappingService {
   }
 
   /* ===================== CONNECTIONS ===================== */
-  
- async connect(config: any) {
-  if (this.clientDB?.isInitialized) {
-    await this.clientDB.destroy();
+
+  async connect(config: any) {
+    if (this.clientDB?.isInitialized) {
+      await this.clientDB.destroy();
+    }
+
+    try {
+      this.logger.log('🔌 CLIENT DB CONFIG RECEIVED:');
+      this.logger.log(JSON.stringify(config, null, 2));
+
+      this.clientDB = await this.dbService.createConnection(config);
+
+      this.logger.log('✅ CLIENT DATABASE CONNECTED SUCCESSFULLY');
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error('❌ CLIENT DB CONNECTION FAILED');
+      this.logger.error(error?.message || error);
+      this.logger.error(error?.stack);
+
+      throw new InternalServerErrorException(
+        error?.message || 'Client DB connection failed',
+      );
+    }
   }
-
-  try {
-    this.logger.log('🔌 CLIENT DB CONFIG RECEIVED:');
-    this.logger.log(JSON.stringify(config, null, 2));
-
-    this.clientDB = await this.dbService.createConnection(config);
-
-    this.logger.log('✅ CLIENT DATABASE CONNECTED SUCCESSFULLY');
-    return { success: true };
-  } catch (error: any) {
-    this.logger.error('❌ CLIENT DB CONNECTION FAILED');
-    this.logger.error(error?.message || error);
-    this.logger.error(error?.stack);
-
-    throw new InternalServerErrorException(
-      error?.message || 'Client DB connection failed',
-    );
-  }
-}
 
 
   async connectServer(config: any) {
-  if (this.serverDB?.isInitialized) {
-    await this.serverDB.destroy();
+    if (this.serverDB?.isInitialized) {
+      await this.serverDB.destroy();
+    }
+
+    try {
+      this.logger.log('🔌 SERVER DB CONFIG RECEIVED:');
+      this.logger.log(JSON.stringify(config, null, 2));
+
+      this.serverDB = await this.dbService.createConnection(config);
+
+      this.logger.log('✅ SERVER DATABASE CONNECTED SUCCESSFULLY');
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error('❌ SERVER DB CONNECTION FAILED');
+      this.logger.error(error?.message || error);
+      this.logger.error(error?.stack);
+
+      throw new InternalServerErrorException(
+        error?.message || 'Server DB connection failed',
+      );
+    }
   }
-
-  try {
-    this.logger.log('🔌 SERVER DB CONFIG RECEIVED:');
-    this.logger.log(JSON.stringify(config, null, 2));
-
-    this.serverDB = await this.dbService.createConnection(config);
-
-    this.logger.log('✅ SERVER DATABASE CONNECTED SUCCESSFULLY');
-    return { success: true };
-  } catch (error: any) {
-    this.logger.error('❌ SERVER DB CONNECTION FAILED');
-    this.logger.error(error?.message || error);
-    this.logger.error(error?.stack);
-
-    throw new InternalServerErrorException(
-      error?.message || 'Server DB connection failed',
-    );
-  }
-}
 
 
   /* ===================== METADATA ===================== */
@@ -188,24 +193,24 @@ export class DatabaseMappingService {
 
   /* ===================== INSERTION LOGIC ===================== */
 
-// ... (imports remain the same)
+  // ... (imports remain the same)
 
 
   // ... (previous code remains the same)
 
   /* ===================== INSERTION LOGIC ===================== */
 
-async insertMappedData(body: any) {
+  async insertMappedData(body: any) {
     const client = this.ensureClient();
     const server = this.ensureServer();
     const clientDriver = client.options.type as string;
     const serverDriver = server.options.type as string;
     const [cqL, cqR] = this.dbService.getQuoteChar(clientDriver);
-    
+
     // --- 1. FETCH SOURCE DATA ---
     const { mappings, joinKey } = body; // <--- Ensure joinKey is destructured
     if (!Array.isArray(mappings)) throw new InternalServerErrorException('Invalid payload');
-    
+
     const validMappings = mappings.filter((m) => m.clientTable && m.serverColumn);
     if (!validMappings.length) throw new InternalServerErrorException('No valid mappings found');
 
@@ -221,27 +226,27 @@ async insertMappedData(body: any) {
     });
 
     const dataStore: Record<string, any[]> = {};
-    
+
     // --- FETCH DATA FROM CLIENT ---
     for (const table of Object.keys(columnsByTable)) {
       try {
         // 1. GET REAL SCHEMA to fix Case Sensitivity issues
         const actualColumns = await this.dbService.getColumnNames(client, table);
         const lowerCaseSchema = actualColumns.map(c => c.toLowerCase());
-        
+
         const requestedCols = Array.from(columnsByTable[table]);
-        
+
         // 2. Map requested columns to ACTUAL DB columns
         const finalSelectCols: string[] = [];
-        
+
         for (const reqCol of requestedCols) {
-            const idx = lowerCaseSchema.indexOf(reqCol.toLowerCase());
-            if (idx !== -1) {
-                // Use the REAL name from the DB (e.g., 'lastname' instead of 'Lastname')
-                finalSelectCols.push(`${cqL}${actualColumns[idx]}${cqR}`);
-            } else {
-                this.logger.warn(`Column '${reqCol}' not found in table '${table}'`);
-            }
+          const idx = lowerCaseSchema.indexOf(reqCol.toLowerCase());
+          if (idx !== -1) {
+            // Use the REAL name from the DB (e.g., 'lastname' instead of 'Lastname')
+            finalSelectCols.push(`${cqL}${actualColumns[idx]}${cqR}`);
+          } else {
+            this.logger.warn(`Column '${reqCol}' not found in table '${table}'`);
+          }
         }
 
         if (finalSelectCols.length === 0) continue;
@@ -249,11 +254,11 @@ async insertMappedData(body: any) {
         // 3. Build Query with Join Key sorting to ensure alignment
         const selectStr = finalSelectCols.join(', ');
         const safeTable = this.dbService.getQualifiedTableName(clientDriver, table);
-        
+
         // Determine sorting column (Use JoinKey if available, otherwise first column)
-        const sortCol = joinKey 
-            ? actualColumns.find(c => c.toLowerCase() === joinKey.toLowerCase()) || actualColumns[0]
-            : actualColumns[0];
+        const sortCol = joinKey
+          ? actualColumns.find(c => c.toLowerCase() === joinKey.toLowerCase()) || actualColumns[0]
+          : actualColumns[0];
 
         let query = '';
         if (clientDriver === 'mssql') query = `SELECT TOP 10000 ${selectStr} FROM ${safeTable} ORDER BY ${cqL}${sortCol}${cqR}`;
@@ -280,7 +285,7 @@ async insertMappedData(body: any) {
 
     // --- MERGE STRATEGY ---
     // If we have a joinKey, we align rows based on value. If not, we merge by index (0->0, 1->1).
-    
+
     const tables = Object.keys(dataStore);
     if (tables.length === 0) return { success: false, message: 'Source tables query failed.' };
 
@@ -288,36 +293,36 @@ async insertMappedData(body: any) {
     const rowCount = dataStore[primaryTable]?.length || 0;
 
     for (let i = 0; i < rowCount; i++) {
-        const baseRow = dataStore[primaryTable][i];
-        let combinedRow = { ...baseRow };
+      const baseRow = dataStore[primaryTable][i];
+      let combinedRow = { ...baseRow };
 
-        // Attempt to find matching rows in other tables
-        for (let j = 1; j < tables.length; j++) {
-            const otherTable = tables[j];
-            const otherRows = dataStore[otherTable];
+      // Attempt to find matching rows in other tables
+      for (let j = 1; j < tables.length; j++) {
+        const otherTable = tables[j];
+        const otherRows = dataStore[otherTable];
 
-            let matchingRow = null;
+        let matchingRow = null;
 
-            if (joinKey) {
-                // ALIGNMENT LOGIC: Match by Join Key Value
-                const baseKeyVal = this.getValueCaseInsensitive(baseRow, joinKey);
-                if (baseKeyVal !== undefined) {
-                    matchingRow = otherRows.find(r => 
-                        String(this.getValueCaseInsensitive(r, joinKey)) === String(baseKeyVal)
-                    );
-                }
-            } 
-            
-            // Fallback: If no join key (or match failed), use Index Alignment (Dangerous but requested)
-            if (!matchingRow && !joinKey) {
-                matchingRow = otherRows[i]; 
-            }
-
-            if (matchingRow) {
-                Object.assign(combinedRow, matchingRow);
-            }
+        if (joinKey) {
+          // ALIGNMENT LOGIC: Match by Join Key Value
+          const baseKeyVal = this.getValueCaseInsensitive(baseRow, joinKey);
+          if (baseKeyVal !== undefined) {
+            matchingRow = otherRows.find(r =>
+              String(this.getValueCaseInsensitive(r, joinKey)) === String(baseKeyVal)
+            );
+          }
         }
-        preparedRows.push(combinedRow);
+
+        // Fallback: If no join key (or match failed), use Index Alignment (Dangerous but requested)
+        if (!matchingRow && !joinKey) {
+          matchingRow = otherRows[i];
+        }
+
+        if (matchingRow) {
+          Object.assign(combinedRow, matchingRow);
+        }
+      }
+      preparedRows.push(combinedRow);
     }
 
     if (preparedRows.length === 0) return { success: false, message: 'No source data mapped.' };
@@ -326,55 +331,106 @@ async insertMappedData(body: any) {
     // --- 2. MULTI-TARGET IDENTIFICATION ---
     const targetTables = new Set<string>();
     validMappings.forEach(m => {
-        if (m.targetTable) targetTables.add(m.targetTable);
-        else if (body.serverTable) targetTables.add(body.serverTable);
+      if (m.targetTable) targetTables.add(m.targetTable);
+      else if (body.serverTable) targetTables.add(body.serverTable);
     });
 
     if (targetTables.size === 0) return { success: false, message: 'No target tables specified.' };
 
     const results: any[] = [];
     for (const targetTable of targetTables) {
-         // ... (Keep existing insertion loop code)
-         const tableMappings = validMappings.filter(m => 
-            (m.targetTable && m.targetTable === targetTable) || 
-            (!m.targetTable && body.serverTable === targetTable)
-        );
+      // ... (Keep existing insertion loop code)
+      const tableMappings = validMappings.filter(m =>
+        (m.targetTable && m.targetTable === targetTable) ||
+        (!m.targetTable && body.serverTable === targetTable)
+      );
 
-        if (tableMappings.length > 0) {
-            const result = await this.performInsertion(preparedRows, tableMappings, targetTable, server, serverDriver);
-            results.push({ table: targetTable, ...result });
+      if (tableMappings.length > 0) {
+        let result;
+
+        if (targetTable.toUpperCase() === 'DPMASTER') {
+          result = await this.insertDpmasterWithEntity(
+            preparedRows,
+            tableMappings
+          );
+        } else {
+          result = await this.performInsertion(
+            preparedRows,
+            tableMappings,
+            targetTable,
+            server,
+            serverDriver
+          );
         }
-    }
 
-    return { success: true, results };
+        results.push({
+          table: targetTable,
+          ...result,
+        });
+
+      }
+    }
+  
+  // 🔁 SECOND PASS: UPDATE FK values
+  if(serverDriver !== 'mongodb' && joinKey) {
+  for (const targetTable of targetTables) {
+    const fks = await this.getStaticForeignKeys(targetTable);
+
+    for (const fk of fks) {
+      await server.query(`
+        UPDATE ${targetTable} child
+        SET ${fk.child_column} = parent.${fk.parent_column}
+        FROM ${fk.parent_table} parent
+        WHERE child.${fk.child_column} IS NULL
+          AND child.${joinKey} = parent.${joinKey}
+      `);
+    }
+  }
+}
+
+// return { success: true, results };
+return {
+  success: true,
+  results,
+  fkUpdated: true
+};
+
   }
 
 
 
 
   async getChildTables(parentTable: string) {
-      const server = this.ensureServer(); // ✅ use existing server connection
+  const key = parentTable.trim().toLowerCase();
+  const children = STATIC_CHILD_MAP[key] ?? [];
 
-  const sql = `
-    SELECT
-      tc.constraint_name,
-      tc.table_schema,
-      tc.table_name AS child_table,
-      kcu.column_name AS child_column,
-      ccu.table_name AS parent_table,
-      ccu.column_name AS parent_column
-    FROM information_schema.table_constraints AS tc
-    JOIN information_schema.key_column_usage AS kcu
-      ON tc.constraint_name = kcu.constraint_name
-    JOIN information_schema.constraint_column_usage AS ccu
-      ON ccu.constraint_name = tc.constraint_name
-    WHERE tc.constraint_type = 'FOREIGN KEY'
-      AND ccu.table_name = $1
-    ORDER BY tc.table_name;
-  `;
-
-  return await server.query(sql, [parentTable]);
+  return children.map((child, idx) => ({
+    constraint_name: `STATIC_${key}_${child}_${idx}`,
+    table_schema: 'static',
+    child_table: child,
+    child_column: null,
+    parent_table: key,
+    parent_column: null,
+  }));
 }
+
+
+
+private getStaticForeignKeys(parentTable: string) {
+  const key = parentTable.trim().toLowerCase();
+
+  const children = STATIC_CHILD_MAP[key] ?? [];
+
+  return children.map((childTable) => ({
+    parent_table: key,
+    child_table: childTable,
+    child_column: null,
+    parent_column: null,
+  }));
+}
+
+
+
 
 /* ===================== MONGODB HELPERS ===================== */
 
@@ -400,8 +456,8 @@ private async getMongoDocuments(
   db: DataSource,
   collectionName: string,
   limit = 10000,
-): Promise<any[]> {
-  if (!this.isMongo(db)) return [];
+): Promise < any[] > {
+  if(!this.isMongo(db)) return [];
 
   const mongoDb = this.getMongoDb(db);
 
@@ -415,8 +471,8 @@ private async getMongoDocuments(
 private async getMongoCount(
   db: DataSource,
   collectionName: string,
-): Promise<number> {
-  if (!this.isMongo(db)) return 0;
+): Promise < number > {
+  if(!this.isMongo(db)) return 0;
 
   const mongoDb = this.getMongoDb(db);
 
@@ -426,176 +482,277 @@ private async getMongoCount(
 }
 
 
+// ================= ENTITY-BASED INSERT =================
 
-  // --- CORE INSERTION LOGIC (Per Table) ---
-  private async performInsertion(rows: any[], mappings: any[], serverTable: string, server: DataSource, serverDriver: string) {
-    // 1. Get Schema
-    const serverTypes = await this.dbService.getColumnTypes(server, serverTable);
+  private async insertDpmasterWithEntity(
     
-    // 2. Double-check: Filter mappings that actually match columns in this table
-    const validMappingsForTable = mappings.filter(m => 
-      Object.prototype.hasOwnProperty.call(serverTypes, m.serverColumn.toLowerCase())
-    );
+  rows: any[],
+  mappings: any[],
+) {
+  this.logger.warn('🟢 ENTITY INSERT PATH: CATEGORYMASTER');
+  const server = this.ensureServer();
+  const entities: CATEGORYMASTER[] = [];
 
-    if (validMappingsForTable.length === 0) {
-      return { success: false, message: `Skipped ${serverTable}: No matching columns found in DB schema.` };
+  for (const sourceRow of rows) {
+    const entity = new CATEGORYMASTER();
+
+    for (const m of mappings) {
+      if (!(m.serverColumn in entity)) continue;
+
+      const value = this.getValueCaseInsensitive(
+        sourceRow,
+        m.clientColumns[0]
+      );
+
+      if (value === undefined) continue;
+
+      entity[m.serverColumn] = this.transformValue(value);
     }
 
-const isMongoSource = this.isMongo(this.clientDB!);
-const isSqlTarget = serverDriver !== 'mongodb';
-
-
-
-    const [sqL, sqR] = this.dbService.getQuoteChar(serverDriver);
-    const safeServerTable = this.dbService.getQualifiedTableName(serverDriver, serverTable);
-    const serverColsList = validMappingsForTable.map((m) => `${sqL}${m.serverColumn}${sqR}`).join(', ');
-
-    const qr = server.createQueryRunner();
-    await qr.connect();
-
-    if (serverDriver === 'postgres') {
-  await qr.query("SET client_encoding TO 'UTF8'");
+    entities.push(entity);
   }
 
-    // 3. DISABLE CONSTRAINTS
-    await this.toggleConstraints(qr, serverDriver, serverTable, false);
+  await server.transaction(async (manager) => {
+    await manager.getRepository(CATEGORYMASTER).save(entities, {
+      chunk: 500
+    });
+  });
 
-    if (serverDriver === 'mssql') {
-      try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} ON`); } catch (e) { /* empty */ }
-    }
-
-    let inserted = 0;
-    let skipped = 0;
-    const errors: string[] = [];
-
-    try {
-      await qr.startTransaction();
+  return {
+    success: true,
+    inserted: entities.length,
+    processed: rows.length,
+    skipped: rows.length - entities.length,
+  };
+}
 
 
-      // 🔑 MongoDB PK counter (ONLY ONCE)
-let mongoPkCounter = 1;
+async insertParentWithChildren(parentTable: string, body: any) {
+  const parent = parentTable.trim().toLowerCase();
 
-if (this.isMongo(this.clientDB!)) {
-  try {
-    const res = await server.query(
-      `SELECT MAX(id) AS max FROM ${safeServerTable}`
-    );
-    mongoPkCounter = (res?.[0]?.max || 0) + 1;
-  } catch {
-    mongoPkCounter = 1;
+  // 1️⃣ Insert parent FIRST
+  await this.insertMappedData({
+    ...body,
+    serverTable: parent,
+  });
+
+  // 2️⃣ Insert only statically allowed child tables
+  const children = STATIC_CHILD_MAP[parent] ?? [];
+
+  for (const childTable of children) {
+    await this.insertMappedData({
+      ...body,
+      serverTable: childTable,
+    });
   }
 }
 
 
-      for (let i = 0; i < rows.length; i++) {
-        const sourceRow = rows[i];
 
 
+  // --- CORE INSERTION LOGIC (Per Table) ---
+ private async performInsertion(
+  rows: any[],
+  mappings: any[],
+  serverTable: string,
+  server: DataSource,
+  serverDriver: string
+) {
+  // 1. Get Schema
+  const serverTypes = await this.dbService.getColumnTypes(server, serverTable);
+
+  // 2. Filter valid mappings
+  // ✅ STEP 1: filter only existing server columns
+  const filtered = mappings.filter(m =>
+    Object.prototype.hasOwnProperty.call(
+      serverTypes,
+      m.serverColumn.toLowerCase()
+    )
+  );
+
+  // ✅ STEP 2: deduplicate by serverColumn (CRITICAL)
+  const seen = new Set<string>();
+
+  const validMappingsForTable = filtered.filter(m => {
+    const key = m.serverColumn.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
 
-
-
-
-
-
-
-        
-// ✅ SPLIT FULL NAME ONCE PER ROW
-const fullNameRaw = this.getValueCaseInsensitive(sourceRow, 'AC_NAME');
-const fullName = this.transformValue(fullNameRaw);
-const split = this.splitFullNameBackend(fullName);
-
-
-const rowValues = validMappingsForTable.map((m) => {
-  const targetType = serverTypes[m.serverColumn.toLowerCase()];
-
-  
-  // 🚫 ORACLE → let DB handle ID
-  if (
-    serverDriver === 'oracle' &&
-    m.serverColumn.toLowerCase() === 'id'
-  ) {
-    return null;
+  if (validMappingsForTable.length === 0) {
+    return {
+      success: false,
+      message: `Skipped ${serverTable}: No matching columns found in DB schema.`,
+    };
   }
 
-  // 🚫 MONGODB CLIENT → generate numeric PK for SQL
-  if (
-    this.isMongo(this.clientDB!) &&
-    m.serverColumn.toLowerCase() === 'id'
-  ) {
-    return mongoPkCounter++;
-  }
+  const [sqL, sqR] = this.dbService.getQuoteChar(serverDriver);
+  const safeServerTable = this.dbService.getQualifiedTableName(
+    serverDriver,
+    serverTable
+  );
 
 
-  // ✅ USE PRE-SPLIT VALUES
-  if (m.transform === 'SPLIT_FULL_NAME') {
-    switch (m.serverColumn.toUpperCase()) {
-      case 'F_NAME':
-        return split.f;
-      case 'M_NAME':
-        return split.m;
-      case 'L_NAME':
-        return split.l;
-      default:
-        return null;
+  const uniqueMappingsMap = new Map<string, any>();
+
+  for (const m of validMappingsForTable) {
+    const key = m.serverColumn.toLowerCase();
+
+    // Keep the FIRST mapping only
+    if (!uniqueMappingsMap.has(key)) {
+      uniqueMappingsMap.set(key, m);
     }
   }
 
-  // ✅ EXISTING MERGE LOGIC (unchanged)
-  const isStringTarget =
-    ['character varying', 'text', 'varchar', 'char']
-      .some((t) => (targetType || '').toLowerCase().includes(t));
+  const uniqueMappingsForTable = Array.from(uniqueMappingsMap.values());
 
-  if (isStringTarget && m.clientColumns.length > 1) {
-    const parts = m.clientColumns.map((c: string) =>
-      this.transformValue(this.getValueCaseInsensitive(sourceRow, c))
-    );
-    return parts.filter((p: any) => p && String(p).trim() !== '').join(' ');
+
+  const serverColsList = uniqueMappingsForTable
+    .map(m => `${sqL}${m.serverColumn}${sqR}`)
+    .join(', ');
+
+
+  let inserted = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+
+  // 🔑 Mongo PK counter (once)
+  let mongoPkCounter = 1;
+  if (this.isMongo(this.clientDB!)) {
+    try {
+      const res = await server.query(
+        `SELECT MAX(id) AS max FROM ${safeServerTable}`
+      );
+      mongoPkCounter = (res?.[0]?.max || 0) + 1;
+    } catch {
+      mongoPkCounter = 1;
+    }
   }
 
-  // ✅ DEFAULT DIRECT MAP
-  const val = this.getValueCaseInsensitive(sourceRow, m.clientColumns[0]);
-  return this.convertValue(val, targetType);
-});
+  // 🔁 ROW-LEVEL TRANSACTION (KEY FIX)
+  for (let i = 0; i < rows.length; i++) {
+    const sourceRow = rows[i];
 
+    // Split full name once
+    const fullNameRaw = this.getValueCaseInsensitive(sourceRow, 'AC_NAME');
+    const fullName = this.transformValue(fullNameRaw);
+    const split = this.splitFullNameBackend(fullName);
 
-        const placeholders = rowValues.map((_, idx) => this.dbService.getParamPlaceholder(serverDriver, idx)).join(', ');
+    const rowValues = validMappingsForTable.map(m => {
+      const targetType = serverTypes[m.serverColumn.toLowerCase()];
 
-        try {
-          await qr.query(`INSERT INTO ${safeServerTable} (${serverColsList}) VALUES (${placeholders})`, rowValues);
-          inserted++;
-        } catch (rowErr: any) {
-          const code = String(rowErr.code || rowErr.number || rowErr.errno);
-          if (['23505', '2627', '2601', '1062'].includes(code)) {
-             skipped++; // Skip duplicates silently
-          } else {
-             skipped++;
-             if (errors.length < 3) errors.push(`Row ${i}: ${rowErr.message}`);
-          }
+      // ORACLE → auto ID
+      if (
+        serverDriver === 'oracle' &&
+        m.serverColumn.toLowerCase() === 'id'
+      ) {
+        return null;
+      }
+
+      // Mongo → numeric PK
+      if (
+        this.isMongo(this.clientDB!) &&
+        m.serverColumn.toLowerCase() === 'id'
+      ) {
+        return mongoPkCounter++;
+      }
+
+      // Split name
+      if (m.transform === 'SPLIT_FULL_NAME') {
+        switch (m.serverColumn.toUpperCase()) {
+          case 'F_NAME': return split.f;
+          case 'M_NAME': return split.m;
+          case 'L_NAME': return split.l;
+          default: return null;
         }
       }
 
+      // Merge strings
+      const isStringTarget =
+        ['character varying', 'text', 'varchar', 'char']
+          .some(t => (targetType || '').toLowerCase().includes(t));
+
+      if (isStringTarget && m.clientColumns.length > 1) {
+        const parts = m.clientColumns.map((c: string) =>
+          this.transformValue(this.getValueCaseInsensitive(sourceRow, c))
+        );
+        return parts.filter(p => p && String(p).trim() !== '').join(' ');
+      }
+
+      // 🔐 FK SAFE (NOT PK)
+      if (
+        targetType &&
+        targetType.toLowerCase().includes('int') &&
+        m.serverColumn.toLowerCase() !== 'id'
+      ) {
+        const fkVal = this.getValueCaseInsensitive(
+          sourceRow,
+          m.clientColumns[0]
+        );
+        if (fkVal === undefined) return null;
+      }
+
+      // Default
+      const val = this.getValueCaseInsensitive(sourceRow, m.clientColumns[0]);
+      return this.convertValue(val, targetType);
+    });
+
+    const placeholders = rowValues
+      .map((_, idx) => this.dbService.getParamPlaceholder(serverDriver, idx))
+      .join(', ');
+
+    const qr = server.createQueryRunner();
+    await qr.connect();
+
+    try {
+      if (serverDriver === 'postgres') {
+        await qr.query(`SET client_encoding TO 'UTF8'`);
+      }
+
+      await this.toggleConstraints(qr, serverDriver, serverTable, false);
+      await qr.startTransaction();
+
+      await qr.query(
+        `INSERT INTO ${safeServerTable} (${serverColsList})
+         VALUES (${placeholders})`,
+        rowValues
+      );
+
       await qr.commitTransaction();
+      inserted++;
+
     } catch (err: any) {
       await qr.rollbackTransaction();
-      // Don't throw here, return failure for this specific table so others might succeed
-      return { success: false, message: err.message, errors: [err.message] };
-    } finally {
-      if (serverDriver === 'mssql') {
-        try { await qr.query(`SET IDENTITY_INSERT ${safeServerTable} OFF`); } catch (e) { /* empty */ }
+      skipped++;
+
+      if (errors.length < 5) {
+        errors.push(err.message);
       }
+
+      console.error('INSERT FAILED:', {
+        table: serverTable,
+        row: rowValues,
+        error: err.message,
+        code: err.code,
+      });
+
+    } finally {
       await this.toggleConstraints(qr, serverDriver, serverTable, true);
       await qr.release();
     }
-
-    return { 
-      success: true, 
-      inserted, 
-      skipped, 
-      processed: rows.length, 
-      errors: errors.length ? errors : undefined 
-    };
   }
+
+  return {
+    success: true,
+    inserted,
+    skipped,
+    processed: rows.length,
+    errors: errors.length ? errors : undefined,
+  };
+}
+
 
 
   
@@ -618,11 +775,11 @@ const rowValues = validMappingsForTable.map((m) => {
 }
 
   async convertToUnicode2(inputText: string) {
-    try {
-      const marathiText = unidev(inputText, 'hindi', 'DVBW-TTYogeshEn');
-      return { marathiText: ManualSymbolMapper.normalize(marathiText) };
-    } catch {
-      return { marathiText: inputText };
-    }
+  try {
+    const marathiText = unidev(inputText, 'hindi', 'DVBW-TTYogeshEn');
+    return { marathiText: ManualSymbolMapper.normalize(marathiText) };
+  } catch {
+    return { marathiText: inputText };
   }
+}
 }

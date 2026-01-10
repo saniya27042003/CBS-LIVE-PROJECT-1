@@ -12,7 +12,7 @@ import { ProfileComponent } from '../components/profile/profile.component';
 })
 export class LayoutComponent {
 
-  title = 'personal-app';
+  title = 'Data-Migration-Tool';
 
   class1 = 'basis-2/28';
   class2 = 'basis-26/28';
