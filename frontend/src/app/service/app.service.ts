@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 // import { env } from '../../environments/environment';
 
 @Injectable({
@@ -7,6 +8,15 @@ import { inject, Injectable } from '@angular/core';
 })
 export class AppService {
   private http = inject(HttpClient);
+
+  // ✅ CHILD TABLE TOGGLE STATE
+private includeChildTables$ = new BehaviorSubject<boolean>(
+  localStorage.getItem('includeChildTables') === 'true'
+);
+
+// ✅ CHILD TABLE DATA STATE
+private childTables$ = new BehaviorSubject<any[]>([]);
+
 
   // ✅ MUST END WITH /
   // private BASE_URL = env.apiBaseUrl;
@@ -25,13 +35,7 @@ private BASE_URL = 'http://localhost:3000/database-mapping/';
   getServerTables() {
     return this.http.get<string[]>(this.BASE_URL + 'server/tables');
   }
-
-  // getServerColumns(tableName: string) {
-  //   return this.http.post<string[]>(this.BASE_URL + 'server/columns', {
-  //     tableName,
-  //   });
-  // }
-getServerColumns(tableName: string) {
+  getServerColumns(tableName: string) {
   return this.http.post<string[]>(
     this.BASE_URL + 'server/columns',
     { tableName }
@@ -39,7 +43,40 @@ getServerColumns(tableName: string) {
 }
 
 
+  // ✅ FETCH CHILD TABLES (POSTGRES FK)
+getChildTables(parentTable: string) {
+  return this.http.get<any[]>(
+    this.BASE_URL + 'child-tables/' + parentTable
+  );
+}
 
+// ✅ UPDATE CHILD TABLE STATE
+setChildTables(tables: any[]) {
+  this.childTables$.next(tables);
+}
+
+
+
+// ✅ CHILD TABLE TOGGLE STATE
+
+  setIncludeChildTables(value: boolean) {
+      localStorage.setItem('includeChildTables', String(value)); // ✅ SAVE
+
+  this.includeChildTables$.next(value);
+
+  // 🔥 CRITICAL FIX
+  if (!value) {
+    this.childTables$.next([]); // CLEAR child tables immediately
+  }
+}
+
+getIncludeChildTables() {
+  return this.includeChildTables$.asObservable();
+}
+
+getChildTablesState() {
+  return this.childTables$.asObservable();
+}
 
 
   // =====================================
@@ -89,11 +126,11 @@ insertData(payload: {
 // =====================================
 // ✅ FETCH CHILD TABLES (POSTGRES FK)
 // =====================================
-getChildTables(parentTable: string) {
-  return this.http.get<any[]>(
-    this.BASE_URL + 'child-tables/' + parentTable
-  );
-}
+// getChildTables(parentTable: string) {
+//   return this.http.get<any[]>(
+//     this.BASE_URL + 'child-tables/' + parentTable
+//   );
+// }
 
 
 // =====================================

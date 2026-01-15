@@ -30,8 +30,8 @@ export class DPMASTER {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @PrimaryGeneratedColumn()
-BANKACNO: number;
+  @Column({ unique: true })
+  BANKACNO: number;
 
 
   @Column()
@@ -53,16 +53,16 @@ BANKACNO: number;
   AC_CATG: number;
 
   @Column({ nullable: true })
-  AC_BALCATG: number;
+  AC_BALCATG: number | null;
 
   @Column({ nullable: true })
-  AC_OPR_CODE: number;
+  AC_OPR_CODE: number | null;
 
   @Column({ nullable: true })
   AC_CUSTID: number;
 
   @Column({ nullable: true })
-  AC_INTCATA: number;
+  AC_INTCATA: number | null;
 
   @Column({ nullable: true })
   AC_OPDATE: string;

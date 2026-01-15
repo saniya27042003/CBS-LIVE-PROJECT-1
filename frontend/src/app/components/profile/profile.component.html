@@ -91,6 +91,24 @@
       <div class="divider my-0 py-0 h-px bg-base-200"></div>
     </li>
 
+
+    <li>
+  <label class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-base-200">
+
+    <input
+      type="checkbox"
+      class="checkbox checkbox-sm checkbox-primary"
+      [(ngModel)]="includeChildTables"
+      (change)="onIncludeChildChange()"
+    />
+
+    <span class="text-sm">Include Child Tables</span>
+
+  </label>
+</li>
+
+
+
     <!-- SIGN OUT -->
     <li>
       <a (click)="onLogout()" class="py-3 flex items-center gap-3 cursor-pointer">

@@ -61,6 +61,7 @@ getChildTables(@Param('parentTable') parentTable: string) {
 return this.db.getChildTables(parentTable);
 }
 
+
   @Post('insert-data')
   insertData(@Body() payload: any) {
     return this.db.insertMappedData(payload);

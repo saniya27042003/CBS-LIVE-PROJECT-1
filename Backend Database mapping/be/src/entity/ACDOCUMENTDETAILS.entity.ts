@@ -1,4 +1,4 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { SCHEMAST } from './schemeParameters.entity';
 import { DOCUMENTMASTER } from './document-master.entity';
 @Entity()

@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppService } from '../../service/app.service';
 import { AutoMapperUtil } from "../../utils/automapper.utils";
-import { ChangeDetectorRef } from '@angular/core';
+import { Subject, takeUntil } from 'rxjs';
+
 
 @Pipe({ name: 'filter', standalone: true })
 export class FilterPipe implements PipeTransform {
@@ -31,6 +32,14 @@ export class FilterPipe implements PipeTransform {
 
 export class TablesComponent implements OnInit {
 
+    private destroy$ = new Subject<void>();
+
+  ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+}
+
+
   // ✅ Track ONLY the user-selected parent table
   explicitParentTable: string | null = null;
 
@@ -40,6 +49,8 @@ export class TablesComponent implements OnInit {
   primaryTableData: any[] = [];
   primaryDatabaseName = '';
   primaryTableSearch = '';
+  includeChildTables = false;
+
 
   /* ================= CLIENT ================= */
   dropdownItemsClient: string[] = [];
@@ -67,7 +78,7 @@ export class TablesComponent implements OnInit {
     if (v) this.ensureClientColumnsLoaded(v);
     this.saveTablesComponentState();
   }
-  
+
 
   /* ================= UI ================= */
   isPrimaryDropdownOpen = false;
@@ -77,7 +88,7 @@ export class TablesComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private appService: AppService,
-    private cdr: ChangeDetectorRef   // ✅ ADD
+   // private cdr: ChangeDetectorRef   // ✅ ADD
 
   ) {}
 
@@ -109,7 +120,7 @@ export class TablesComponent implements OnInit {
 applyAutoMapping() {
 
 
-  
+
 
   const userRaw = localStorage.getItem('user');
     const user = userRaw ? JSON.parse(userRaw) : null;
@@ -222,65 +233,50 @@ onChildTableToggle(childTable: string, checked: boolean) {
   this.selectedChildTables[childTable] = checked;
 
   if (checked) {
-    // ➕ Add child table
     if (!this.selectedPrimaryTable.includes(childTable)) {
       this.selectedPrimaryTable.push(childTable);
-      this.loadPrimaryTableColumns(childTable); // ✅ REQUIRED
-
+      this.loadPrimaryTableColumns(childTable);
     }
   } else {
-    // ➖ Remove child table
-    this.selectedPrimaryTable = this.selectedPrimaryTable.filter(
-      t => t !== childTable
-    );
+    this.selectedPrimaryTable =
+      this.selectedPrimaryTable.filter(t => t !== childTable);
+
+    this.primaryTableData =
+      this.primaryTableData.filter(r => r.source !== childTable);
+
+    delete this.mappingDataByTable[childTable];
+
+    if (this.activePrimaryTable === childTable) {
+      this.activePrimaryTable = this.explicitParentTable;
+    }
   }
 }
 
 
 fetchChildTables(parentTable: string) {
-
-  // 🚫 HARD STOP: only allow for explicitly clicked parent
-  if (this.explicitParentTable !== parentTable) return;
-
-  // 🚫 Do not refetch again
+  if (!this.includeChildTables) return;
+  if (!this.isOracleClient()) return;
   if (this.childTablesByParent[parentTable]) return;
 
-  this.appService.getChildTables(parentTable).subscribe({
-    next: (rows) => {
-      this.childTablesByParent[parentTable] = rows || [];
+  this.appService.getChildTables(parentTable).subscribe(rows => {
+    this.childTablesByParent[parentTable] = rows || [];
 
-      const directChildren = [...new Set(
-        rows.map(r => r.child_table)
-      )];
+    const children = [...new Set(rows.map(r => r.child_table))];
+    children.forEach(ct => {
+      if (!this.selectedPrimaryTable.includes(ct)) {
+        this.selectedPrimaryTable.push(ct);
+        this.loadPrimaryTableColumns(ct);
+      }
+    });
 
-      directChildren.forEach(ct => {
-        if (!this.selectedPrimaryTable.includes(ct)) {
-          this.selectedPrimaryTable.push(ct);
-
-          // ⚠️ IMPORTANT: load columns ONLY
-          this.loadPrimaryTableColumns(ct);
-
-          // ❌ DO NOT fetch children of this child
-          // ❌ DO NOT call fetchChildTables(ct)
-        }
-      });
-
-      this.reconstructPrimaryTableData();
-      this.applyAutoMapping();
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      console.error('Failed to load child tables for', parentTable, err);
-    }
+    this.reconstructPrimaryTableData();
+    this.applyAutoMapping();
   });
 }
 
-
-
-
 private loadPrimaryTableColumns(table: string) {
-  // Prevent duplicate loading
-  if (this.mappingDataByTable[table]?.length) return;
+  // 🔒 Prevent duplicate loading
+  if (this.primaryTableData.some(r => r.source === table)) return;
 
   const activeClientRows =
     this.selectedClientTable.length > 0
@@ -288,26 +284,39 @@ private loadPrimaryTableColumns(table: string) {
       : [];
 
   this.appService.getServerColumns(table).subscribe(cols => {
-    this.mappingDataByTable[table] = (cols || []).map(c => {
-  let position = '';
-  const dbType = this.getClientDbType();
+    const rows = (cols || []).map(c => {
+      let position = '';
+      const dbType = this.getClientDbType();
 
-  if (AutoMapperUtil.normalize(c) === 'id') {
-    if (dbType === 'mongo') position = '2';
-    else if (dbType === 'oracle') position = '';
-    else position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
-  } else {
-    position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
-  }
+      // ✅ ID handling
+      if (AutoMapperUtil.normalize(c) === 'id') {
+        if (dbType === 'mongo') {
+          position = '2';           // Mongo _id
+        } else if (dbType === 'oracle') {
+          position = '';            // Oracle skips id
+        } else {
+          position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+        }
+      } else {
+        position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+      }
 
-  return {
-    id: c,
-    source: table,
-    position,
-    mappedTable: null,
-  };
-});
+      return {
+        id: c,
+        source: table,
+        position,
+        mappedTable: null
+      };
+    });
 
+    // ✅ Single place where rows are added
+    this.primaryTableData.push(...rows);
+
+    // ✅ Auto-map remaining empty columns
+    this.applyAutoMapping();
+
+    // ✅ Auto-select matching client table
+    this.autoSelectClientTableIfExists(table);
   });
 }
 
@@ -331,6 +340,48 @@ private loadPrimaryTableColumns(table: string) {
   /* ================= INIT ================= */
 
   ngOnInit() {
+
+     // 👇 SUBSCRIBE TO PROFILE TOGGLE
+  this.appService.getIncludeChildTables()
+  .pipe(takeUntil(this.destroy$))
+
+  .subscribe(value => {
+    this.includeChildTables = value;
+
+
+     if (value && this.explicitParentTable && this.isOracleClient()) {
+    this.fetchChildTables(this.explicitParentTable);
+  }
+    // 🔥 When checkbox is turned OFF
+   // 🔥 Checkbox turned OFF → clean child tables
+   if (!value) {
+  const parent = this.explicitParentTable;
+
+  // ✅ Keep ONLY parent table on PRIMARY side
+  this.selectedPrimaryTable = parent ? [parent] : [];
+
+  // ✅ Remove CHILD table rows from PRIMARY table data
+  this.primaryTableData = this.primaryTableData.filter(
+    row => row.source === parent
+  );
+
+   // ✅ REMOVE child table mappings
+  Object.keys(this.mappingDataByTable).forEach(table => {
+    if (table !== parent) {
+      delete this.mappingDataByTable[table];
+    }
+  });
+
+  // ✅ Clear child-only state
+  this.childTablesByParent = {};
+  this.selectedChildTables = {};
+  this.autoSelectedChildTables = [];
+ // this.explicitParentTable = null;
+
+}
+
+
+  });
     const params = this.route.snapshot.queryParams;
     const compState = this.loadTablesComponentState();
     const stored = JSON.parse(sessionStorage.getItem('mappingState') || 'null');
@@ -373,6 +424,24 @@ private loadPrimaryTableColumns(table: string) {
 // }
   }
 
+  private removeAllChildTables() {
+  const parent = this.explicitParentTable;
+
+  this.selectedPrimaryTable = parent ? [parent] : [];
+  this.primaryTableData = this.primaryTableData.filter(
+    row => row.source === parent
+  );
+
+  Object.keys(this.mappingDataByTable).forEach(t => {
+    if (t !== parent) delete this.mappingDataByTable[t];
+  });
+
+  this.childTablesByParent = {};
+  this.selectedChildTables = {};
+  this.autoSelectedChildTables = [];
+}
+
+
   /* ================= PRIMARY ================= */
 
   getPrimaryTables() {
@@ -381,56 +450,20 @@ private loadPrimaryTableColumns(table: string) {
     });
   }
 
- // In tables.component.ts
+ onSelectPrimaryTable(table: string) {
+  const isNewSelection = !this.selectedPrimaryTable.includes(table);
 
-onSelectPrimaryTable(table: string) {
-  if (!this.selectedPrimaryTable.includes(table)) {
+  if (isNewSelection) {
     this.selectedPrimaryTable.push(table);
-    this.loadPrimaryTableColumns(table); // ✅ ADD THIS
+    this.explicitParentTable = table;
 
+    this.loadPrimaryTableColumns(table);
 
-    // ✅ NEW: fetch child tables automatically
-// ✅ ONLY user-selected table becomes parent
-this.explicitParentTable = table;
-
-if (this.isOracleClient()) {
-  this.fetchChildTables(table);
-}
-
-    const activeClientRows = this.selectedClientTable.length > 0
-      ? this.getClientRowsForTable(this.selectedClientTable[0])
-      : [];
-
-    this.appService.getServerColumns(table).subscribe(cols => {
-      this.primaryTableData.push(
-  ...(cols || []).map(c => {
-    let position = '';
-    const dbType = this.getClientDbType();
-
-    if (AutoMapperUtil.normalize(c) === 'id') {
-      if (dbType === 'mongo') position = '2';
-      else if (dbType === 'oracle') position = '';
-      else position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
-    } else {
-      position = AutoMapperUtil.getAutoMapPosition(c, activeClientRows);
+    if (this.isOracleClient() && this.includeChildTables) {
+      this.fetchChildTables(table);
     }
-
-    return {
-      id: c,
-      source: table,
-      position,
-      mappedTable: null
-    };
-  })
-);
-
-      this.applyAutoMapping();
-
-
-    // ✅ AUTO-SELECT CLIENT TABLE
-    this.autoSelectClientTableIfExists(table);
-    });
   }
+
   this.activePrimaryTable = table;
 }
 
@@ -566,14 +599,26 @@ this.autoSelectClientTableIfExists(table);
 
   const pos = String(row.position).trim();
 
-  this.enforceUniqueClientMapping(
-    row.source,   // server table
-    pos,          // client column ID
-    row
+  const conflict = this.primaryTableData.find(r =>
+    r !== row &&
+    r.source === row.source &&
+    r.mappedTable === this.activeClientTable &&
+    String(r.position) === pos
   );
 
+  if (conflict) {
+    alert(
+      `Client column "${pos}" is already mapped to "${conflict.id}".`
+    );
+    row.position = '';
+    row.mappedTable = null;
+    return;
+  }
+
+  this.enforceUniqueClientMapping(row.source, pos, row);
   row.mappedTable = this.activeClientTable;
 }
+
 
 
   // 🔒 Enforce: server column can be mapped only once
@@ -701,13 +746,15 @@ private enforceUniqueClientMapping(
     if (
       r !== currentRow &&
       r.source === serverTable &&
+      r.mappedTable === currentRow.mappedTable && // ✅ IMPORTANT
       String(r.position) === String(clientColumnId)
     ) {
-      r.position = '';        // 🔥 auto-unmap
+      r.position = '';
       r.mappedTable = null;
     }
   });
 }
+
 
 
 

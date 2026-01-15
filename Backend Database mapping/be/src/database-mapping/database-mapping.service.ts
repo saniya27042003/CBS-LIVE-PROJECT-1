@@ -374,7 +374,7 @@ export class DatabaseMappingService {
   // 🔁 SECOND PASS: UPDATE FK values
   if(serverDriver !== 'mongodb' && joinKey) {
   for (const targetTable of targetTables) {
-    const fks = await this.getStaticForeignKeys(targetTable);
+    const fks = this.getStaticForeignKeys(targetTable);
 
     for (const fk of fks) {
       await server.query(`

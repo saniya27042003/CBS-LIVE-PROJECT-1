@@ -1,15 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AppService } from '../../service/app.service';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
+
+  includeChildTables: boolean = false; // ✅ REQUIRED
+
 
   username = '';
   email = '';
@@ -25,7 +30,10 @@ export class ProfileComponent implements OnInit {
   isAdmin = false;
   adminCheckbox = false;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router,
+      private appService: AppService // ✅ INJECT SERVICE
+
+  ) {}
 
   ngOnInit(): void {
     const userData = localStorage.getItem('user');
@@ -55,7 +63,18 @@ export class ProfileComponent implements OnInit {
     if (this.isAdmin) {
       this.adminCheckbox = localStorage.getItem('adminAutoMapEnabled') === 'true';
     }
+
+    this.appService.getIncludeChildTables().subscribe(value => {
+    this.includeChildTables = value;   // ✅ sync UI checkbox
+  });
   }
+
+selectedParentTable!: string;
+// ✅ CHILD TABLE TOGGLE
+  onIncludeChildChange() {
+    this.appService.setIncludeChildTables(this.includeChildTables);
+  }
+
 
   onImageError(): void {
     this.showImage = false;
@@ -77,7 +96,6 @@ export class ProfileComponent implements OnInit {
     } else {
       localStorage.setItem('adminAutoMapEnabled', 'false');
     }
-    window.location.reload();
   }
 
   onLogout(): void {
