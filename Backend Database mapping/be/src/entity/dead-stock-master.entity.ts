@@ -4,6 +4,7 @@ import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColum
 @Entity()
 @Unique(['ITEM_CODE'])
 export class ITEMMASTER {
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -36,7 +37,7 @@ export class ITEMMASTER {
   PURCHASE_VALUE: number;
 
   @Column({ nullable: true })
-  OP_BAL_DATE: string; 
+  OP_BAL_DATE: string;
 
   @Column({ default: 0 })
   OP_QUANTITY: number;
@@ -59,16 +60,14 @@ export class ITEMMASTER {
   @Column({ nullable: true })
   SYSCHNG_LOGIN: string;
 
-
   @Column({ nullable: true, default: 1 })
-  status: number
+  status: number;
 
   @Column()
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.branchCodeds, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  BranchCodeMaster: OWNBRANCHMASTER[];
+
+ @ManyToOne(() => OWNBRANCHMASTER)
+@JoinColumn({ name: 'BRANCH_CODE' })
+branch: OWNBRANCHMASTER;
 
 }

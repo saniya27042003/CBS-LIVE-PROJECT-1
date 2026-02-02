@@ -1,11 +1,11 @@
 
 
-import { BANKDETAILS } from './BANKDETAILS.entity';
-import { NOMINEELINK } from './nominee.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { CUSTOMERADDRESS } from './customer-address.entity'
-import { DIRECTORMASTER } from './director-master.entity';
-import { APPLGUARANTERS } from './APPLGUARANTERS.entity';
+//import { BANKDETAILS } from './BANKDETAILS.entity';
+//import { NOMINEELINK } from './nominee.entity';
+import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
+//import { CUSTOMERADDRESS } from './customer-address.entity'
+//import { DIRECTORMASTER } from './director-master.entity';
+//import { APPLGUARANTERS } from './APPLGUARANTERS.entity';
 @Entity()
 export class CITYMASTER {
   @PrimaryGeneratedColumn()
@@ -38,29 +38,30 @@ export class CITYMASTER {
 
   // @Column({nullable:false})
   // AC_PIN: string;
-  @OneToMany(() => CUSTOMERADDRESS, (cityMaster) => cityMaster.city, {
-    cascade: ["insert", "update"]
-  })
-  cityMaster: CUSTOMERADDRESS[];
 
-  @OneToMany(() => NOMINEELINK, (cityMasters) => cityMasters.city, {
-    cascade: ["insert", "update"]
-  })
-  cityMasters: NOMINEELINK[];
+  // @OneToMany(() => CUSTOMERADDRESS, (cityMaster) => cityMaster.city, {
+  //   cascade: ["insert", "update"]
+  // })
+  // cityMaster: CUSTOMERADDRESS[];
 
-  @OneToMany(() => DIRECTORMASTER, castmast => castmast.directormaster, {
-    cascade: ["insert", "update"]
-  })
-  castmast: DIRECTORMASTER[];
+  // @OneToMany(() => NOMINEELINK, (cityMasters) => cityMasters.city, {
+  //   cascade: ["insert", "update"]
+  // })
+  // cityMasters: NOMINEELINK[];
 
-  @OneToMany(() => APPLGUARANTERS, cityCode => cityCode.cityCode, {
-    cascade: ["insert", "update"]
-  })
-  cityCode: APPLGUARANTERS[];
+  // @OneToMany(() => DIRECTORMASTER, castmast => castmast.directormaster, {
+  //   cascade: ["insert", "update"]
+  // })
+  // castmast: DIRECTORMASTER[];
 
-  @OneToMany(() => BANKDETAILS, bankDetailCity => bankDetailCity.bankDetailCity, {
-    cascade: ["insert", "update"]
-  })
-  bankDetailCity: BANKDETAILS[];
+  // @OneToMany(() => APPLGUARANTERS, cityCode => cityCode.cityCode, {
+  //   cascade: ["insert", "update"]
+  // })
+  // cityCode: APPLGUARANTERS[];
+
+  // @OneToMany(() => BANKDETAILS, bankDetailCity => bankDetailCity.bankDetailCity, {
+  //   cascade: ["insert", "update"]
+  // })
+  // bankDetailCity: BANKDETAILS[];
 
 }

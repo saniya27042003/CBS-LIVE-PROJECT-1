@@ -1,5 +1,5 @@
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class RENEWALHISTORY {
@@ -196,9 +196,8 @@ export class RENEWALHISTORY {
     @Column({ nullable: true, default: 1 })
     status: number
 
-    @ManyToOne(() => SCHEMAST, (renewalHistory) => renewalHistory.renewalHistory, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_TYPE" })
-    renewalHistory: SCHEMAST[];
+    @ManyToOne(() => SCHEMAST)
+    @JoinColumn({ name: 'SCHEMA_CODE' }) // or correct FK column
+    scheme: SCHEMAST;
+
 }

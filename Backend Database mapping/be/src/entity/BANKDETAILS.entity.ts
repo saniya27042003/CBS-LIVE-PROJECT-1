@@ -1,4 +1,4 @@
-import { BANKMASTER } from './bank-master.entity';
+//import { BANKMASTER } from './bank-master.entity';
 import { CITYMASTER } from './city-master.entity';
 import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
@@ -32,8 +32,8 @@ export class BANKDETAILS {
     @Column({ nullable: true })
     AREA_LOCATION: string
 
-    @Column({ nullable: true })
-    CITY_CODE: number
+    // @Column({ nullable: true })
+    // CITY_CODE: number
 
     @Column({ nullable: true })
     PIN_CODE: number
@@ -75,10 +75,11 @@ export class BANKDETAILS {
     // bankDetails: BANKMASTER[];
 
 
-    @ManyToOne(() => CITYMASTER, (bankDetailCity) => bankDetailCity.bankDetailCity, {
-        cascade: true
-    })
-    @JoinColumn({ name: "CITY_CODE" })
-    bankDetailCity: CITYMASTER[];
+   @Column({ nullable: true })
+CITY_CODE: number;
+
+@ManyToOne(() => CITYMASTER, { nullable: true })
+@JoinColumn({ name: "CITY_CODE" })
+bankDetailCity?: CITYMASTER;
 
 }

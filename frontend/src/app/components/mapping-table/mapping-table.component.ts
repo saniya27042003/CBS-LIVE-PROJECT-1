@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AppService } from '../../service/app.service';
 import { from, of } from 'rxjs';
 import { concatMap, map, catchError, toArray } from 'rxjs/operators';
+import { MappingSettingsService } from '../../service/mapping-settings.service';
 @Component({
   selector: 'app-mapping-table',
   standalone: true,
@@ -19,6 +20,8 @@ export class MappingTableComponent implements OnInit {
   clientDatabaseName = '';
   isMigrating = false;
   childTablesByParent: Record<string, any[]> = {};
+  includeChildren = false;
+
 
 
   // ✅ Client columns reference (ID → Name)
@@ -30,10 +33,20 @@ export class MappingTableComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private appService: AppService
+    private appService: AppService,
+    private mappingSettings: MappingSettingsService // ✅
+
   ) {}
 
+
+
+
   ngOnInit(): void {
+
+    this.mappingSettings.includeChildren$
+      .subscribe(value => {
+        this.includeChildren = value;
+      });
     const navState: any = history.state && Object.keys(history.state).length ? history.state : null;
     const storedRaw = sessionStorage.getItem('mappingState');
     const stored = storedRaw ? JSON.parse(storedRaw) : null;
@@ -130,9 +143,30 @@ saveMapping() {
   if (foundKey) detectedJoinKey = foundKey.name || foundKey.COLUMN_NAME;
 
   from(tablesToMigrate).pipe(
-    concatMap(serverTable => {
-      // ✅ GENERIC MAPPING WITH AUTO-SPLIT DETECTION
-      const mappingsForTable = this.mappingDataByTable[serverTable].map(m => {
+   concatMap(serverTable => {
+
+  // 🔐 ENFORCE: same serverColumn + same serverTable = ONE mapping
+const rawMappings = this.mappingDataByTable[serverTable] ?? [];
+
+  const uniqueMap = new Map<string, any>();
+
+  for (const m of rawMappings) {
+    const key =
+      serverTable.toLowerCase() +
+      '|' +
+      (m.serverColumn || '').toLowerCase();
+
+    // keep FIRST mapping only
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, m);
+    }
+  }
+
+  const dedupedMappings = Array.from(uniqueMap.values());
+
+  // ✅ GENERIC MAPPING WITH AUTO-SPLIT DETECTION
+  const mappingsForTable = dedupedMappings.map(m => {
+
         const rawCols = String(m.clientColumns || '').split(',').map(v => v.trim());
         const finalCols = rawCols.map(val => {
           const match = this.clientSideColumns.find(
@@ -167,12 +201,17 @@ saveMapping() {
         return mappingPayload;
       });
 
-      const payload = {
-        serverTable,
-        baseClientTable: this.selectedClientTable[0],
-        joinKey: detectedJoinKey,
-        mappings: mappingsForTable
-      };
+
+    const payload = {
+      serverTable,
+      baseClientTable: this.selectedClientTable[0],
+      joinKey: detectedJoinKey,
+      bankCode: this.primaryDatabaseName, // or actual bankCode
+      branchCode: this.clientDatabaseName, // or actual branchCode
+      includeChildren: this.includeChildren, // ✅ ADD THIS
+      mappings: mappingsForTable
+    };
+
 
       return this.appService.insertData(payload).pipe(
         map(res => ({ table: serverTable, success: true, res })),
@@ -198,7 +237,15 @@ saveMapping() {
       this.migrationResultMessage = `Migration Completed\n\n✅ Success: ${success.length}\n❌ Failed: ${failed.length}`;
       this.migrationHasErrors = failed.length > 0;
       this.showResultModal = true;
+      // 🔥 ADD THIS HERE — EXACTLY HERE
+   if (this.includeChildren) {
+  this.mappingSettings.setIncludeChildren(false);
+  setTimeout(() => {
+    this.mappingSettings.setIncludeChildren(true);
+  }, 0);
+}
     },
+
     error: () => {
       this.isMigrating = false;
       alert('Critical migration error');

@@ -1,4 +1,4 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { SYSPARA } from './system-master-parameters.entity';
 
 @Entity()
@@ -19,10 +19,8 @@ export class SHARECAPITALAMTDETAILS {
     @Column()
     SYSID: number
 
-    @ManyToOne(() => SYSPARA, (SYSPARAID) => SYSPARAID.SYSPARAID, {
-        cascade: true
-    })
-    @JoinColumn({ name: "SYSID" })
-    SYSPARAID: SYSPARA[];
+   @ManyToOne(() => SYSPARA, { nullable: true })
+@JoinColumn({ name: 'SYSID' })
+syspara?: SYSPARA;
 
 }

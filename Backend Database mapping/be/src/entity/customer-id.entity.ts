@@ -1,15 +1,16 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn, Index } from 'typeorm';
-import { CUSTOMERADDRESS } from './customer-address.entity'
+import { Column, CreateDateColumn, Entity, Generated, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn, Index, JoinColumn, ManyToOne } from 'typeorm';
+//import { CUSTOMERADDRESS } from './customer-address.entity'
 import { SHMASTER } from './share-master.entity';
-import { TDSFORMSUBMIT } from './tds-form.entity'
-import { SECURITYDETAILS } from './security.entity'
-import { CUSTDOCUMENT } from './document.entity'
+//import { TDSFORMSUBMIT } from './tds-form.entity'
+//import { CUSTDOCUMENT } from './document.entity'
 import { LNMASTER } from './term-loan-master.entity'
 import { DPMASTER } from './dpmaster.entity';
-import { PGMASTER } from './pgmaster.entity';
-import { CASTMASTER } from './cast-master.entity'
-import { OCCUPATIONMASTER } from './ocuupation-master.entity'
-import { RISKCATEGORYMASTER } from './risk-category.entity'
+import { RISKCATEGORYMASTER } from './risk-category.entity';
+import { OCCUPATIONMASTER } from './occupation-master.entity';
+//import { PGMASTER } from './pgmaster.entity';
+//import { CASTMASTER } from './cast-master.entity'
+//import { OCCUPATIONMASTER } from './ocuupation-master.entity'
+//import { RISKCATEGORYMASTER } from './risk-category.entity'
 @Entity()
 @Unique(['AC_NO'])
 @Index("NDXIDMASTER", ["BRANCH_CODE", "AC_NO"])
@@ -106,15 +107,15 @@ export class IDMASTER {
     @Column({ nullable: true })
     BRANCH_CODE: number;
 
-    @OneToMany(() => CUSTOMERADDRESS, custAddress => custAddress.idmaster, {
-        cascade: ["insert", "update"]
-    })
-    custAddress: CUSTOMERADDRESS[];
+    // @OneToMany(() => CUSTOMERADDRESS, custAddress => custAddress.idmaster, {
+    //     cascade: ["insert", "update"]
+    // })
+    // custAddress: CUSTOMERADDRESS[];
 
-    @OneToOne(() => TDSFORMSUBMIT, tdsForm => tdsForm.idmaster, {
-        cascade: ["insert", "update"]
-    })
-    tdsForm: TDSFORMSUBMIT[];
+    // @OneToOne(() => TDSFORMSUBMIT, tdsForm => tdsForm.idmaster, {
+    //     cascade: ["insert", "update"]
+    // })
+    // tdsForm: TDSFORMSUBMIT[];
 
     @OneToMany(() => SHMASTER, shareMaster => shareMaster.idmaster, {
         cascade: ["insert", "update"]
@@ -126,20 +127,19 @@ export class IDMASTER {
     })
     dpmaster: DPMASTER[];
 
-    @OneToMany(() => CUSTDOCUMENT, custdocument => custdocument.idmaster, {
-        cascade: ["insert", "update"]
-    })
-    custdocument: CUSTDOCUMENT[];
+    // @OneToMany(() => CUSTDOCUMENT, custdocument => custdocument.idmaster, {
+    //     cascade: ["insert", "update"]
+    // })
+    // custdocument: CUSTDOCUMENT[];
 
-    @OneToMany(() => LNMASTER, termLoan => termLoan.idmaster, {
-        cascade: ["insert", "update"]
-    })
-    termLoan: LNMASTER[];
+    @OneToMany(() => LNMASTER, ln => ln.idmaster)
+termLoan: LNMASTER[];
 
-    @OneToMany(() => PGMASTER, pgmaster => pgmaster.idmaster, {
-        cascade: ["insert", "update"]
-    })
-    pgmaster: PGMASTER[];
+
+    // @OneToMany(() => PGMASTER, pgmaster => pgmaster.idmaster, {
+    //     cascade: ["insert", "update"]
+    // })
+    // pgmaster: PGMASTER[];
 
     // @Column({ default: 0 })
     @Column({ nullable: true })
@@ -163,21 +163,17 @@ export class IDMASTER {
     @Column({ nullable: true })
     ORA_BRANCH: number;
 
-    @ManyToOne(() => CASTMASTER, (castMaster) => castMaster.cast, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_CAST" })
-    castMaster: CASTMASTER[];
+//    @ManyToOne(() => CASTMASTER)
+// @JoinColumn({ name: "AC_CAST" })
+// castMaster: CASTMASTER;
 
-    @ManyToOne(() => OCCUPATIONMASTER, (occupMaster) => occupMaster.occupation, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_OCODE" })
-    occupMaster: OCCUPATIONMASTER[];
 
-    @ManyToOne(() => RISKCATEGORYMASTER, (riskCategory) => riskCategory.riskMaster, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_RISKCATG" })
-    riskCategory: RISKCATEGORYMASTER[];
+@ManyToOne(() => OCCUPATIONMASTER)
+@JoinColumn({ name: "AC_OCODE" })
+occupMaster: OCCUPATIONMASTER;
+
+@ManyToOne(() => RISKCATEGORYMASTER)
+@JoinColumn({ name: "AC_RISKCATG" })
+riskCategory: RISKCATEGORYMASTER;
+
 }

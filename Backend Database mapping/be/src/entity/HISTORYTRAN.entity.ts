@@ -1,4 +1,4 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Check, Index } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Check, Index } from 'typeorm';
 import { SCHEMAST } from './schemeParameters.entity';
 @Entity()
 @Check(`"TRAN_DRCR" IN ('D', 'C')`)
@@ -268,21 +268,18 @@ export class HISTORYTRAN {
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
     SANCTIONED_CASH_LIMIT: number
 
-    @ManyToOne(() => SCHEMAST, (HistoryTranType) => HistoryTranType.historyTran, {
-        cascade: true
-    })
-    @JoinColumn({ name: "TRAN_ACTYPE" })
-    HistoryTranType: SCHEMAST[];
+    @ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: "TRAN_ACTYPE" })
+tranScheme: SCHEMAST;
 
-    @ManyToOne(() => SCHEMAST, (HistoryTran) => HistoryTran.historyTran, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AGENT_ACTYPE" })
-    HistoryTran: SCHEMAST[];
+@ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: "AGENT_ACTYPE" })
+agentScheme: SCHEMAST;
+
 
 
     @Column({ nullable: false })
-    TRAN_BRANCH_CODE: Number;
+    TRAN_BRANCH_CODE: number;
 
     @Column({ nullable: false })
     SYSTRAN_TYPE: string;

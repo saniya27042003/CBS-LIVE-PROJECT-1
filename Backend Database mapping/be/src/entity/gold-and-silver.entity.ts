@@ -1,7 +1,7 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class GOLDSILVER {
@@ -16,9 +16,7 @@ export class GOLDSILVER {
     @Column({ default: 0 })
     AC_TYPE: number;
 
-    @ManyToOne(() => SCHEMAST, (goldsilver) => goldsilver.goldsilver, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
 
     goldsilver: SCHEMAST[];
@@ -90,9 +88,7 @@ export class GOLDSILVER {
 
     @Column({ nullable: true })
     BRANCH_CODE: number;
-    @ManyToOne(() => OWNBRANCHMASTER, (goldsilverbranchcode) => goldsilverbranchcode.goldsilverbranchcode, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     goldsilverbranchcode: OWNBRANCHMASTER[];
 

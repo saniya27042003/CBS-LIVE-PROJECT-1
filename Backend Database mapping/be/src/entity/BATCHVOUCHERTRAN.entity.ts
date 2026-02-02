@@ -1,5 +1,5 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class BATCHVOUCHERTRAN {
@@ -43,9 +43,8 @@ export class BATCHVOUCHERTRAN {
     @Column({ nullable: true })
     FILE_IMPORT: number
 
-    @ManyToOne(() => OWNBRANCHMASTER, (voucherBranch) => voucherBranch.voucherBranch, {
-        cascade: true
-    })
-    @JoinColumn({ name: "BRANCH_CODE" })
-    voucherBranch: OWNBRANCHMASTER[];
+   @ManyToOne(() => OWNBRANCHMASTER)
+@JoinColumn({ name: "BRANCH_CODE" })
+branch: OWNBRANCHMASTER;
+
 }

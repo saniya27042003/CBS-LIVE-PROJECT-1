@@ -1,14 +1,16 @@
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { INTRATE } from '../entity/interest-rate.entity'
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { INTRATE } from '../entity/interest-rate.entity';
+
 @Entity()
 export class INTRATEPATSCHEMES {
+
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: true })
-  EFFECT_DATE: string
+  EFFECT_DATE: string;
 
   @Column({ nullable: true })
   TYPE: string;
@@ -19,20 +21,16 @@ export class INTRATEPATSCHEMES {
   rate: INTRATE[];
 
   @Column({ nullable: true })
-  AC_TYPE: number
-  @ManyToOne(() => SCHEMAST, (scheme) => scheme.patscheme, {
-    cascade: true
-  })
+  AC_TYPE: number;
+
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "AC_TYPE" })
-  scheme: SCHEMAST[];
+  scheme: SCHEMAST;
 
   @Column({ nullable: true })
-  INT_CATEGORY: number
-  @ManyToOne(() => INTCATEGORYMASTER, (category) => category.patdeposit, {
-    cascade: true
-  })
+  INT_CATEGORY: number;
+
+  @ManyToOne(() => INTCATEGORYMASTER)
   @JoinColumn({ name: "INT_CATEGORY" })
-  category: INTCATEGORYMASTER[];
-
-
+  category: INTCATEGORYMASTER;
 }

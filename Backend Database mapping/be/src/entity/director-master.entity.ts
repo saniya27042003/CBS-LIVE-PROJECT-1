@@ -39,12 +39,13 @@ export class DIRECTORMASTER {
 
     @Column({ nullable: true })
 
-    AC_CTCODE: number;
-    @ManyToOne(() => CITYMASTER, (directormaster) => directormaster.castmast, {
-        cascade: true
-    })
-    @JoinColumn({ name: "idmasterID" })
-    directormaster: CITYMASTER[];
+ @Column({ nullable: true })
+CTCODE: number;
+
+@ManyToOne(() => CITYMASTER, { nullable: true })
+@JoinColumn({ name: "CTCODE" })
+city?: CITYMASTER;
+
 
     @Column({ nullable: true })
     BRANCH_CODE: number;

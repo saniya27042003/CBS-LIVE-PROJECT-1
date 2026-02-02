@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AppService } from '../../service/app.service';
+import { MappingSettingsService } from '../../service/mapping-settings.service';
 
 @Component({
   selector: 'app-profile',
@@ -31,9 +32,12 @@ export class ProfileComponent implements OnInit {
   adminCheckbox = false;
 
   constructor(private router: Router,
-      private appService: AppService // ✅ INJECT SERVICE
+      private appService: AppService, // ✅ INJECT SERVICE
+      private mappingSettings: MappingSettingsService
 
   ) {}
+
+
 
   ngOnInit(): void {
     const userData = localStorage.getItem('user');
@@ -71,9 +75,11 @@ export class ProfileComponent implements OnInit {
 
 selectedParentTable!: string;
 // ✅ CHILD TABLE TOGGLE
-  onIncludeChildChange() {
-    this.appService.setIncludeChildTables(this.includeChildTables);
-  }
+
+onIncludeChildChange() {
+  this.mappingSettings.setIncludeChildren(this.includeChildTables);
+}
+
 
 
   onImageError(): void {

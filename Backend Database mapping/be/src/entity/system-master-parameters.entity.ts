@@ -1,6 +1,5 @@
-import { SHARECAPITALAMTDETAILS } from './SHARECAPITALANTDETAILS.entity';
-import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class SYSPARA {
 
@@ -392,13 +391,5 @@ export class SYSPARA {
   // @Column({ nullable: true})
   // AUTO_INT_DEBIT_VOCHER: number;
 
-  @OneToMany(type => OWNBRANCHMASTER, branch => branch.id)
-  @JoinColumn({ name: "BRANCH_CODE" })
-  branch: OWNBRANCHMASTER[]
 
-
-  @OneToMany(() => SHARECAPITALAMTDETAILS, SYSPARAID => SYSPARAID.SYSPARAID, {
-    cascade: ["insert", "update"]
-  })
-  SYSPARAID: SHARECAPITALAMTDETAILS[];
 }

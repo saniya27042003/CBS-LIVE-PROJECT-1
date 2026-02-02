@@ -1,5 +1,5 @@
-import { BeforeInsert, Column, Entity, Generated, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity'
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+//import { IDMASTER } from './customer-id.entity'
 import { CITYMASTER } from './city-master.entity'
 @Entity('CUSTOMERADDRESS')
 export class CUSTOMERADDRESS {
@@ -45,15 +45,14 @@ logInsert() {
 
   
 
-  @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custAddress, {
-    cascade: false
-  })
-  @JoinColumn({ name: 'idmasterID' })
-  idmaster: IDMASTER;
+  // @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custAddress, {
+  //   cascade: false
+  // })
+  // @JoinColumn({ name: 'idmasterID' })
+  // idmaster: IDMASTER;
 
-  @ManyToOne(() => CITYMASTER, (city) => city.cityMaster, {
-    cascade: false
-  })
-  @JoinColumn({ name: 'AC_CTCODE' })
-  city: CITYMASTER;
+  @ManyToOne(() => CITYMASTER, { nullable: true })
+@JoinColumn({ name: 'CITY_CODE' }) // or your actual FK
+city?: CITYMASTER;
+
 }

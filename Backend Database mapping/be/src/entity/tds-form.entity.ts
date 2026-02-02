@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne,  PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { IDMASTER } from './customer-id.entity';
 
 @Entity()
@@ -39,10 +39,9 @@ export class TDSFORMSUBMIT {
 
     @Column({ nullable: true })
     idmasterID: number
-    @ManyToOne(() => IDMASTER, (idmaster) => idmaster.tdsForm, {
-        cascade: true
-    })
-    @JoinColumn({ name: "idmasterID" })
-    idmaster: IDMASTER[];
+
+   @ManyToOne(() => IDMASTER, { nullable: true })
+@JoinColumn({ name: 'idmasterID' })
+idmaster?: IDMASTER;
 
 }

@@ -187,43 +187,41 @@ export class SHMASTER {
     cascade: true
   })
   @JoinColumn({ name: "idmasterID" })
-  idmaster: IDMASTER[];
+  idmaster: IDMASTER;
 
-  @OneToMany(() => NOMINEELINK, (nomineeDetails) => nomineeDetails.sharesId, {
+  @OneToMany(() => NOMINEELINK, (nomineeDetails) => nomineeDetails.shares, {
     cascade: ["insert", "update"]
   })
   nomineeDetails: NOMINEELINK[]
 
-  @OneToOne(() => HISTORYDIVIDEND, (shareDividend) => shareDividend.sharesId, {
-    cascade: ["insert", "update"]
-  })
-  shareDividend: HISTORYDIVIDEND[]
+@OneToOne(() => HISTORYDIVIDEND, d => d.shMaster)
+shareDividend?: HISTORYDIVIDEND;
 
-  @ManyToOne(() => CATEGORYMASTER, (CategoryMaster) => CategoryMaster.category, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_CATG" })
-  CategoryMaster: CATEGORYMASTER[];
+
+
+ @ManyToOne(() => CATEGORYMASTER, { cascade: true })
+@JoinColumn({ name: "AC_CATG" })
+CategoryMaster: CATEGORYMASTER;
+
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.branchCodesh, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  BranchCodeMaster: OWNBRANCHMASTER[];
 
-  @ManyToOne(() => SCHEMAST, (shareMaster) => shareMaster.shareCode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_TYPE" })
-  shareMaster: SCHEMAST[];
+ @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
+@JoinColumn({ name: 'BRANCH_CODE' })
+BranchCodeMaster?: OWNBRANCHMASTER;
 
-  @ManyToOne(() => OWNBRANCHMASTER, (divBranchMaster) => divBranchMaster.divBranch, {
-    cascade: true
-  })
+
+ @ManyToOne(() => SCHEMAST, s => s.shareCode)
+@JoinColumn({ name: 'SCHEMA_CODE' }) // use your real FK column
+shareMaster: SCHEMAST;
+
+
+    
+  @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
   @JoinColumn({ name: "DIV_TRANSFER_BRANCH" })
-  divBranchMaster: OWNBRANCHMASTER[];
+  divBranchMaster?: OWNBRANCHMASTER;
+
 
 
 

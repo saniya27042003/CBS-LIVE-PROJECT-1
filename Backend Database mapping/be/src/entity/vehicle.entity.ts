@@ -1,7 +1,7 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class VEHICLE {
@@ -15,9 +15,7 @@ export class VEHICLE {
 
   @Column({ nullable: true })
   AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (vehicle) => vehicle.vehicle, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "AC_TYPE" })
 
   vehicle: SCHEMAST[];
@@ -79,9 +77,7 @@ export class VEHICLE {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode, {
-    cascade: true
-  })
+  @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: "BRANCH_CODE" })
   vehiclebranchcode: OWNBRANCHMASTER[];
 

@@ -1,51 +1,57 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class OWNDEPOSIT {
+
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: true })
   AC_ACNOTYPE: string;
 
+  // ---------------- Account Type ----------------
   @Column()
   AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (actypeowndepo) => actypeowndepo.actypeowndepo, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_TYPE" })
-  actypeowndepo: SCHEMAST[];
+  
+@ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: 'AC_TYPE' })
+accountTypeScheme: SCHEMAST;
 
+
+  // ---------------- Account No ----------------
   @Column({ default: 0, length: 15 })
   AC_NO: string;
 
+  // ---------------- Branch ----------------
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (owndeposit) => owndeposit.owndeposit, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  owndeposit: OWNBRANCHMASTER[];
 
+@ManyToOne(() => OWNBRANCHMASTER)
+@JoinColumn({ name: 'BRANCH_CODE' })
+branch: OWNBRANCHMASTER;
+
+
+  // ---------------- Deposit Scheme ----------------
   @Column({ nullable: true })
   DEPO_AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (depoactype) => depoactype.depoactype, {
-    cascade: true
-  })
-  @JoinColumn({ name: "DEPO_AC_TYPE" })
-  depoactype: SCHEMAST[];
 
+  @ManyToOne(() => SCHEMAST)
+  @JoinColumn({ name: 'DEPO_AC_TYPE' })
+  depoactype: SCHEMAST;      // ✅ SINGLE
+
+  // ---------------- Security ----------------
   @Column({ nullable: true })
   SECU_CODE: number;
-  @ManyToOne(() => SECURITYMASTER, (deposit) => deposit.deposit, {
-    cascade: true
-  })
-  @JoinColumn({ name: "SECU_CODE" })
-  deposit: SECURITYMASTER[];
 
+@ManyToOne(() => SECURITYMASTER, s => s.deposits)
+@JoinColumn({ name: 'SECU_CODE' })
+security: SECURITYMASTER;
+
+
+  // ---------------- Other Fields ----------------
   @Column({ length: 15 })
   DEPO_AC_NO: string;
 
@@ -70,13 +76,12 @@ export class OWNDEPOSIT {
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
   LEDGER_BAL: number;
 
-  //lien mark clear fields
   @Column({ nullable: true })
-  AC_EXPIRE_DATE: string
+  AC_EXPIRE_DATE: string;
 
   @Column({ default: '0' })
-  IS_LIEN_MARK_CLEAR: string
+  IS_LIEN_MARK_CLEAR: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  BALANCE_OF_LOAN_ACCOUNT: number
+  BALANCE_OF_LOAN_ACCOUNT: number;
 }

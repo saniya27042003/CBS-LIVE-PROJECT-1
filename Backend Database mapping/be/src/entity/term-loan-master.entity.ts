@@ -1,6 +1,6 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn, Unique, Index } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, Unique, Index } from 'typeorm';
 import { COBORROWER } from './coborrower.entity';
 import { IDMASTER } from './customer-id.entity';
 import { LNDISPUTEDETAILS } from './dispute-loan-master.entity';
@@ -93,11 +93,11 @@ export class LNMASTER {
 
     @Column({ nullable: true })
     AC_AUTHORITY: number
-    @ManyToOne(() => AUTHORITYMASTER, (authority) => authority.authority, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_AUTHORITY" })
-    authority: AUTHORITYMASTER[];
+
+   @ManyToOne(() => AUTHORITYMASTER, a => a.authority)
+@JoinColumn({ name: 'AC_AUTHORITY' })
+authority: AUTHORITYMASTER;
+
 
     @Column({ nullable: true })
     AC_RECOMMEND_BY: number
@@ -257,11 +257,9 @@ export class LNMASTER {
     @Column({ unique: false })
     idmasterID: number
 
-    @ManyToOne(() => IDMASTER, (termLoan) => termLoan.termLoan, {
-        cascade: true
-    })
-    @JoinColumn({ name: "idmasterID" })
-    idmaster: IDMASTER[];
+   @ManyToOne(() => IDMASTER, id => id.termLoan)
+@JoinColumn({ name: 'idmasterID' })
+idmaster: IDMASTER;
 
     @OneToMany(() => GUARANTERDETAILS, guaranterMaster => guaranterMaster.lnmaster, {
         cascade: ["insert", "update"]
@@ -274,10 +272,12 @@ export class LNMASTER {
     CoborrowerMaster: COBORROWER[];
     lnmaster: any;
 
-    @OneToMany(() => LNDISPUTEDETAILS, disputeloan => disputeloan.lnDisputemasterID, {
-        cascade: ["insert", "update"]
-    })
-    disputeloanMaster: LNDISPUTEDETAILS[];
+  @OneToMany(() => LNDISPUTEDETAILS, d => d.lnmaster, {
+  cascade: ["insert", "update"]
+})
+disputeloanMaster: LNDISPUTEDETAILS[];
+
+
 
     @OneToMany(() => SECURITYDETAILS, securityMaster => securityMaster.lnmaster, {
         cascade: ["insert", "update"]
@@ -287,23 +287,24 @@ export class LNMASTER {
     @Column({ nullable: true })
     BRANCH_CODE: number;
 
-    @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.branchCodeLN, {
-        cascade: true
-    })
-    @JoinColumn({ name: "BRANCH_CODE" })
-    BranchCodeMaster: OWNBRANCHMASTER[];
+        @ManyToOne(() => OWNBRANCHMASTER)
+        @JoinColumn({ name: 'BRANCHCODE' })
+        BranchCodeMaster: OWNBRANCHMASTER;
 
-    @ManyToOne(() => SCHEMAST, (LNCCMaster) => LNCCMaster.lncccode, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_TYPE" })
 
-    LNCCMaster: SCHEMAST[];
+    @ManyToOne(() => SCHEMAST, s => s.lncccode)
+    @JoinColumn({ name: 'AC_TYPE' })   // FK column
+    LNCCMaster: SCHEMAST;
+
+
+
 
     @OneToMany(() => LNMASTER, termLoan => termLoan.termLoan, {
         cascade: ["insert", "update"]
     })
     termLoan: LNMASTER[];
+
+    
     // @OneToMany(() => LNACINTRATE, (lnacint) => lnacint.lnacintrate, {
     //     cascade: ["insert", "update"]
     // })

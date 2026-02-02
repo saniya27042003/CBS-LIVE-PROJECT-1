@@ -1,16 +1,17 @@
-
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, Unique, Index } from 'typeorm';
-import { IDMASTER } from './customer-id.entity';
-import { NOMINEELINK } from './nominee.entity';
+//import { NOMINEELINK } from './nominee.entity';
 // import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-import { JointAcLink } from './joint-account.entity';
+//import { JointAcLink } from './joint-account.entity';
 
-import { ATTERONEYLINK } from './power-of-attorney.entity';
+//import { ATTERONEYLINK } from './power-of-attorney.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { SCHEMAST } from './schemeParameters.entity';
-import { PIGMYCHARTMASTER } from './pigmyChart.entity'
-@Entity()
+//import { SCHEMAST } from './schemeParameters.entity';
+import { PIGMYCHART } from './pigmy-chart.entity';
+//import { ATTERONEYLINK} from './atteroneylink.entity';
+import { NOMINEELINK } from './nominee.entity';
+import { JointAcLink } from './joint-account.entity';
+@Entity({ name: 'pgmaster' })
 @Unique(['BANKACNO'])
 @Index("NDXPGMASTER", ["BRANCH_CODE", "AC_ACNOTYPE", "AC_TYPE", "BANKACNO"])
 @Index("NDXPGMASTER1", ["BRANCH_CODE", "AC_ACNOTYPE", "AC_TYPE", "AC_NO"])
@@ -199,50 +200,59 @@ export class PGMASTER {
   AUTO_MATURED_INTERESTAMT: number
   //relation
 
-  @Column({ unique: false })
-  idmasterID: number
 
-  @ManyToOne(() => IDMASTER, (idmaster) => idmaster.pgmaster, {
-    cascade: true
-  })
-  @JoinColumn({ name: "idmasterID" })
-  idmaster: IDMASTER[];
 
-  @OneToMany(() => NOMINEELINK, (nomineeDetails) => nomineeDetails.pgmasterId, {
-    cascade: ["insert", "update"]
-  })
-  nomineeDetails: NOMINEELINK[]
+//  @OneToMany(() => NOMINEELINK, nomineeDetails => nomineeDetails.pgmaster, {
+//   cascade: ['insert', 'update'],
+// })
+// nomineeDetails: NOMINEELINK[];
 
-  @OneToMany(() => JointAcLink, (jointAccounts) => jointAccounts.pgmasterId, {
-    cascade: ["insert", "update"]
-  })
-  jointAccounts: JointAcLink[]
+//  @OneToMany(() => JointAcLink, jointAccounts => jointAccounts.pgmaster, {
+//   cascade: ['insert', 'update'],
+// })
+// jointAccounts: JointAcLink[];
 
-  @OneToMany(() => ATTERONEYLINK, (powerOfAttorney) => powerOfAttorney.pgmasterId, {
-    cascade: ["insert", "update"]
-  })
-  powerOfAttorney: ATTERONEYLINK[]
+
+  // @OneToMany(() => ATTERONEYLINK, (powerOfAttorney) => powerOfAttorney.pgmasterId, {
+  //   cascade: ["insert", "update"]
+  // })
+  // powerOfAttorney: ATTERONEYLINK[]
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.branchCodePG, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  BranchCodeMaster: OWNBRANCHMASTER[];
 
 
-  @ManyToOne(() => SCHEMAST, (PGMaster) => PGMaster.PGschemecode, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_TYPE" })
-  PGMaster: SCHEMAST[];
+  @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
+@JoinColumn({ name: 'BRANCH_CODE' })
+BranchCodeMaster?: OWNBRANCHMASTER;
 
 
-  @OneToMany(() => PIGMYCHARTMASTER, (pigmychart) => pigmychart.accountId, {
-    cascade: ["insert", "update"]
-  })
-  pigmychart: PIGMYCHARTMASTER[]
+
+  // @ManyToOne(() => SCHEMAST, (PGMaster) => PGMaster.PGschemecode, {
+  //   cascade: true
+  // })
+  // @JoinColumn({ name: "AC_TYPE" })
+  // PGMaster: SCHEMAST[];
+
+
+@OneToMany(() => PIGMYCHART, pigmy => pigmy.pgmaster)
+pigmycharts: PIGMYCHART[];
+
+
+
+
+    @OneToMany(() => JointAcLink, joint => joint.pgmaster)
+  jointAccounts: JointAcLink[];
+
+  @OneToMany(() => NOMINEELINK, nominee => nominee.pgmaster)
+  nomineeDetails: NOMINEELINK[];
+
+//  @OneToMany(
+//     () => ATTERONEYLINK,
+//     (attorney) => attorney.pgMaster
+//   )
+//   powerOfAttorney: ATTERONEYLINK[];
+ 
 
   // @OneToMany(() => DPMASTER, (pgmasterdata) => pgmasterdata.pgmasterdata, {
   //   cascade: ["insert", "update"]
@@ -279,4 +289,3 @@ export class PGMASTER {
   @Column({ nullable: true })
   AC_RECOMMEND_BY: number
 }
-

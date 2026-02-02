@@ -117,10 +117,9 @@ export class SECURITYMASTER {
   })
   other: OTHERSECURITY[];
 
-  @OneToMany(() => OWNDEPOSIT, deposit => deposit.deposit, {
-    cascade: ["insert", "update"]
-  })
-  deposit: OWNDEPOSIT[];
+@OneToMany(() => OWNDEPOSIT, o => o.security)
+deposits: OWNDEPOSIT[];
+
 
   @OneToMany(() => PLANTMACHINARY, plant => plant.plant, {
     cascade: ["insert", "update"]

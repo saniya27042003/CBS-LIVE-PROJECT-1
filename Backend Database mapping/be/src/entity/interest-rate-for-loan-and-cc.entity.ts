@@ -14,21 +14,19 @@ export class INTRATELOAN {
 
   @Column({nullable: true})
   ACNOTYPE: number
-  @ManyToOne(() => SCHEMAST, (scheme) => scheme.id, {
-    cascade: true
-  })
+
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "ACNOTYPE" })
   scheme: SCHEMAST[];
 
   @Column()
   INT_CATEGORY: number
-  @ManyToOne(() => INTCATEGORYMASTER, (category) => category.loanandcc, {
-      cascade: true
-  })
+
+  @ManyToOne(() => INTCATEGORYMASTER)
   @JoinColumn({ name: "INT_CATEGORY" })
-  category: INTCATEGORYMASTER[];
+  category: INTCATEGORYMASTER;
 
   @OneToMany(() => LNCCLOAN, rate => rate.idRate)
   rate: LNCCLOAN[];
-
 }
+

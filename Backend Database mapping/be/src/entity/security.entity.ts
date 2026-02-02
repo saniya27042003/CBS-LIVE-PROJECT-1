@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity';
+import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { IDMASTER } from './customer-id.entity';
 import { LNMASTER } from '../entity/term-loan-master.entity';
+import { LNDISPUTEDETAILS } from './dispute-loan-master.entity';
 
 @Entity()
 export class SECURITYDETAILS {
@@ -34,5 +35,10 @@ export class SECURITYDETAILS {
     })
     @JoinColumn({ name: "lnmasterID" })
     lnmaster: LNMASTER[];
+
+    @ManyToOne(() => LNDISPUTEDETAILS, d => d.securityMaster)
+@JoinColumn({ name: 'LNDISPUTE_ID' }) // use real FK column
+lndispute: LNDISPUTEDETAILS;
+
 }
 

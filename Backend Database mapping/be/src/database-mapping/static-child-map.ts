@@ -22,7 +22,7 @@ export const STATIC_CHILD_MAP: Record<string, string[]> = {
 
   dpmaster: [
     'idmaster',
-    'jointaclink',
+    'joint_ac_link',
     'nomineelink',
     'atteroneylink',
     'intcategorymaster',

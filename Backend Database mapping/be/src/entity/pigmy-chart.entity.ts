@@ -1,7 +1,8 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Check } from 'typeorm';
-import { PIGMYCHARTMASTER } from './pigmyChart.entity'
+import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Check } from 'typeorm';
 import { SCHEMAST } from './schemeParameters.entity'
+import { PGMASTER } from './pgmaster.entity';
+
 
 @Entity()
 @Check(`"TRAN_DRCR" IN ('D', 'C')`)
@@ -77,20 +78,20 @@ export class PIGMYCHART {
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCode) => BranchCode.branchCodePigmyChart, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  BranchCode: OWNBRANCHMASTER[];
+/* ✅ BRANCH RELATION (child side only) */
+  @ManyToOne(() => OWNBRANCHMASTER)
+  @JoinColumn({ name: 'BRANCHCODE' })
+  branch: OWNBRANCHMASTER;
 
-  @OneToMany(() => PIGMYCHARTMASTER, (pigmyChartMaster) => pigmyChartMaster.PIGMYCHART, {
-    cascade: ["insert", "update"]
-  })
-  pigmyChartMaster: PIGMYCHARTMASTER[];
 
-  @ManyToOne(() => SCHEMAST, (Scheme) => Scheme.pigmyChart, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AGENT_ACTYPE" })
-  Scheme: SCHEMAST[];
+ @ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: 'SCHEMA_CODE' }) // or actual FK column
+scheme: SCHEMAST;
+
+@ManyToOne(() => PGMASTER, pg => pg.pigmycharts)
+@JoinColumn({ name: 'AC_NO' })
+pgmaster: PGMASTER;
+
+
+
 }

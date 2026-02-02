@@ -1,7 +1,7 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class STOCKSTATEMENT {
@@ -14,9 +14,7 @@ export class STOCKSTATEMENT {
 
     @Column({ nullable: true })
     AC_TYPE: number;
-    @ManyToOne(() => SCHEMAST, (stockstatement) => stockstatement.stockstatement, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
 
     stockstatement: SCHEMAST[];
@@ -26,9 +24,7 @@ export class STOCKSTATEMENT {
 
     @Column({ nullable: true })
     BRANCH_CODE: number;
-    @ManyToOne(() => OWNBRANCHMASTER, (stockbranchcode) => stockbranchcode.stockbranchcode, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     stockbranchcode: OWNBRANCHMASTER[];
 

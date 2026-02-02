@@ -1,4 +1,4 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { SCHEMAST } from './schemeParameters.entity';
 @Entity()
 export class AGENTCHANGEHISTORY {
@@ -39,17 +39,16 @@ export class AGENTCHANGEHISTORY {
     @Column({ nullable: true })
     TRAN_STATUS: string
 
-    @ManyToOne(() => SCHEMAST, (agentChange) => agentChange.agentChange, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_TYPE" })
-    agentChange: SCHEMAST[];
+    // @ManyToOne(() => SCHEMAST, (agentChange) => agentChange.agentChange, {
+    //     cascade: true
+    // })
+    // @JoinColumn({ name: "AC_TYPE" })
+    // agentChange: SCHEMAST[];
 
-    @ManyToOne(() => SCHEMAST, (agentACChange) => agentACChange.agentACChange, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AGENT_ACTYPE" })
-    agentACChange: SCHEMAST[];
+    @ManyToOne(() => SCHEMAST)
+    @JoinColumn({ name: 'SCHEMA_CODE' }) // or correct FK
+    scheme: SCHEMAST;
+
 
 
 }

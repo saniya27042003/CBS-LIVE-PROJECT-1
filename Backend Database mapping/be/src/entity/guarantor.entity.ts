@@ -1,5 +1,5 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity';
+import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+//import { IDMASTER } from './customer-id.entity';
 import { LNMASTER } from './term-loan-master.entity';
 
 @Entity()
@@ -38,10 +38,8 @@ export class GUARANTERDETAILS {
 
     @Column({ nullable: true })
     lnmasterID: number
-    @ManyToOne(() => LNMASTER, (lnmaster) => lnmaster.guaranterMaster, {
-        cascade: true
-    })
-    @JoinColumn({ name: "lnmasterID" })
-    lnmaster: LNMASTER[];
-
+   
+  @ManyToOne(() => LNMASTER, ln => ln.guaranterMaster)
+  @JoinColumn({ name: 'LNMASTER_ID' }) // use your real FK column
+  lnmaster: LNMASTER;
 }

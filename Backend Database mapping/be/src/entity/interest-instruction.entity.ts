@@ -82,15 +82,11 @@ export class INTINSTRUCTION {
   @JoinColumn({ name: "BRANCH_CODE" })
   BranchCode: OWNBRANCHMASTER[];
 
-  @ManyToOne(() => SCHEMAST, (interestDr) => interestDr.interestDr, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "DR_ACTYPE" })
   interestDr: SCHEMAST[];
 
-  @ManyToOne(() => SCHEMAST, (interestCr) => interestCr.interestCr, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "CR_ACTYPE" })
   interestCr: SCHEMAST[];
 }

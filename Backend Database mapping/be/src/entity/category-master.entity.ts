@@ -1,6 +1,5 @@
 import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { SHMASTER } from './share-master.entity'
-import { DPMASTER } from './dpmaster.entity'
+import { DPMASTER } from './dpmaster.entity';
 
 @Entity()
 export class CATEGORYMASTER {
@@ -12,20 +11,13 @@ export class CATEGORYMASTER {
   @Generated('increment')
   CODE: number;
 
-
   @Column({ type: 'varchar', length: 100 })
   NAME: string;
 
   @Column({ nullable: true })
   ACNOTYPE: string;
 
-  @OneToMany(() => SHMASTER, (category) => category.CategoryMaster, {
-    cascade: ["insert", "update"]
-  })
-  category: SHMASTER[];
-
-  @OneToMany(() => DPMASTER, (category) => category.CategoryMaster, {
-    cascade: ["insert", "update"]
-  })
+  // Only keep relations that REALLY belong here
+  @OneToMany(() => DPMASTER, dp => dp.CategoryMaster)
   DPcategory: DPMASTER[];
 }

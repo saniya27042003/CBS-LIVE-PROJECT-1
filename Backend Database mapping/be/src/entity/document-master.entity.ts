@@ -19,10 +19,19 @@ export class DOCUMENTMASTER {
   })
   custdocument: CUSTDOCUMENT[];
 
-  @OneToMany(() => ACDOCUMENTDETAILS, (acDocumentDetails) => acDocumentDetails.acDocumentMaster, {
-    cascade: ["insert", "update"]
-  })
-  acDocumentDetails: ACDOCUMENTDETAILS[];
+//  @OneToMany(
+//   () => ACDOCUMENTDETAILS,
+//   (acDocumentDetails) => acDocumentDetails.acDocumentMaster
+// )
+// acDocumentMaster: ACDOCUMENTDETAILS[];
+
+@OneToMany(
+  () => ACDOCUMENTDETAILS,
+  (acDocumentDetails) => acDocumentDetails.documentMaster
+)
+acDocumentDetails: ACDOCUMENTDETAILS[];
+
+
 
   @OneToMany(() => SCHEMEDOCUMENTLINK, schemeDocumentMaster => schemeDocumentMaster.schemeDocumentMaster, {
     cascade: ["insert", "update"]

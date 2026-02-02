@@ -1,5 +1,5 @@
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { IDMASTER } from './customer-id.entity';
+import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+//import { IDMASTER } from './customer-id.entity';
 import { LNMASTER } from './term-loan-master.entity';
 
 @Entity()
@@ -29,9 +29,8 @@ export class COBORROWER {
 
     @Column()
     lnmasterID: number
-    @ManyToOne(() => LNMASTER, (lnmaster) => lnmaster.CoborrowerMaster, {
-        cascade: true
-    })
-    @JoinColumn({ name: "lnmasterID" })
-    lnmaster: LNMASTER[];
+    
+   @ManyToOne(() => LNMASTER, ln => ln.CoborrowerMaster)
+  @JoinColumn({ name: 'LNMASTER_ID' }) // use your real FK column
+  lnmaster: LNMASTER;
 }

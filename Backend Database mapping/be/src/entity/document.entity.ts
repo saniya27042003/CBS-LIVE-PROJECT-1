@@ -16,11 +16,10 @@ export class CUSTDOCUMENT {
     @Column()
     idmasterID: number
 
-    @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custdocument, {
-        cascade: true
-    })
-    @JoinColumn({ name: "idmasterID" })
-    idmaster: IDMASTER[];
+    
+@ManyToOne(() => IDMASTER, { nullable: true })
+@JoinColumn({ name: 'idmasterID' })
+idmaster?: IDMASTER;
 
     @Column()
     DocumentMasterID: number

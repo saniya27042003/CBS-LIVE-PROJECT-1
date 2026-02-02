@@ -1,5 +1,13 @@
-import { Column, Entity, Generated, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { SHMASTER } from './share-master.entity'
+import * as SHMASTER_AGAIN from './share-master.entity';
+
+
+console.log(
+  'SHMASTER duplicate check:',
+  SHMASTER === SHMASTER_AGAIN.SHMASTER
+);
+
 @Entity()
 export class HISTORYDIVIDEND {
 
@@ -78,12 +86,9 @@ export class HISTORYDIVIDEND {
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
-  @Column({ nullable: true })
-  sharesID: number
-
-  @OneToOne(() => SHMASTER, (sharesId) => sharesId.shareDividend, {
-    cascade: true
-  })
-  @JoinColumn({ name: "sharesID" })
-  sharesId: SHMASTER[];
+ 
+  
+  @OneToOne(() => SHMASTER, sh => sh.shareDividend)
+  @JoinColumn({ name: 'SH_ID' })   // FK column in HISTORYDIVIDEND table
+  shMaster: SHMASTER;
 }

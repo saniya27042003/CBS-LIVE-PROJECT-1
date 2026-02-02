@@ -1,50 +1,55 @@
-import { BANKBRANCHMASTER } from './BANKBRANCHMASTER.entity';
-import { BATCHVOUCHERTRAN } from './BATCHVOUCHERTRAN.entity';
-import { BRANCHWISEDIVIDEND } from './BRANCHWISEDIVIDEND.entity';
-import { CASHREMITRAN } from './CASHREMITRAN.entity';
-import { CHEQUEBOOKISSUED } from './CHEQUEBOOKISSUED.entity';
-import { CHEQUECOLLECTTRAN } from './CHEQUECOLLECTTRAN.entity';
-import { ITEMMASTER } from './dead-stock-master.entity';
+//import { BANKBRANCHMASTER } from './BANKBRANCHMASTER.entity';
+//import { BATCHVOUCHERTRAN } from './BATCHVOUCHERTRAN.entity';
+//import { BRANCHWISEDIVIDEND } from './BRANCHWISEDIVIDEND.entity';
+//import { CASHREMITRAN } from './CASHREMITRAN.entity';
+//import { CHEQUEBOOKISSUED } from './CHEQUEBOOKISSUED.entity';
+//import { CHEQUECOLLECTTRAN } from './CHEQUECOLLECTTRAN.entity';
+//mport { ITEMMASTER } from './dead-stock-master.entity';
 import { DPMASTER } from './dpmaster.entity';
 import { PGMASTER } from './pgmaster.entity';
-import { SHMASTER } from './share-master.entity';
-import { LNMASTER } from './term-loan-master.entity';
+//import { SHMASTER } from './share-master.entity';
+//import { LNMASTER } from './term-loan-master.entity';
 import { ACMASTER } from './gl-account-master.entity';
-import { MORATORIUMPERIOD } from './moratorium-peroid-master.entity';
-import { CHARGESNOTING } from './CHARGESNOTING.entity';
-import { BOOKDEBTS } from './book-debts.entity';
-import { SECINSURANCE } from './customer-insurance.entity';
-import { FIREPOLICY } from './fire-policy.entity';
-import { FURNITURE } from './furniture-and-fixture.entity';
-import { GOLDSILVER } from './gold-and-silver.entity';
-import { GOVTSECULIC } from './govt-security-and-lic.entity';
-import { LANDBUILDING } from './land-and-buildings.entity';
-import { MARKETSHARE } from './market-shares.entity';
-import { OTHERSECURITY } from './other-security.entity';
-import { OWNDEPOSIT } from './own-deposits.entity';
-import { PLANTMACHINARY } from './plant-and-machinery.entity';
-import { PLEDGESTOCK } from './pleadge-stock.entity';
-import { STOCKSTATEMENT } from './stock-statement.entity';
-import { VEHICLE } from './vehicle.entity';
-import { PIGMYCHART } from './pigmy-chart.entity';
+//import { MORATORIUMPERIOD } from './moratorium-peroid-master.entity';
+//import { CHARGESNOTING } from './CHARGESNOTING.entity';
+// import { BOOKDEBTS } from './book-debts.entity';
+// import { SECINSURANCE } from './customer-insurance.entity';
+// import { FIREPOLICY } from './fire-policy.entity';
+// import { FURNITURE } from './furniture-and-fixture.entity';
+// import { GOLDSILVER } from './gold-and-silver.entity';
+// import { GOVTSECULIC } from './govt-security-and-lic.entity';
+// import { LANDBUILDING } from './land-and-buildings.entity';
+// import { MARKETSHARE } from './market-shares.entity';
+// import { OTHERSECURITY } from './other-security.entity';
+// import { OWNDEPOSIT } from './own-deposits.entity';
+// import { PLANTMACHINARY } from './plant-and-machinery.entity';
+// import { PLEDGESTOCK } from './pleadge-stock.entity';
+// import { STOCKSTATEMENT } from './stock-statement.entity';
+// import { VEHICLE } from './vehicle.entity';
+//import { PIGMYCHART } from './pigmy-chart.entity';
 import { SYSPARA } from './system-master-parameters.entity';
 // import { USERDEFINATION } from 'src/utility/user-defination/entity/user-defination.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { INTINSTRUCTION } from './interest-instruction.entity'
-import { COMPANYGROUPLINKMASTER } from './company-group-link-master.entity';
-import { COMPANYGROUPMASTER } from './company-group-master.entity';
-import { DEPRCATEGORY } from './depriciation-category-master.entity';
-import { DIRECTORMASTER } from './director-master.entity';
-import { LOCKERRACKMASTER } from './locker-rack-master.entity';
-import { LOCKERMASTER } from './locker-rackwise-master.entity';
-import { LOCKERSIZE } from './locker-size-master.entity';
-import { SALARYDIVISIONMASTER } from './salary-division-master.entity';
-import { SUBSALARYMASTER } from './sub-salary-division-master.entity';
-import { USERDEFINATION } from './USERDEFINATION.entity';
+import { Column, Entity,  JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+//import { INTINSTRUCTION } from './interest-instruction.entity'
+// import { COMPANYGROUPLINKMASTER } from './company-group-link-master.entity';
+// import { COMPANYGROUPMASTER } from './company-group-master.entity';
+// import { DEPRCATEGORY } from './depriciation-category-master.entity';
+// import { DIRECTORMASTER } from './director-master.entity';
+// import { LOCKERRACKMASTER } from './locker-rack-master.entity';
+// import { LOCKERMASTER } from './locker-rackwise-master.entity';
+// import { LOCKERSIZE } from './locker-size-master.entity';
+//import { SALARYDIVISIONMASTER } from './salary-division-master.entity';
+// import { SUBSALARYMASTER } from './sub-salary-division-master.entity';
+// import { USERDEFINATION } from './USERDEFINATION.entity';
+//import { DIVBRANCHMASTER } from './DIVBRANCHMASTER.entity';
+
 @Entity()
 export class OWNBRANCHMASTER {
+  [x: string]: any;
   @PrimaryGeneratedColumn()
   id: number;
+
+
 
   @Column()
   CODE: number;
@@ -55,142 +60,156 @@ export class OWNBRANCHMASTER {
   // @Column({ nullable: true, length: 15 })
   // AC_NO: string;
 
-  @OneToMany(type => USERDEFINATION, user => user.branch)
-  user: USERDEFINATION
+  // @OneToMany(type => USERDEFINATION, user => user.branch)
+  // user: USERDEFINATION
 
   @Column({ nullable: true })
   sysparaId: number;
-  @ManyToOne(type => SYSPARA, syspara => syspara.branch)
-  syspara: SYSPARA
 
-  @OneToMany(type => DPMASTER, branchcode => branchcode.BranchCodeMaster)
-  branchcode: DPMASTER
 
-  @OneToMany(() => DPMASTER, (branch) => branch.BranchMaster) BranchMaster
-  branch: DPMASTER
+  @ManyToOne(() => SYSPARA, { nullable: true })
+@JoinColumn({ name: 'sysparaId' })
+syspara?: SYSPARA;
 
-  @OneToMany(() => PGMASTER, (branchCodePG) => branchCodePG.BranchCodeMaster)
-  branchCodePG: PGMASTER
 
-  @OneToMany(() => SHMASTER, (branchCodesh) => branchCodesh.BranchCodeMaster)
-  branchCodesh: SHMASTER
+@OneToMany(() => DPMASTER, dp => dp.BranchCodeMaster)
+branchcode: DPMASTER[];
 
-  @OneToMany(() => ITEMMASTER, (branchCodeds) => branchCodeds.BranchCodeMaster)
-  branchCodeds: ITEMMASTER
+@OneToMany(() => DPMASTER, dp => dp.BranchMaster)
+branch: DPMASTER[];
 
-  @OneToMany(() => LNMASTER, (branchCodeLN) => branchCodeLN.BranchCodeMaster)
-  branchCodeLN: LNMASTER
+@OneToMany(() => PGMASTER, pg => pg.BranchCodeMaster)
+branchCodePG: PGMASTER[];
 
-  @OneToMany(() => SHMASTER, (divBranch) => divBranch.divBranchMaster)
-  divBranch: SHMASTER
+// @ManyToOne(() => DIVBRANCHMASTER, div => div.ownBranches)
+// divBranch: DIVBRANCHMASTER;
 
-  @OneToMany(() => PIGMYCHART, (branchCodePigmyChart) => branchCodePigmyChart.BranchCode)
-  branchCodePigmyChart: PIGMYCHART
+//  @OneToMany(() => ITEMMASTER, item => item.branch)
+//   items: ITEMMASTER[];
+
+
+  // @OneToMany(() => LNMASTER, (branchCodeLN) => branchCodeLN.BranchCodeMaster)
+  // branchCodeLN: LNMASTER[];
+
+  // @OneToMany(() => SHMASTER, (divBranch) => divBranch.divBranchMaster)
+  // divBranch: SHMASTER
+
+
+  // @OneToMany(() => PIGMYCHART, pigmy => pigmy.branch)
+  // pigmyCharts: PIGMYCHART[];
 
   @Column({ nullable: true })
   AC_NO: string;
 
-  @ManyToOne(() => ACMASTER, (accNo) => accNo.ownBranch, {
-    cascade: true
-  })
 
-  @JoinColumn({ name: "AC_NO" })
-  accNo: ACMASTER[];
+@ManyToOne(() => ACMASTER, accNo => accNo.ownBranches, {
+  cascade: true,
+})
+@JoinColumn({ name: 'AC_NO' })
+accNo: ACMASTER;
 
-  @OneToMany(() => INTINSTRUCTION, (branchCodeIns) => branchCodeIns.BranchCode)
-  branchCodeIns: INTINSTRUCTION
 
-  @OneToMany(() => SALARYDIVISIONMASTER, salarydiv => salarydiv.branch, {
-    cascade: ["insert", "update"]
-  })
-  salarydiv: SALARYDIVISIONMASTER[];
-  @OneToMany(() => BANKBRANCHMASTER, (BBranchMaster) => BBranchMaster.BBranchMaster)
-  BBranchMaster: BANKBRANCHMASTER
 
-  @OneToMany(() => BATCHVOUCHERTRAN, (voucherBranch) => voucherBranch.voucherBranch)
-  voucherBranch: BATCHVOUCHERTRAN
+  // @OneToMany(() => INTINSTRUCTION, (branchCodeIns) => branchCodeIns.BranchCode)
+  // branchCodeIns: INTINSTRUCTION
 
-  @OneToMany(() => BRANCHWISEDIVIDEND, (branchDividend) => branchDividend.branchDividend)
-  branchDividend: BRANCHWISEDIVIDEND
+  // @OneToMany(() => SALARYDIVISIONMASTER, salarydiv => salarydiv.branch, {
+  //   cascade: ["insert", "update"]
+  // })
+  // salarydiv: SALARYDIVISIONMASTER[];
 
-  @OneToMany(() => CASHREMITRAN, (cashTran) => cashTran.cashTran)
-  cashTran: CASHREMITRAN
 
-  @OneToMany(() => CHEQUEBOOKISSUED, (chequebook) => chequebook.chequebook)
-  chequebook: CHEQUEBOOKISSUED
+  // @OneToMany(() => BANKBRANCHMASTER, (BBranchMaster) => BBranchMaster.BBranchMaster)
+  // BBranchMaster: BANKBRANCHMASTER
 
-  @OneToMany(() => CHEQUECOLLECTTRAN, (chequeCollection) => chequeCollection.chequeCollection)
-  chequeCollection: CHEQUECOLLECTTRAN
+  // @OneToMany(() => BATCHVOUCHERTRAN, (voucherBranch) => voucherBranch.voucherBranch)
+  // voucherBranch: BATCHVOUCHERTRAN
 
-  @OneToMany(() => MORATORIUMPERIOD, (moratoriumBranch) => moratoriumBranch.moratoriumBranch)
-  moratoriumBranch: MORATORIUMPERIOD
+  // @OneToMany(() => BRANCHWISEDIVIDEND, (branchDividend) => branchDividend.branchDividend)
+  // branchDividend: BRANCHWISEDIVIDEND
 
-  @OneToMany(() => CHARGESNOTING, (notingChargeBranch) => notingChargeBranch.notingChargeBranch)
-  notingChargeBranch: CHARGESNOTING
-  @OneToMany(() => DIRECTORMASTER, (director) => director.BranchCodeMaster)
-  director: DIRECTORMASTER
+  // @OneToMany(() => CASHREMITRAN, (cashTran) => cashTran.cashTran)
+  // cashTran: CASHREMITRAN
 
-  @OneToMany(() => LOCKERRACKMASTER, (locker) => locker.BranchCodeMaster)
-  locker: LOCKERRACKMASTER
+  // @OneToMany(() => CHEQUEBOOKISSUED, (chequebook) => chequebook.chequebook)
+  // chequebook: CHEQUEBOOKISSUED
 
-  @OneToMany(() => LOCKERSIZE, (lockersize) => lockersize.BranchCodeMaster)
-  lockersize: LOCKERSIZE
+  // @OneToMany(() => CHEQUECOLLECTTRAN, (chequeCollection) => chequeCollection.chequeCollection)
+  // chequeCollection: CHEQUECOLLECTTRAN
 
-  @OneToMany(() => LOCKERMASTER, (lockerwise) => lockerwise.BranchCodeMaster)
-  lockerwise: LOCKERMASTER
+  // @OneToMany(() => MORATORIUMPERIOD, (moratoriumBranch) => moratoriumBranch.moratoriumBranch)
+  // moratoriumBranch: MORATORIUMPERIOD
 
-  @OneToMany(() => DEPRCATEGORY, (depre) => depre.BranchCodeMaster)
-  depre: DEPRCATEGORY
+  // @OneToMany(() => CHARGESNOTING, (notingChargeBranch) => notingChargeBranch.notingChargeBranch)
+  // notingChargeBranch: CHARGESNOTING
 
-  @OneToMany(() => SUBSALARYMASTER, (subsal) => subsal.BranchCodeMaster)
-  subsal: SUBSALARYMASTER
 
-  @OneToMany(() => COMPANYGROUPMASTER, (comapny) => comapny.BranchCodeMaster)
-  comapny: COMPANYGROUPMASTER
+  // @OneToMany(() => DIRECTORMASTER, (director) => director.BranchCodeMaster)
+  // director: DIRECTORMASTER
 
-  @OneToMany(() => COMPANYGROUPLINKMASTER, (comapnylink) => comapnylink.BranchCodeMaster)
-  comapnylink: COMPANYGROUPLINKMASTER
+  // @OneToMany(() => LOCKERRACKMASTER, (locker) => locker.BranchCodeMaster)
+  // locker: LOCKERRACKMASTER
 
-  @OneToMany(() => OWNDEPOSIT, (owndeposit) => owndeposit.owndeposit)
-  owndeposit: OWNDEPOSIT
+  // @OneToMany(() => LOCKERSIZE, (lockersize) => lockersize.BranchCodeMaster)
+  // lockersize: LOCKERSIZE
 
-  @OneToMany(() => FIREPOLICY, (firebranchcode) => firebranchcode.firebranchcode)
-  firebranchcode: FIREPOLICY
+  // @OneToMany(() => LOCKERMASTER, (lockerwise) => lockerwise.BranchCodeMaster)
+  // lockerwise: LOCKERMASTER
 
-  @OneToMany(() => BOOKDEBTS, (bookbrach) => bookbrach.bookbrach)
-  bookbrach: BOOKDEBTS
+  // @OneToMany(() => DEPRCATEGORY, (depre) => depre.BranchCodeMaster)
+  // depre: DEPRCATEGORY
 
-  @OneToMany(() => SECINSURANCE, (secinsubranch) => secinsubranch.secinsubranch)
-  secinsubranch: SECINSURANCE
+  // @OneToMany(() => SUBSALARYMASTER, (subsal) => subsal.BranchCodeMaster)
+  // subsal: SUBSALARYMASTER
 
-  @OneToMany(() => FURNITURE, (furniturebranchcode) => furniturebranchcode.furniturebranchcode)
-  furniturebranchcode: FURNITURE
+//   @OneToMany(() => COMPANYGROUPMASTER, (comapny) => comapny.BranchCodeMaster)
+//   comapny: COMPANYGROUPMASTER
 
-  @OneToMany(() => GOLDSILVER, (goldsilverbranchcode) => goldsilverbranchcode.goldsilverbranchcode)
-  goldsilverbranchcode: GOLDSILVER
+//   @OneToMany(() => COMPANYGROUPLINKMASTER, (comapnylink) => comapnylink.BranchCodeMaster)
+//   comapnylink: COMPANYGROUPLINKMASTER
 
-  @OneToMany(() => GOVTSECULIC, (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode)
-  govtsecbranchcode: GOVTSECULIC
+// @OneToMany(() => OWNDEPOSIT, o => o.branch)
+// owndeposits: OWNDEPOSIT[];
 
-  @OneToMany(() => LANDBUILDING, (landbranchcode) => landbranchcode.landbranchcode)
-  landbranchcode: LANDBUILDING
 
-  @OneToMany(() => MARKETSHARE, (marketbranchcode) => marketbranchcode.marketbranchcode)
-  marketbranchcode: MARKETSHARE
 
-  @OneToMany(() => OTHERSECURITY, (othersecbranchcode) => othersecbranchcode.othersecbranchcode)
-  othersecbranchcode: OTHERSECURITY
+  // @OneToMany(() => FIREPOLICY, (firebranchcode) => firebranchcode.firebranchcode)
+  // firebranchcode: FIREPOLICY
 
-  @OneToMany(() => PLANTMACHINARY, (plantbranchcode) => plantbranchcode.plantbranchcode)
-  plantbranchcode: PLANTMACHINARY
+  // @OneToMany(() => BOOKDEBTS, (bookbrach) => bookbrach.bookbrach)
+  // bookbrach: BOOKDEBTS
 
-  @OneToMany(() => PLEDGESTOCK, (pleadgebranchcode) => pleadgebranchcode.pleadgebranchcode)
-  pleadgebranchcode: PLEDGESTOCK
+  // @OneToMany(() => SECINSURANCE, (secinsubranch) => secinsubranch.secinsubranch)
+  // secinsubranch: SECINSURANCE
 
-  @OneToMany(() => STOCKSTATEMENT, (stockbranchcode) => stockbranchcode.stockbranchcode)
-  stockbranchcode: STOCKSTATEMENT
+  // @OneToMany(() => FURNITURE, (furniturebranchcode) => furniturebranchcode.furniturebranchcode)
+  // furniturebranchcode: FURNITURE
 
-  @OneToMany(() => VEHICLE, (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode)
-  vehiclebranchcode: VEHICLE
+  // @OneToMany(() => GOLDSILVER, (goldsilverbranchcode) => goldsilverbranchcode.goldsilverbranchcode)
+  // goldsilverbranchcode: GOLDSILVER
+
+  // @OneToMany(() => GOVTSECULIC, (govtsecbranchcode) => govtsecbranchcode.govtsecbranchcode)
+  // govtsecbranchcode: GOVTSECULIC
+
+  // @OneToMany(() => LANDBUILDING, (landbranchcode) => landbranchcode.landbranchcode)
+  // landbranchcode: LANDBUILDING
+
+  // @OneToMany(() => MARKETSHARE, (marketbranchcode) => marketbranchcode.marketbranchcode)
+  // marketbranchcode: MARKETSHARE
+
+  // @OneToMany(() => OTHERSECURITY, (othersecbranchcode) => othersecbranchcode.othersecbranchcode)
+  // othersecbranchcode: OTHERSECURITY
+
+  // @OneToMany(() => PLANTMACHINARY, (plantbranchcode) => plantbranchcode.plantbranchcode)
+  // plantbranchcode: PLANTMACHINARY
+
+  // @OneToMany(() => PLEDGESTOCK, (pleadgebranchcode) => pleadgebranchcode.pleadgebranchcode)
+  // pleadgebranchcode: PLEDGESTOCK
+
+  // @OneToMany(() => STOCKSTATEMENT, (stockbranchcode) => stockbranchcode.stockbranchcode)
+  // stockbranchcode: STOCKSTATEMENT
+
+  // @OneToMany(() => VEHICLE, (vehiclebranchcode) => vehiclebranchcode.vehiclebranchcode)
+  // vehiclebranchcode: VEHICLE
 
 }

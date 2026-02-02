@@ -1,5 +1,5 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class BRANCHWISEDIVIDEND {
@@ -58,10 +58,8 @@ export class BRANCHWISEDIVIDEND {
     @Column({ nullable: true })
     AC_ACNOTYPE: string
 
-    @ManyToOne(() => OWNBRANCHMASTER, (branchDividend) => branchDividend.branchDividend, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
-    branchDividend: OWNBRANCHMASTER[];
+    branch: OWNBRANCHMASTER;
 
 }

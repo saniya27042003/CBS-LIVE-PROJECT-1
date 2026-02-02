@@ -15,8 +15,10 @@ export class BALACATA {
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
   BC_MINBAL: number;
 
-  @OneToMany(() => DPMASTER, (minimumBalance) => minimumBalance.MinimumBalanceMaster, {
-    cascade: ["insert", "update"]
-  })
-  minimumBalance: DPMASTER[];
+ @OneToMany(
+  () => DPMASTER,
+  (dp) => dp.MinimumBalanceMaster
+)
+dpMasters: DPMASTER[];
+
 }

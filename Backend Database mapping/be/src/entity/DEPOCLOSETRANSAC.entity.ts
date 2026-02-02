@@ -1,5 +1,5 @@
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { DEPOCLOSETRAN } from './DEPOCLOSETRAN.entity';
 
 @Entity()
@@ -50,21 +50,17 @@ export class DEPOCLOSETRANSAC {
     @Column({ default: 0 })
     AC_CLOSED: number
 
-    @Column({ nullable: true })
-    depoclosetran: number
+    // @Column({ nullable: true })
+    // depoclosetran: number
+
+    @ManyToOne(() => SCHEMAST)
+    @JoinColumn({ name: 'TRANSFER_ACTYPE' })
+    scheme: SCHEMAST;
 
 
-    @ManyToOne(() => SCHEMAST, (depoCloseTranAc) => depoCloseTranAc.depoCloseTranAc, {
-        cascade: true
-    })
-    @JoinColumn({ name: "TRANSFER_ACTYPE" })
-    depoCloseTranAc: SCHEMAST[];
 
-
-    @ManyToOne(() => DEPOCLOSETRAN, (depocloseTranNo) => depocloseTranNo.depocloseTranNo, {
-        cascade: true
-    })
-    @JoinColumn({ name: "depoclosetran" })
-    depocloseTranNo: DEPOCLOSETRAN[];
+  @ManyToOne(() => DEPOCLOSETRAN, tran => tran.depocloseTransacs)
+@JoinColumn({ name: 'depoclosetran' }) // FK column
+depocloseTran: DEPOCLOSETRAN;
 
 }

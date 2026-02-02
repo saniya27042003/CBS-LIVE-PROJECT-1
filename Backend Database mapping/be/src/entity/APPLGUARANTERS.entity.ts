@@ -1,5 +1,5 @@
 import { CITYMASTER } from './city-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class APPLGUARANTERS {
@@ -37,12 +37,13 @@ export class APPLGUARANTERS {
     @Column({ nullable: true })
     AC_ADDR3: string
 
-    @Column()
-    CTCODE: number
 
-    @ManyToOne(() => CITYMASTER, (cityCode) => cityCode.cityCode, {
-        cascade: true
-    })
-    @JoinColumn({ name: "CTCODE" })
-    cityCode: CITYMASTER[];
+
+    @Column({ nullable: true })
+CTCODE: number;
+
+@ManyToOne(() => CITYMASTER, { nullable: true })
+@JoinColumn({ name: "CTCODE" })
+city?: CITYMASTER;
+
 }

@@ -1,7 +1,7 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class BOOKDEBTS {
@@ -14,9 +14,7 @@ export class BOOKDEBTS {
 
     @Column({ nullable: true })
     BRANCH_CODE: number;
-    @ManyToOne(() => OWNBRANCHMASTER, (bookbrach) => bookbrach.bookbrach, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     bookbrach: OWNBRANCHMASTER[];
 
@@ -71,9 +69,7 @@ export class BOOKDEBTS {
 
     @Column({ nullable: true })
     AC_TYPE: number;
-    @ManyToOne(() => SCHEMAST, (scheme) => scheme.bookdebts, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
     scheme: SCHEMAST[];
 }

@@ -1,6 +1,4 @@
-import { timeStamp } from 'console';
-import { Column, CreateDateColumn, Entity, Generated, Index, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
-import { OWNBRANCHMASTER } from './own-branch-master.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { ROLE_DEFINE } from './ROLE_DEFINE.entity';
 import { VOUCHERHISTORY } from './VOUCHERHISTORY.entity';
 
@@ -16,7 +14,7 @@ export class USERDEFINATION {
     F_NAME: string;
  
     @Column({ nullable: true })
-    L_NAME: String;
+    L_NAME: string;
  
     @Column({ nullable: true })
     DOB: string;
@@ -50,7 +48,7 @@ export class USERDEFINATION {
     // roleId:String;
  
     @Column()
-    branchId: String;
+    branchId: string;
  
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     USER_CREATED_AT: Date;
@@ -66,13 +64,13 @@ export class USERDEFINATION {
     // @JoinColumn({name:"roleId"})
     // Role : ROLEDATAMASTER
  
-    @OneToMany(type => ROLE_DEFINE, RoleDefine => RoleDefine.user)
+@OneToMany(() => ROLE_DEFINE, role => role.user)
     RoleDefine: ROLE_DEFINE;
- 
-    @ManyToOne(type => OWNBRANCHMASTER, branch => branch.id)
-    @JoinColumn({ name: 'branchId' })
-    branch: OWNBRANCHMASTER[]
- 
+
+ @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
+@JoinColumn({ name: 'branchId' })
+branch?: OWNBRANCHMASTER;
+
  
     @OneToMany(() => VOUCHERHISTORY, voucher => voucher.ACTION_BY)
     vouchers: VOUCHERHISTORY[];

@@ -1,5 +1,5 @@
 import { DEPRCATEGORY } from './depriciation-category-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class DEPRRATE {
@@ -15,10 +15,9 @@ export class DEPRRATE {
 
   @Column()
   CATEGORY: number;
-  @ManyToOne(() => DEPRCATEGORY, (decategory) => decategory.deprerate, {
-    cascade: true
-  })
-  @JoinColumn({ name: "CATEGORY" })
-  decategory: DEPRCATEGORY[];
+  
+  @ManyToOne(() => DEPRCATEGORY)
+  @JoinColumn({ name: 'DEPR_CATEGORY_ID' })   // use your real FK column
+  decategory: DEPRCATEGORY;   // 🔴 NAME MUST MATCH
 
 }

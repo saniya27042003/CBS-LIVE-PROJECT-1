@@ -1,5 +1,5 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class CASHREMITRAN {
@@ -52,9 +52,7 @@ export class CASHREMITRAN {
     @Column({ nullable: true })
     TRAN_DRCR: string
 
-    @ManyToOne(() => OWNBRANCHMASTER, (cashTran) => cashTran.cashTran, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
-    cashTran: OWNBRANCHMASTER[];
+    branch: OWNBRANCHMASTER;
 }

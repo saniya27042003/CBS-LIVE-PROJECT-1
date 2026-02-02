@@ -1,8 +1,7 @@
-import { BRANCHMASTER } from './clearing-branch-master.entity';
 import { DEPRCATEGORY } from './depriciation-category-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn, ManyToOne, JoinColumn, PrimaryColumn, Unique, Index } from 'typeorm';
+import { Column, Entity, OneToMany, ManyToOne, JoinColumn, PrimaryColumn, Unique } from 'typeorm';
 @Entity()
 @Unique(['AC_NO'])
 export class ACMASTER {
@@ -85,27 +84,23 @@ export class ACMASTER {
   @Column({ default: false })
   IS_DORMANT: boolean;
 
-  @OneToMany(() => BRANCHMASTER, clearingBranch => clearingBranch.accountNo, {
-    cascade: ["insert", "update"]
-  })
-  clearingBranch: BRANCHMASTER[];
+ @ManyToOne(() => OWNBRANCHMASTER, branch => branch.clearingAccounts)
+@JoinColumn({ name: 'CLEARING_BRANCH_ID' }) // use real FK column
+clearingBranch: OWNBRANCHMASTER;
 
-  @OneToMany(() => OWNBRANCHMASTER, ownBranch => ownBranch.accNo, {
-    cascade: ["insert", "update"]
-  })
-  ownBranch: OWNBRANCHMASTER[];
+ 
+  @OneToMany(() => OWNBRANCHMASTER, branch => branch.accNo)
+  ownBranches: OWNBRANCHMASTER[];
 
 
-  @OneToMany(() => DEPRCATEGORY, deprecat => deprecat.depaccountno, {
-    cascade: ["insert", "update"]
-  })
-  deprecat: DEPRCATEGORY[];
+ @ManyToOne(() => DEPRCATEGORY)
+@JoinColumn({ name: 'DEPR_CATEGORY_ID' })   // use real FK
+deprecat: DEPRCATEGORY;
 
 
-  @ManyToOne(() => SCHEMAST, (glAcMaster) => glAcMaster.glAcMaster, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_TYPE" })
-  glAcMaster: SCHEMAST[];
+  @ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: 'AC_TYPE' })
+glAcMaster: SCHEMAST;
+
 
 }

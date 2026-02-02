@@ -2,7 +2,7 @@ import { SECURITYMASTER } from './security-code.entity';
 import { INSUARANCEMASTER } from './insurance-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class SECINSURANCE {
@@ -22,9 +22,7 @@ export class SECINSURANCE {
 
   @Column({ nullable: true })
   AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (custinsurace) => custinsurace.custinsurace, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "AC_TYPE" })
 
   custinsurace: SCHEMAST[];

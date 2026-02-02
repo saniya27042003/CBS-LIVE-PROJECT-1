@@ -1,13 +1,11 @@
-import { INTRATELOAN } from './interest-rate-for-loan-and-cc.entity';
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+//import { INTRATELOAN } from './interest-rate-for-loan-and-cc.entity';
+import { Column, Entity,  PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class SCHEMDATA {
 
     @PrimaryGeneratedColumn()
     id: number;
-
-
 
     @Column()
     S_ACNOTYPE: string

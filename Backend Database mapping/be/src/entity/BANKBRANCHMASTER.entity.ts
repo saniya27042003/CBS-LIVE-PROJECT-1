@@ -1,6 +1,6 @@
 import { BANKMASTER } from './bank-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class BANKBRANCHMASTER {
@@ -47,11 +47,10 @@ export class BANKBRANCHMASTER {
     @JoinColumn({ name: "BANK_CODE" })
     BankCode: BANKMASTER[];
 
-    @ManyToOne(() => OWNBRANCHMASTER, (BBranchMaster) => BBranchMaster.BBranchMaster, {
-        cascade: true
-    })
-    @JoinColumn({ name: "BRANCH_CODE" })
-    BBranchMaster: OWNBRANCHMASTER[];
+  @ManyToOne(() => OWNBRANCHMASTER)
+@JoinColumn({ name: "BRANCH_CODE" })
+branch: OWNBRANCHMASTER;
+
 
 
 

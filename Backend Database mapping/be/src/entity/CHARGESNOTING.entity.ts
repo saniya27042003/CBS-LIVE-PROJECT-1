@@ -1,6 +1,6 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class CHARGESNOTING {
@@ -86,16 +86,12 @@ export class CHARGESNOTING {
     @Column({ nullable: true })
     SYSCHNG_LOGIN: string;
 
-    @ManyToOne(() => SCHEMAST, (chargesScheme) => chargesScheme.chargesScheme, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "TRAN_ACTYPE" })
     chargesScheme: SCHEMAST[];
 
 
-    @ManyToOne(() => OWNBRANCHMASTER, (notingChargeBranch) => notingChargeBranch.notingChargeBranch, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     notingChargeBranch: OWNBRANCHMASTER[];
 

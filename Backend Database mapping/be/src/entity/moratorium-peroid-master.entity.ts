@@ -1,7 +1,7 @@
 
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class MORATORIUMPERIOD {
@@ -36,15 +36,11 @@ export class MORATORIUMPERIOD {
     @Column()
     BRANCH_CODE: number;
 
-    @ManyToOne(() => OWNBRANCHMASTER, (moratoriumBranch) => moratoriumBranch.moratoriumBranch, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     moratoriumBranch: OWNBRANCHMASTER[];
 
-    @ManyToOne(() => SCHEMAST, (moratoriumScheme) => moratoriumScheme.moratoriumScheme, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
     moratoriumScheme: SCHEMAST[];
 

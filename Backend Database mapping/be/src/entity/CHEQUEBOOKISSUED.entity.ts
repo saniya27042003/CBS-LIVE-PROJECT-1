@@ -1,6 +1,6 @@
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class CHEQUEBOOKISSUED {
@@ -56,16 +56,12 @@ export class CHEQUEBOOKISSUED {
     @Column({ nullable: true })
     IS_MICR_CHEQUE: number
 
-    @ManyToOne(() => OWNBRANCHMASTER, (chequebook) => chequebook.chequebook, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "AC_BRANCH" })
     chequebook: OWNBRANCHMASTER[];
 
 
-    @ManyToOne(() => SCHEMAST, (chequeBook) => chequeBook.chequeBook, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
     chequeBook: SCHEMAST[];
 

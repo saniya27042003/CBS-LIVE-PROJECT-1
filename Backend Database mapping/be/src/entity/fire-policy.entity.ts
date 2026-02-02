@@ -2,7 +2,7 @@ import { SECURITYMASTER } from './security-code.entity';
 import { INSUARANCEMASTER } from './insurance-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class FIREPOLICY {
@@ -14,9 +14,7 @@ export class FIREPOLICY {
 
   @Column()
   AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (fireactype) => fireactype.fireactype, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "AC_TYPE" })
 
   fireactype: SCHEMAST[];
@@ -69,9 +67,7 @@ export class FIREPOLICY {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (firebranchcode) => firebranchcode.firebranchcode, {
-    cascade: true
-  })
+  @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: "BRANCH_CODE" })
   firebranchcode: OWNBRANCHMASTER[];
 

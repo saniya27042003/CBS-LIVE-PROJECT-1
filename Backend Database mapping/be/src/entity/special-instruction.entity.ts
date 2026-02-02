@@ -48,9 +48,7 @@ export class SPECIALINSTRUCTION {
   @Column({ nullable: true })
   SYSCHNG_LOGIN: string;
 
-  @ManyToOne(() => SCHEMAST, (specialIns) => specialIns.specialIns, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "TRAN_ACTYPE" })
   specialIns: SCHEMAST[];
 }

@@ -1,14 +1,15 @@
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { TERMINTRATE } from './rate-for term.entity';
 @Entity()
 export class INTRATETD {
+
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  EFFECT_DATE: string
+  EFFECT_DATE: string;
 
   @Column({ nullable: true })
   TYPE: string;
@@ -18,21 +19,17 @@ export class INTRATETD {
   })
   rate: TERMINTRATE[];
 
-  @Column({nullable:true})
-  ACNOTYPE: number
-  @ManyToOne(() => SCHEMAST, (scheme) => scheme.irftd, {
-    cascade: true
-  })
+  @Column({ nullable: true })
+  ACNOTYPE: number;
+
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "ACNOTYPE" })
-  scheme: SCHEMAST[];
-
-
+  scheme: SCHEMAST;
 
   @Column()
-  INT_CATEGORY: number
-  @ManyToOne(() => INTCATEGORYMASTER, (category) => category.idftd, {
-    cascade: true
-  })
+  INT_CATEGORY: number;
+
+  @ManyToOne(() => INTCATEGORYMASTER)
   @JoinColumn({ name: "INT_CATEGORY" })
-  category: INTCATEGORYMASTER[];
+  category: INTCATEGORYMASTER;
 }

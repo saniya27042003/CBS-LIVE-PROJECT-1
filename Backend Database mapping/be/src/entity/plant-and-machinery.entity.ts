@@ -1,7 +1,7 @@
 import { SECURITYMASTER } from './security-code.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class PLANTMACHINARY {
@@ -15,9 +15,7 @@ export class PLANTMACHINARY {
 
     @Column()
     AC_TYPE: number;
-    @ManyToOne(() => SCHEMAST, (plantmachinary) => plantmachinary.plantmachinary, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "AC_TYPE" })
 
     plantmachinary: SCHEMAST[];
@@ -71,9 +69,7 @@ export class PLANTMACHINARY {
 
     @Column({ nullable: true })
     BRANCH_CODE: number;
-    @ManyToOne(() => OWNBRANCHMASTER, (plantbranchcode) => plantbranchcode.plantbranchcode, {
-        cascade: true
-    })
+    @ManyToOne(() => OWNBRANCHMASTER)
     @JoinColumn({ name: "BRANCH_CODE" })
     plantbranchcode: OWNBRANCHMASTER[];
 }

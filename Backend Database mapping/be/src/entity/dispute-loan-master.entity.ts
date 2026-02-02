@@ -1,6 +1,6 @@
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { SECURITYDETAILS } from './security.entity';
-import { IDMASTER } from './customer-id.entity';
+//import { IDMASTER } from './customer-id.entity';
 import { GUARANTERDETAILS } from './guarantor.entity';
 import { LNMASTER } from './term-loan-master.entity';
 
@@ -341,17 +341,17 @@ export class LNDISPUTEDETAILS {
 
 
 
-  @Column({ nullable: true })
-  lnDisputemasterID: number
-  @ManyToOne(() => LNDISPUTEDETAILS, (disputeloan) => disputeloan.disputeloanmaster)
-  @JoinColumn({ name: "lnDisputemasterID" })
-  disputeloanmaster: LNDISPUTEDETAILS[];
+  // @Column({ nullable: true })
+  // lnDisputemasterID: number
+  // @ManyToOne(() => LNDISPUTEDETAILS, (disputeloan) => disputeloan.disputeloanmaster)
+  // @JoinColumn({ name: "lnDisputemasterID" })
+  // disputeloanmaster: LNDISPUTEDETAILS[];
 
 
-  @OneToMany(() => LNMASTER, termloan => termloan.lnmaster, {
-    cascade: ["insert", "update"]
-  })
-  termloan: LNMASTER[];
+ @ManyToOne(() => LNMASTER, ln => ln.disputeloanMaster)
+@JoinColumn({ name: 'LNMASTER_ID' })   // real FK column
+lnmaster: LNMASTER;
+
 
 
   @OneToMany(() => GUARANTERDETAILS, guaranterMaster => guaranterMaster.lnmaster, {

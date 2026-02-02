@@ -35,9 +35,7 @@ export class SALARYDIVISIONMASTER {
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (branch) => branch.salarydiv, {
-    cascade: true
-  })
+  @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: "BRANCH_CODE" })
   branch: OWNBRANCHMASTER[];
 

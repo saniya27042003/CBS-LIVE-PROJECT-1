@@ -1,92 +1,72 @@
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CITYMASTER } from './city-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DPMASTER } from './dpmaster.entity';
-import { PGMASTER } from './pgmaster.entity'
+import { PGMASTER } from './pgmaster.entity';
 import { SHMASTER } from './share-master.entity';
+
 @Entity()
 export class NOMINEELINK {
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ nullable: true })
-    AC_NNAME: string
+  @Column({ nullable: true })
+  AC_NNAME: string;
 
-    @Column({ nullable: true })
-    AC_NRELA: string
+  @Column({ nullable: true })
+  AC_NRELA: string;
 
-    @Column({ nullable: true })
-    AC_NDATE: string
+  @Column({ nullable: true })
+  AC_NDATE: string;
 
-    @Column({ nullable: true })
-    AGE: string
+  @Column({ nullable: true })
+  AGE: string;
 
-    @Column({ nullable: true })
-    AC_NHONO: string
+  @Column({ nullable: true })
+  AC_NHONO: string;
 
-    @Column({ nullable: true })
-    AC_NWARD: string
+  @Column({ nullable: true })
+  AC_NWARD: string;
 
-    @Column({ nullable: true })
-    AC_NADDR: string
+  @Column({ nullable: true })
+  AC_NADDR: string;
 
-    @Column({ nullable: true })
-    AC_NGALLI: string
+  @Column({ nullable: true })
+  AC_NGALLI: string;
 
-    @Column({ nullable: true })
-    AC_NAREA: string
+  @Column({ nullable: true })
+  AC_NAREA: string;
 
-    @Column({ nullable: true })
-    AC_CITYNAME: string
+  @Column({ nullable: true })
+  AC_CITYNAME: string;
 
-    @Column({ nullable: true })
-    AC_NCTCODE: number
-    @ManyToOne(() => CITYMASTER, (city) => city.cityMasters, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_CTCODE" })
-    city: CITYMASTER[];
+ 
+  @Column({ nullable: true })
+  sharesID: number;
 
-    @Column({ nullable: true })
-    AC_NPIN: string
+  @Column({ nullable: true })
+  DPMasterID: number;
 
-    @Column({ nullable: true })
-    sharesID: number
+  @Column({ nullable: true })
+  PGMasterID: number;
 
-    @ManyToOne(() => SHMASTER, (sharesId) => sharesId.nomineeDetails, {
-        cascade: true
-    })
-    @JoinColumn({ name: "sharesID" })
-    sharesId: SHMASTER[];
+@Column({ nullable: true })
+AC_NCTCODE: number;
 
-    @Column({ nullable: true })
-    DPMasterID: number
+@ManyToOne(() => CITYMASTER, { nullable: true })
+@JoinColumn({ name: 'AC_NCTCODE' })
+city?: CITYMASTER;
 
-    @ManyToOne(() => DPMASTER, (dpmasterId) => dpmasterId.nomineeDetails, {
-        cascade: true
-    })
-    @JoinColumn({ name: "DPMasterID" })
-    dpmasterId: DPMASTER[];
+@ManyToOne(() => SHMASTER, { nullable: true })
+@JoinColumn({ name: 'sharesID' })
+shares?: SHMASTER;
 
-    @Column({ nullable: true })
-    pigmyAID: number
+@ManyToOne(() => DPMASTER, { nullable: true })
+@JoinColumn({ name: 'DPMasterID' })
+dpmaster?: DPMASTER;
 
-    @ManyToOne(() => PGMASTER, (pigmyAccount) => pigmyAccount.nomineeDetails, {
-        cascade: true
-    })
-    @JoinColumn({ name: "pigmyAID" })
-    pgmasterId: PGMASTER[];
+@ManyToOne(() => PGMASTER, { nullable: true })
+@JoinColumn({ name: 'PGMasterID' })
+pgmaster?: PGMASTER;
 
-
-
-
-    //pigmy agent
-
-    // @Column({ nullable: true })
-    // PGMasterID: number
-    // @ManyToOne(() => DPMASTER, (pgmasterId) => pgmasterId.nomineeDetails, {
-    //     cascade: true
-    // })
-    // @JoinColumn({ name: "PGMasterID" })
-    // pgmasterId: PGMASTER[];
 }

@@ -1,5 +1,5 @@
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { DEPOCLOSETRANSAC } from './DEPOCLOSETRANSAC.entity';
 
 @Entity()
@@ -133,13 +133,15 @@ export class DEPOCLOSETRAN {
     @Column({ nullable: true, default: 1 })
     status: number
 
-    @OneToMany(() => DEPOCLOSETRANSAC, (depocloseTranNo) => depocloseTranNo.depocloseTranNo)
-    depocloseTranNo: DEPOCLOSETRANSAC[]
+    @OneToMany(
+  () => DEPOCLOSETRANSAC,
+  (d) => d.depocloseTran
+)
+depocloseTransacs: DEPOCLOSETRANSAC[];
 
 
-    @ManyToOne(() => SCHEMAST, (depocloseTran) => depocloseTran.depocloseTran, {
-        cascade: true
-    })
+
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "TRAN_ACTYPE" })
     depocloseTran: SCHEMAST[];
 

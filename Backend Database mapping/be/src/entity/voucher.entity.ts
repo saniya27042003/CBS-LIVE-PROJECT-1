@@ -1,5 +1,5 @@
 import { SCHEMAST } from './schemeParameters.entity';
-import { Check, Column, CreateDateColumn, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, Index } from 'typeorm';
+import { Check, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Index } from 'typeorm';
 
 @Entity()
 @Check(`"TRAN_DRCR" IN ('D', 'C')`)
@@ -242,7 +242,7 @@ export class DAILYTRAN {
     CASHIER_CODE: number;
 
     @Column({ nullable: false })
-    TRAN_BRANCH_CODE: Number;
+    TRAN_BRANCH_CODE: number;
 
     @Column({ nullable: false })
     SYSTRAN_TYPE: string;
@@ -268,9 +268,7 @@ export class DAILYTRAN {
     @Column({ default: 0 })
     SENDSMS: number;
 
-    @ManyToOne(() => SCHEMAST, (dailytranschemes) => dailytranschemes.dailytranscheme, {
-        cascade: true
-    })
+    @ManyToOne(() => SCHEMAST)
     @JoinColumn({ name: "TRAN_ACTYPE" })
     dailytranschemes: SCHEMAST[];
 }

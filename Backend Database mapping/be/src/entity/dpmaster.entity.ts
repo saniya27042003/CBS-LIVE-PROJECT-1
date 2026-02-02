@@ -14,7 +14,7 @@ import {
 import { IDMASTER } from './customer-id.entity';
 import { JointAcLink } from './joint-account.entity';
 import { NOMINEELINK } from './nominee.entity';
-import { ATTERONEYLINK } from './power-of-attorney.entity';
+//import { ATTERONEYLINK } from './power-of-attorney.entity';
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { CATEGORYMASTER } from './category-master.entity';
 import { OPERATIONMASTER } from './operation-master.entity';
@@ -22,7 +22,7 @@ import { BALACATA } from './minimum-balance-master.entity';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
 
-@Entity()
+@Entity({ name: 'dpmaster' })
 @Unique(['BANKACNO'])
 @Index('NDXDPMASTER', ['BRANCH_CODE', 'AC_ACNOTYPE', 'AC_TYPE', 'BANKACNO'])
 @Index('NDXDPMASTER1', ['BRANCH_CODE', 'AC_ACNOTYPE', 'AC_TYPE', 'AC_NO'])
@@ -30,12 +30,12 @@ export class DPMASTER {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  BANKACNO: number;
+@Column({ length: 15 })
+BANKACNO: string;
 
+@Column({ nullable: true })
+AC_ACNOTYPE: string;
 
-  @Column()
-  AC_ACNOTYPE: string;
 
   @Column()
   AC_TYPE: number;
@@ -120,8 +120,9 @@ export class DPMASTER {
   idmaster?: IDMASTER;
 
   @ManyToOne(() => INTCATEGORYMASTER, { cascade: false })
-  @JoinColumn({ name: 'AC_INTCATA' })
-  intCategory?: INTCATEGORYMASTER;
+@JoinColumn({ name: 'AC_INTCATA' })
+intCategory?: INTCATEGORYMASTER;
+
 
   @ManyToOne(() => CATEGORYMASTER, { cascade: false })
   @JoinColumn({ name: 'AC_CATG' })
@@ -145,14 +146,19 @@ export class DPMASTER {
 
   /* ===================== CHILD COLLECTIONS ===================== */
 
-  @OneToMany(() => NOMINEELINK, (n) => n.dpmasterId)
+  @OneToMany(() => NOMINEELINK, (n) => n.dpmaster)
   nomineeDetails?: NOMINEELINK[];
 
-  @OneToMany(() => JointAcLink, (j) => j.dpmasterId)
+  @OneToMany(() => JointAcLink, (j) => j.dpmaster)
   jointAccounts?: JointAcLink[];
 
-  @OneToMany(() => ATTERONEYLINK, (p) => p.dpmasterId)
-  powerOfAttorney?: ATTERONEYLINK[];
+//  @OneToMany(
+//   () => ATTERONEYLINK,
+//   (attorney) => attorney.dpmaster
+// )
+// powerOfAttorney: ATTERONEYLINK[];
+
+
 
   /* ===================== SYSTEM ===================== */
 

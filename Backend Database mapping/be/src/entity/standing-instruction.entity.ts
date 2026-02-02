@@ -79,21 +79,15 @@ export class STANDINSTRUCTION {
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCode) => BranchCode.branchCodeIns, {
-    cascade: true
-  })
+  @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: "BRANCH_CODE" })
   BranchCode: OWNBRANCHMASTER[];
 
-  @ManyToOne(() => SCHEMAST, (standingInsDr) => standingInsDr.standingInsDr, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "DR_ACTYPE" })
   standingInsDr: SCHEMAST[];
 
-  @ManyToOne(() => SCHEMAST, (standingInsCr) => standingInsCr.standingInsCr, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "CR_ACTYPE" })
   standingInsCr: SCHEMAST[];
 }

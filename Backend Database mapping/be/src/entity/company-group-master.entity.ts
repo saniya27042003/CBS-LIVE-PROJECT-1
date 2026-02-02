@@ -27,17 +27,13 @@ export class COMPANYGROUPMASTER {
 
   @Column()
   AC_TYPE: number;
-  @ManyToOne(() => SCHEMAST, (company) => company.scheme, {
-    cascade: true
-  })
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "AC_TYPE" })
   company: SCHEMAST[];
 
   @Column({ nullable: true })
   BRANCH_CODE: number;
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.comapny, {
-    cascade: true
-  })
+  @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: "BRANCH_CODE" })
   BranchCodeMaster: OWNBRANCHMASTER[];
 

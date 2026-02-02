@@ -1,6 +1,6 @@
 import { INTCATEGORYMASTER } from './interest-category-master.entity';
 import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { INTMULTI } from './slab-int.entity';
 
 @Entity()
@@ -16,19 +16,15 @@ export class INTRATETDMULTI {
 
   @Column({ nullable: true })
   ACNOTYPE: number;
-  @ManyToOne(() => SCHEMAST, (scheme) => scheme.depoint, {
-    cascade: true
-  })
+
+  @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "ACNOTYPE" })
-  scheme: SCHEMAST[];
+  scheme: SCHEMAST;
 
   @Column({ nullable: true })
   INT_CATEGORY: number;
 
-
-  @ManyToOne(() => INTCATEGORYMASTER, (category) => category.depointrate, {
-    cascade: true
-  })
+  @ManyToOne(() => INTCATEGORYMASTER)
   @JoinColumn({ name: "INT_CATEGORY" })
-  category: INTCATEGORYMASTER[];
+  category: INTCATEGORYMASTER;
 }

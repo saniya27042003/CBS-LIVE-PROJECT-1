@@ -1,5 +1,5 @@
-import { IDMASTER } from './customer-id.entity'
-import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+//import { IDMASTER } from './customer-id.entity'
+import { Column, Entity, Generated, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 
 @Entity()
@@ -14,9 +14,8 @@ export class CASTMASTER {
   @Column({ type: 'varchar', length: 100 })
   NAME: string;
 
-  @OneToMany(() => IDMASTER, (cast) => cast.castMaster, {
-    cascade: ["insert", "update"]
-  })
-  cast: IDMASTER[];
+ @ManyToOne(() => CASTMASTER)
+@JoinColumn({ name: "AC_CAST" })
+castMaster: CASTMASTER;
 
 }

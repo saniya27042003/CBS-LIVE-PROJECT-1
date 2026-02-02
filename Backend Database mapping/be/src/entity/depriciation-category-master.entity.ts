@@ -1,9 +1,19 @@
 import { ACMASTER } from './gl-account-master.entity';
 import { DEPRRATE } from './depriciation-rate-master.entity';
-import { Column, Entity, Generated, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { OWNBRANCHMASTER } from './own-branch-master.entity';
-@Entity()
+import {
+  Column,
+  Entity,
+  Generated,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+
+@Entity({ name: 'DEPRCATEGORY' })
 export class DEPRCATEGORY {
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -14,25 +24,25 @@ export class DEPRCATEGORY {
   @Column({ length: 100, nullable: false })
   NAME: string;
 
+  // ---------- Depreciation Account ----------
   @Column({ nullable: true })
   AC_NO: number;
-  @ManyToOne(() => ACMASTER, (depaccountno) => depaccountno.deprecat, {
-    cascade: true
-  })
-  @JoinColumn({ name: "AC_NO" })
-  depaccountno: ACMASTER[];
 
-  @OneToMany(() => DEPRRATE, deprerate => deprerate.decategory, {
-    cascade: ["insert", "update"]
+  @ManyToOne(() => ACMASTER)
+  @JoinColumn({ name: 'AC_NO' })
+  depaccountno: ACMASTER;   // ✅ SINGLE entity
+
+  // ---------- Depreciation Rates ----------
+  @OneToMany(() => DEPRRATE, rate => rate.decategory, {
+    cascade: ['insert', 'update'],
   })
   deprerate: DEPRRATE[];
 
+  // ---------- Branch ----------
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
-  @ManyToOne(() => OWNBRANCHMASTER, (BranchCodeMaster) => BranchCodeMaster.depre, {
-    cascade: true
-  })
-  @JoinColumn({ name: "BRANCH_CODE" })
-  BranchCodeMaster: OWNBRANCHMASTER[];
+  @ManyToOne(() => OWNBRANCHMASTER)
+  @JoinColumn({ name: 'BRANCH_CODE' })
+  BranchCodeMaster: OWNBRANCHMASTER;  // ✅ SINGLE entity
 }

@@ -19,16 +19,14 @@ export class ACDOCUMENTDETAILS {
     @Column()
     DOCUMENT_CODE: number
 
-    @ManyToOne(() => SCHEMAST, (acDocument) => acDocument.acDocumentDetails, {
-        cascade: true
-    })
-    @JoinColumn({ name: "AC_TYPE" })
-    acDocument: SCHEMAST[];
+   // Scheme relation
+@ManyToOne(() => SCHEMAST)
+@JoinColumn({ name: "AC_TYPE" })
+scheme: SCHEMAST;
 
-    @ManyToOne(() => SCHEMAST, (acDocumentMaster) => acDocumentMaster.acDocumentDetails, {
-        cascade: true
-    })
-    @JoinColumn({ name: "DOCUMENT_CODE" })
-    acDocumentMaster: DOCUMENTMASTER[];
+// Document master relation
+@ManyToOne(() => DOCUMENTMASTER)
+@JoinColumn({ name: "DOCUMENT_CODE" })
+documentMaster: DOCUMENTMASTER;
 
 }
