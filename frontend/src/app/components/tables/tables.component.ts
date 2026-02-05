@@ -131,9 +131,6 @@ export class TablesComponent implements OnInit, OnDestroy {
 
 applyAutoMapping() {
 
-
-
-
   const userRaw = localStorage.getItem('user');
     const user = userRaw ? JSON.parse(userRaw) : null;
     const isAdmin = user?.role === 'admin';
@@ -239,10 +236,13 @@ private tryFetchChildTables() {
   if (!this.includeChildTables) return;
   if (!this.explicitParentTable) return;
   if (!this.isOracleClient()) return;
-  if (this.lastFetchedParent === this.explicitParentTable) return;
 
-  this.lastFetchedParent = this.explicitParentTable;
-  this.fetchChildTables(this.explicitParentTable);
+  const normalized = this.normalizeTableName(this.explicitParentTable);
+
+  if (this.lastFetchedParent === normalized) return;
+
+  this.lastFetchedParent = normalized;
+  this.fetchChildTables(normalized);
 }
 
 
@@ -278,38 +278,42 @@ onChildTableToggle(childTable: string, checked: boolean) {
 }
 }
 
+
+private normalizeTableName(table: string): string {
+  return table
+    .replace(/"/g, '')
+    .split('.')
+    .pop()!
+    .trim()
+    .toLowerCase();
+}
+
+
 fetchChildTables(parentTable: string) {
+  const normalizedParent = this.normalizeTableName(parentTable);
 
-  // 🔥 HARD RESET — REQUIRED for re-fetch after migration
-  this.childFetchInProgress = false;
-  this.lastFetchedParent = null;
-  this.explicitParentTable = parentTable;
+  // 🔒 hard guard
+  if (this.childFetchInProgress) return;
 
-  // ❗ Clear old child state BEFORE guards
+ // this.explicitParentTable = normalizedParent;
+
+  // ✅ clear children immediately and safely
   this.clearChildOnlyState();
-  delete this.childTablesByParent[parentTable];
 
-  // 🔒 Guards AFTER reset
   if (!this.includeChildTables) return;
   if (!this.isOracleClient()) return;
 
   this.childFetchInProgress = true;
 
-  this.appService.getChildTables(parentTable)
-    .pipe(
-      finalize(() => {
-        this.childFetchInProgress = false; // ✅ always unlock
-      })
-    )
+  this.appService.getChildTables(normalizedParent)
+    .pipe(finalize(() => this.childFetchInProgress = false))
     .subscribe({
       next: rows => {
-        this.childTablesByParent[parentTable] = rows || [];
+        this.childTablesByParent[normalizedParent] = rows || [];
 
         const children = [...new Set(rows.map(r => r.child_table))];
 
         children.forEach(child => {
-
-          // 🔥 force re-load child columns after migration
           delete this.mappingDataByTable[child];
 
           if (!this.selectedPrimaryTable.includes(child)) {
@@ -323,22 +327,19 @@ fetchChildTables(parentTable: string) {
         this.reconstructPrimaryTableData();
         this.applyAutoMapping();
         this.cdr.detectChanges();
-      },
-      error: err => {
-        console.error('Failed to load child tables for', parentTable, err);
       }
     });
 }
 
 
-
-
-
 private clearChildOnlyState() {
   const parent = this.explicitParentTable;
+  if (!parent) return; // 🔒 guard
 
-  // Remove child tables only
-  this.selectedPrimaryTable = parent ? [parent] : [];
+  this.selectedPrimaryTable = this.selectedPrimaryTable.filter(
+    t => t === parent
+  );
+
   this.primaryTableData = this.primaryTableData.filter(
     r => r.source === parent
   );
@@ -350,8 +351,8 @@ private clearChildOnlyState() {
   this.childTablesByParent = {};
   this.selectedChildTables = {};
   this.autoSelectedChildTables = [];
-
 }
+
 
 private clearClientChildTablesOnly() {
   const parent = this.explicitParentTable?.toLowerCase();
@@ -479,84 +480,107 @@ private buildPrimaryRow(
 
 
   /* ================= INIT ================= */
+ngOnInit() {
 
-  ngOnInit() {
+  /* ================= 1️⃣ RESET GUARDS ================= */
+  this.lastFetchedParent = null;
+  this.childFetchInProgress = false;
 
-    // ✅ Force child fetch if checkbox is ON after migration
-setTimeout(() => {
-  if (this.includeChildTables) {
-    this.lastFetchedParent = null; // 🔥 allow re-fetch
-    this.tryFetchChildTables();
+  /* ================= 2️⃣ RESTORE STATE FIRST ================= */
+  const params = this.route.snapshot.queryParams;
+  const compState = this.loadTablesComponentState();
+  const stored = JSON.parse(sessionStorage.getItem('mappingState') || 'null');
+
+  this.clientDatabaseType =
+    compState?.clientDatabaseType ||
+    stored?.clientDatabaseType ||
+    params['clientType'] || '';
+
+  this.primaryDatabaseName =
+    compState?.primaryDatabaseName ||
+    stored?.primaryDatabaseName ||
+    params['primary'] || '';
+
+  this.clientDatabaseName =
+    compState?.clientDatabaseName ||
+    stored?.clientDatabaseName ||
+    params['client'] || '';
+
+  this.selectedPrimaryTable =
+    compState?.selectedPrimaryTable ||
+    stored?.selectedPrimaryTable ||
+    [];
+
+  this.selectedClientTable =
+    compState?.selectedClientTable ||
+    stored?.selectedClientTable ||
+    [];
+
+  this.mappingDataByTable = stored?.mappingDataByTable || {};
+
+  this._activePrimaryTable =
+    compState?.activePrimaryTable ||
+    this.selectedPrimaryTable[0] ||
+    null;
+
+  this._activeClientTable =
+    compState?.activeClientTable ||
+    this.selectedClientTable[0] ||
+    null;
+
+  // ✅ restore explicit parent ONCE
+  if (!this.explicitParentTable && this.selectedPrimaryTable.length > 0) {
+    this.explicitParentTable = this.selectedPrimaryTable[0];
+  }
+
+  /* ================= 3️⃣ SUBSCRIBE TO CHECKBOX ================= */
+  this.mappingSettings.includeChildren$
+    .pipe(takeUntil(this.destroy$))
+
+   .subscribe(enabled => {
+  this.includeChildTables = enabled;
+
+  // Checkbox only grants permission
+  this.lastFetchedParent = null;
+
+  if (!enabled) {
+    this.childFetchInProgress = false;
+    this.clearChildOnlyState();
+    this.clearClientChildTablesOnly();
   }
 });
 
 
-  // ✅ SINGLE SOURCE OF TRUTH
-  this.mappingSettings.includeChildren$
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(enabled => {
-      this.includeChildTables = enabled;
+  /* ================= 4️⃣ FORCE FETCH ON BACK NAVIGATION ================= */
+  // if (
+  //   this.includeChildTables &&
+  //   this.explicitParentTable &&
+  //   this.isOracleClient()
+  // ) {
+  //   this.lastFetchedParent = null;
+  //   this.tryFetchChildTables();
+  // }
 
-      if (enabled) {
-        this.tryFetchChildTables();        // ✅ fetch children
-      } else {
-        this.childFetchInProgress = false;   // 🔥 ADD THIS
-        this.lastFetchedParent = null;      // 🔥 ADD THIS
-        this.clearChildOnlyState();        // ✅ remove primary children
-        this.clearClientChildTablesOnly(); // ✅ remove client children
-      }
-    });
+  /* ================= 5️⃣ NORMAL LOAD ================= */
+  if (this.primaryDatabaseName) this.getPrimaryTables();
+  if (this.clientDatabaseName) this.getClientTables();
 
-    const params = this.route.snapshot.queryParams;
-    const compState = this.loadTablesComponentState();
-    const stored = JSON.parse(sessionStorage.getItem('mappingState') || 'null');
-    this.clientDatabaseType =
-  compState?.clientDatabaseType ||
-  stored?.clientDatabaseType ||
-  params['clientType'] || '';
+  this.selectedClientTable.forEach(t => this.ensureClientColumnsLoaded(t));
+  this.reconstructPrimaryTableData();
 
-  // 🔥 re-check child fetch AFTER client type is resolvedss
+// 🔥 FINAL GUARANTEE: fetch children after everything is ready
+// setTimeout(() => {
+//   if (
+//     this.includeChildTables &&
+//     this.explicitParentTable &&
+//     this.isOracleClient()
+//   ) {
+//     this.lastFetchedParent = null;
+//     this.tryFetchChildTables();
+//   }
+// });
 
-  console.log('clientType from params =', params['clientType']);
-  console.log('resolved clientDatabaseType =', this.clientDatabaseType);
-
-
-    this.primaryDatabaseName =
-      compState?.primaryDatabaseName || stored?.primaryDatabaseName || params['primary'] || '';
-    this.clientDatabaseName =
-      compState?.clientDatabaseName || stored?.clientDatabaseName || params['client'] || '';
-
-    this.selectedPrimaryTable =
-      compState?.selectedPrimaryTable || stored?.selectedPrimaryTable || [];
-    this.selectedClientTable =
-      compState?.selectedClientTable || stored?.selectedClientTable || [];
-
-      // ✅ ADD THIS BLOCK HERE
-if (!this.explicitParentTable && this.selectedPrimaryTable.length > 0) {
-  this.explicitParentTable = this.selectedPrimaryTable[0];
 }
-
-    this.mappingDataByTable = stored?.mappingDataByTable || {};
-
-    this._activePrimaryTable =
-      compState?.activePrimaryTable || this.selectedPrimaryTable[0] || null;
-    this._activeClientTable =
-      compState?.activeClientTable || this.selectedClientTable[0] || null;
-
-    if (this.primaryDatabaseName) this.getPrimaryTables();
-    if (this.clientDatabaseName) this.getClientTables();
-
-    this.selectedClientTable.forEach(t => this.ensureClientColumnsLoaded(t));
-    this.reconstructPrimaryTableData();
-
-    // ✅ RESTORE CHILD TABLES
-// if (this.isOracleClient()) {
-//   this.selectedPrimaryTable.forEach(pt => {
-//     this.fetchChildTables(pt);
-//   });
-// }
-  }
-
 
 
   /* ================= PRIMARY ================= */
@@ -570,44 +594,40 @@ if (!this.explicitParentTable && this.selectedPrimaryTable.length > 0) {
  // In tables.component.ts
 
 onSelectPrimaryTable(table: string) {
+
+  // 🔥 user intent = hard reset
+  this.lastFetchedParent = null;
+  this.childFetchInProgress = false;
+
+  this.explicitParentTable = table;
+
   if (!this.selectedPrimaryTable.includes(table)) {
     this.selectedPrimaryTable.push(table);
-    this.loadPrimaryTableColumns(table); // ✅ ADD THIS
+    this.loadPrimaryTableColumns(table);
+  }
 
-
-    // ✅ NEW: fetch child tables automatically
-    // ✅ ONLY user-selected table becomes parent
-    // ✅ Just mark this as the active parent
-    this.explicitParentTable = table;
-
-    // ✅ IMPORTANT: fetch if checkbox is already ON
+    if (this.includeChildTables && this.isOracleClient()) {
     this.tryFetchChildTables();
+  }
 
+  this.activePrimaryTable = table;
 
-
-// ❌ DO NOT fetch here
-// Child tables will be handled by checkbox subscription only
-
-    const activeClientRows = this.selectedClientTable.length > 0
+  // Load columns + auto-map
+  const activeClientRows =
+    this.selectedClientTable.length > 0
       ? this.getClientRowsForTable(this.selectedClientTable[0])
       : [];
 
-    this.appService.getServerColumns(table).subscribe(cols => {
-      this.primaryTableData.push(
-  ...(cols || []).map(c =>
-  this.buildPrimaryRow(c, table, activeClientRows)
-)
+  this.appService.getServerColumns(table).subscribe(cols => {
+    this.primaryTableData.push(
+      ...(cols || []).map(c =>
+        this.buildPrimaryRow(c, table, activeClientRows)
+      )
+    );
 
-);
-
-      this.applyAutoMapping();
-
-
-    // ✅ AUTO-SELECT CLIENT TABLE
+    this.applyAutoMapping();
     this.autoSelectClientTableIfExists(table);
-    });
-  }
-  this.activePrimaryTable = table;
+  });
 }
 
 
@@ -857,13 +877,15 @@ onOkClick() {
       });
 
       if (matchedIdsWithParts.length > 0) {
-        this.mappingDataByTable[serverTable].push({
-          serverColumn: r.id,
-          clientTableName: clientTable,
-          clientColumns: matchedIdsWithParts.join(','), // Send encoded string to backend
-          clientId: rawPos,
-          clientName: matchedNames.join(', ')
-        });
+       this.mappingDataByTable[serverTable].push({
+        serverColumn: r.id,
+        clientTableName: clientTable,
+        clientColumns: matchedIdsWithParts.join(','),
+        clientId: rawPos,
+        clientName: matchedNames.join(', '),
+        targetTable: serverTable
+      });
+
       }
     });
   });
@@ -957,9 +979,16 @@ private getClientDbType(): 'mongo' | 'oracle' | 'sql' {
     this.isClientDropdownOpen = false;
   }
 
-  goToDatabase() {
-    sessionStorage.removeItem('tablesComponentState');
-    sessionStorage.removeItem('mappingState');
-    this.router.navigate(['/database']);
-  }
+goToDatabase() {
+  sessionStorage.removeItem('tablesComponentState');
+  sessionStorage.removeItem('mappingState');
+
+  // 🔥 RESET CHILD FETCH STATE
+  this.explicitParentTable = null;
+  this.lastFetchedParent = null;
+  this.childFetchInProgress = false;
+
+  this.router.navigate(['/database']);
+}
+
 }

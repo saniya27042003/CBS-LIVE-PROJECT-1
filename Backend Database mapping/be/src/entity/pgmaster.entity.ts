@@ -5,12 +5,14 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, Pri
 //import { JointAcLink } from './joint-account.entity';
 
 //import { ATTERONEYLINK } from './power-of-attorney.entity';
-import { OWNBRANCHMASTER } from './own-branch-master.entity';
+//import { OWNBRANCHMASTER } from './own-branch-master.entity';
 //import { SCHEMAST } from './schemeParameters.entity';
 import { PIGMYCHART } from './pigmy-chart.entity';
 //import { ATTERONEYLINK} from './atteroneylink.entity';
 import { NOMINEELINK } from './nominee.entity';
 import { JointAcLink } from './joint-account.entity';
+import { IDMASTER } from './customer-id.entity';
+
 @Entity({ name: 'pgmaster' })
 @Unique(['BANKACNO'])
 @Index("NDXPGMASTER", ["BRANCH_CODE", "AC_ACNOTYPE", "AC_TYPE", "BANKACNO"])
@@ -200,6 +202,20 @@ export class PGMASTER {
   AUTO_MATURED_INTERESTAMT: number
   //relation
 
+// 👇 virtual column (NOT physically written)
+@Column({
+  name: 'idmasterID',
+  nullable: true,
+  insert: false,
+  update: false,
+})
+idmasterID?: number;
+
+// 👇 relation uses the same column
+@ManyToOne(() => IDMASTER, { nullable: false })
+@JoinColumn({ name: 'idmasterID' })
+idmaster: IDMASTER;
+
 
 
 //  @OneToMany(() => NOMINEELINK, nomineeDetails => nomineeDetails.pgmaster, {
@@ -222,9 +238,9 @@ export class PGMASTER {
   BRANCH_CODE: number;
 
 
-  @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
-@JoinColumn({ name: 'BRANCH_CODE' })
-BranchCodeMaster?: OWNBRANCHMASTER;
+//   @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
+// @JoinColumn({ name: 'BRANCH_CODE' })
+// BranchCodeMaster?: OWNBRANCHMASTER;
 
 
 

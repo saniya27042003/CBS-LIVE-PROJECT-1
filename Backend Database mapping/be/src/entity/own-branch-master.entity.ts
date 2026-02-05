@@ -6,7 +6,7 @@
 //import { CHEQUECOLLECTTRAN } from './CHEQUECOLLECTTRAN.entity';
 //mport { ITEMMASTER } from './dead-stock-master.entity';
 import { DPMASTER } from './dpmaster.entity';
-import { PGMASTER } from './pgmaster.entity';
+//import { PGMASTER } from './pgmaster.entity';
 //import { SHMASTER } from './share-master.entity';
 //import { LNMASTER } from './term-loan-master.entity';
 import { ACMASTER } from './gl-account-master.entity';
@@ -78,8 +78,8 @@ branchcode: DPMASTER[];
 @OneToMany(() => DPMASTER, dp => dp.BranchMaster)
 branch: DPMASTER[];
 
-@OneToMany(() => PGMASTER, pg => pg.BranchCodeMaster)
-branchCodePG: PGMASTER[];
+// @OneToMany(() => PGMASTER, pg => pg.BranchCodeMaster)
+// branchCodePG: PGMASTER[];
 
 // @ManyToOne(() => DIVBRANCHMASTER, div => div.ownBranches)
 // divBranch: DIVBRANCHMASTER;

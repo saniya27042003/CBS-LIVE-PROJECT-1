@@ -284,12 +284,13 @@ disputeloanMaster: LNDISPUTEDETAILS[];
     })
     securityMaster: SECURITYDETAILS[];
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, insert: false, update: false })
     BRANCH_CODE: number;
 
-        @ManyToOne(() => OWNBRANCHMASTER)
-        @JoinColumn({ name: 'BRANCHCODE' })
-        BranchCodeMaster: OWNBRANCHMASTER;
+    @ManyToOne(() => OWNBRANCHMASTER)
+    @JoinColumn({ name: 'BRANCH_CODE' })
+    BranchCodeMaster: OWNBRANCHMASTER;
+
 
 
     @ManyToOne(() => SCHEMAST, s => s.lncccode)
