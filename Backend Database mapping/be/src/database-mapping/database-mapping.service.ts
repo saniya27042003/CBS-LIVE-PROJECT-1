@@ -101,10 +101,10 @@ private resolveTargetTables(
         value === 0 ||
         value === '0'
       ) {
-        // 🔥 DPMASTER → enforce NULL (never 0)
+        // DPMASTER → enforce NULL (never 0)
         if (tbl === 'dpmaster') {
           this.logger.warn(
-            `⚠️ DPMASTER FK ${col} missing → setting NULL`
+            ` DPMASTER FK ${col} missing → setting NULL`
           );
           return null;
         }
@@ -149,7 +149,7 @@ private resolveTargetTables(
     const branch = String(branchCode).padStart(3, '0');
     const scheme = String(schemeCode).padStart(3, '0');
 
-    // ✅ START ACCOUNT FROM 1 LAKH
+    // START ACCOUNT FROM 1 LAKH
     const accountNumber = 100000 + Number(acNo);
     const account = String(accountNumber).padStart(6, '0');
 
@@ -190,15 +190,15 @@ private resolveTargetTables(
     }
 
     try {
-      this.logger.log('🔌 CLIENT DB CONFIG RECEIVED:');
+      this.logger.log(' CLIENT DB CONFIG RECEIVED:');
       this.logger.log(JSON.stringify(config, null, 2));
 
       this.clientDB = await this.dbService.createConnection(config);
 
-      this.logger.log('✅ CLIENT DATABASE CONNECTED SUCCESSFULLY');
+      this.logger.log(' CLIENT DATABASE CONNECTED SUCCESSFULLY');
       return { success: true };
     } catch (error: any) {
-      this.logger.error('❌ CLIENT DB CONNECTION FAILED');
+      this.logger.error(' CLIENT DB CONNECTION FAILED');
       this.logger.error(error?.message || error);
       this.logger.error(error?.stack);
 
@@ -214,23 +214,23 @@ private resolveTargetTables(
     }
 
     try {
-      this.logger.log('🔌 SERVER DB CONFIG RECEIVED:');
+      this.logger.log(' SERVER DB CONFIG RECEIVED:');
       this.logger.log(JSON.stringify(config, null, 2));
 
       this.serverDB = await this.dbService.createConnection(config);
 
       this.logger.log(
-        '📦 SERVER ENTITY METADATA => ' +
+        ' SERVER ENTITY METADATA => ' +
         this.serverDB.entityMetadatas
           .map(e => `${e.schema ?? 'default'}.${e.tableName}`)
           .join(', ')
       );
 
 
-      this.logger.log('✅ SERVER DATABASE CONNECTED SUCCESSFULLY');
+      this.logger.log(' SERVER DATABASE CONNECTED SUCCESSFULLY');
       return { success: true };
     } catch (error: any) {
-      this.logger.error('❌ SERVER DB CONNECTION FAILED');
+      this.logger.error(' SERVER DB CONNECTION FAILED');
       this.logger.error(error?.message || error);
       this.logger.error(error?.stack);
 
@@ -265,7 +265,7 @@ private resolveTargetTables(
     const strRaw = String(raw);
 
 
-    // 1️⃣ Detect mojibake / legacy corruption
+    // 1. Detect mojibake / legacy corruption
     const looksCorrupted =
       /�|Ã|Â|¤|§|ª|©/.test(strRaw) ||   // classic mojibake chars
       /[A-Za-z]�[A-Za-z]/.test(strRaw); // broken legacy joins
@@ -274,7 +274,7 @@ private resolveTargetTables(
       return strRaw; // real English → safe
     }
 
-    // 2️⃣ PURE Unicode Devanagari → DO NOT TOUCH
+    // 2. PURE Unicode Devanagari → DO NOT TOUCH
     const isPureUnicodeDevanagari =
       /[\u0900-\u097F]/.test(strRaw) &&
       !/[A-Za-z]/.test(strRaw);
@@ -283,11 +283,11 @@ private resolveTargetTables(
       return strRaw;
     }
 
-    // 3️⃣ Legacy font detection (existing logic)
+    // 3. Legacy font detection (existing logic)
     const looksLegacy = /[^\u0900-\u097F]/.test(strRaw);
     if (!looksLegacy) return strRaw;
 
-    // 4️⃣ Existing conversion pipeline (UNCHANGED)
+    // 4. Existing conversion pipeline (UNCHANGED)
     try {
       let marathi = unidev(strRaw, 'hindi', 'DVBW-TTYogeshEn');
       marathi = ManualSymbolMapper.normalize(marathi);
@@ -326,7 +326,7 @@ private resolveTargetTables(
   private convertValue(value: any, targetType: any) {
     if (value === null || value === undefined) return null;
 
-    /* ================== 🔥 NORMALIZE TARGET TYPE ================== */
+    /* ==================  NORMALIZE TARGET TYPE ================== */
 
     let type = '';
 
@@ -339,7 +339,7 @@ private resolveTargetTables(
       type = targetType.constructor.name.toLowerCase();
     }
 
-    /* ================== 🔥 ORACLE DATE OBJECT FIX ================== */
+    /* ==================  ORACLE DATE OBJECT FIX ================== */
 
     if (value instanceof Date || type.includes('date')) {
       const d = new Date(value);
@@ -429,12 +429,8 @@ private resolveTargetTables(
     return meta?.target ?? null;
   }
 
-  /* ===================== INSERTION LOGIC ===================== */
-
-  // ... (imports remain the same)
 
 
-  // ... (previous code remains the same)
 
   /* ===================== INSERTION LOGIC ===================== */
   async insertMappedData(body: any) {
@@ -474,9 +470,6 @@ const effectiveMappings = includeChildren
       !m.targetTable ||
       m.targetTable.toLowerCase() === normalizedParent
     );
-
-
-
 
     if (!effectiveMappings.length) {
       return {
@@ -590,14 +583,14 @@ const effectiveMappings = includeChildren
         }
 
         if (!joinKey && i === 0) {
-          this.logger.warn('⚠️ joinKey missing → using index-based merge');
+          this.logger.warn(' joinKey missing → using index-based merge');
         }
 
 
         if (matchingRow) {
           Object.assign(combinedRow, matchingRow);
 
-          // 🔥 PROTECT DPMASTER CORE KEYS
+          //  PROTECT DPMASTER CORE KEYS
           if (baseRow.AC_NO && !combinedRow.AC_NO) {
             combinedRow.AC_NO = baseRow.AC_NO;
           }
@@ -629,28 +622,28 @@ return { success: false, message: 'No target tables specified.' };
 
 
       if (tableMappings.length === 0 && targetTable === 'dpmaster') {
-        throw new Error('❌ No mappings resolved for DPMASTER');
+        throw new Error(' No mappings resolved for DPMASTER');
       }
 
       if (tableMappings.length > 0) {
         let result;
-
+ 
         const EntityClass =
           this.getEntityByTableName(targetTable);
 
 
         if (EntityClass) {
-          this.logger.warn(`🟢 ENTITY INSERT PATH: ${targetTable}`);
+          this.logger.warn(` ENTITY INSERT PATH: ${targetTable}`);
 
           result = await this.insertWithEntityGeneric(
             preparedRows,
             tableMappings,
             EntityClass,
-            targetTable   // 👈 ADD THIS
+            targetTable   
           );
 
         } else {
-          this.logger.warn(`🟡 QUERY INSERT PATH: ${targetTable}`);
+          this.logger.warn(` QUERY INSERT PATH: ${targetTable}`);
           result = await this.performInsertion(
             preparedRows,
             tableMappings,
@@ -670,7 +663,7 @@ return { success: false, message: 'No target tables specified.' };
       }
     }
 
-    //   // 🔁 SECOND PASS: UPDATE FK values
+    //   //  SECOND PASS: UPDATE FK values
     // if (includeChildren && serverDriver !== 'mongodb' && joinKey) {
     //   for (const targetTable of targetTables) {
     //     const fks = this.getStaticForeignKeys(targetTable);
@@ -688,6 +681,8 @@ return { success: false, message: 'No target tables specified.' };
     // }
 
     // return { success: true, results };
+
+
     return {
       success: true,
       results,
@@ -695,6 +690,48 @@ return { success: false, message: 'No target tables specified.' };
     };
 
   }
+
+  //================================================================================
+  // ===================== NAME SPILT ==============================================
+
+  private splitFullNameLFM(fullName: any): {
+  F_NAME: string | null;
+  M_NAME: string | null;
+  L_NAME: string | null;
+} {
+  if (!fullName) {
+    return { F_NAME: null, M_NAME: null, L_NAME: null };
+  }
+
+  const clean = String(fullName)
+    .replace(/\(.*?\)/g, '') // remove (P.D.) etc
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!clean) {
+    return { F_NAME: null, M_NAME: null, L_NAME: null };
+  }
+
+  const parts = clean.split(' ');
+
+  // LAST FIRST MIDDLE
+  const L_NAME = parts[0] ?? null;
+  const F_NAME = parts[1] ?? null;
+
+  let M_NAME: string | null = null;
+  if (parts.length > 2) {
+    M_NAME = parts.slice(2).join(' ');
+  }
+
+  return {
+    F_NAME,
+    M_NAME,
+    L_NAME,
+  };
+}
+
+
+
 
   async getChildTables(parentTable: string) {
     const key = parentTable
@@ -790,7 +827,7 @@ return { success: false, message: 'No target tables specified.' };
     rows: any[],
     mappings: any[],
     EntityClass: EntityTarget<T>,
-    tableName: string, // 👈 REQUIRED
+    tableName: string, //  REQUIRED
   ) {
     const server = this.ensureServer();
     const repo = server.getRepository<T>(EntityClass);
@@ -806,14 +843,37 @@ return { success: false, message: 'No target tables specified.' };
 
 
 
-    // ✅ Cache bank + branch once (performance + correctness)
+    //  Cache bank + branch once (performance + correctness)
     const { bankCode, branchCode } = await this.getBankAndBranch(server);
     const schemeCache = new Map<string, string>();
 
     const entities: T[] = [];
 
-    for (const sourceRow of rows) {
-      const entity = repo.create();
+   for (const sourceRow of rows) {
+  const entity = repo.create();
+
+  /* ===================== NAME SPLIT LOGIC ===================== */
+  const fullName =
+    this.getValueCaseInsensitive(sourceRow, 'AC_NAME') ??
+    this.getValueCaseInsensitive(sourceRow, 'FULLNAME');
+
+  if (fullName) {
+    const nameParts = this.splitFullNameLFM(
+      this.convertValue(fullName, 'string')
+    );
+
+    if (meta.columns.some(c => c.databaseName === 'F_NAME')) {
+      (entity as any).F_NAME = nameParts.F_NAME;
+    }
+
+    if (meta.columns.some(c => c.databaseName === 'M_NAME')) {
+      (entity as any).M_NAME = nameParts.M_NAME;
+    }
+
+    if (meta.columns.some(c => c.databaseName === 'L_NAME')) {
+      (entity as any).L_NAME = nameParts.L_NAME;
+    }
+  }
 
       /* ===================== BANKACNO (MANDATORY) ===================== */
 
@@ -823,7 +883,7 @@ return { success: false, message: 'No target tables specified.' };
 
       if (!acNo) {
         this.logger.error(
-          `❌ DPMASTER BLOCKED: AC_NO missing. SOURCE KEYS = ${Object.keys(sourceRow).join(', ')}`
+          ` DPMASTER BLOCKED: AC_NO missing. SOURCE KEYS = ${Object.keys(sourceRow).join(', ')}`
         );
         throw new Error('DPMASTER insert stopped: AC_NO missing in source row');
       }
@@ -861,7 +921,7 @@ return { success: false, message: 'No target tables specified.' };
       );
 
       //(entity as any).BANKACNO = bankAcNo;
-      /* ===================== 🔥 FORCE DEFAULTS (HERE) ===================== */
+      /* ===================== FORCE DEFAULTS (HERE) ===================== */
 
       if (
         meta.columns.some(c => c.databaseName === 'AC_ACNOTYPE') &&
@@ -878,7 +938,12 @@ return { success: false, message: 'No target tables specified.' };
       /* ===================== OTHER COLUMNS ===================== */
 
       for (const m of mappings) {
-        if (m.serverColumn === 'BANKACNO') continue; // already set
+
+
+         if (['F_NAME', 'M_NAME', 'L_NAME'].includes(m.serverColumn)) {
+    continue;
+  }
+        if (m.serverColumn === 'BANKACNO') continue; 
         const column = meta.columns.find(c =>
           c.propertyName.toLowerCase() === m.serverColumn.toLowerCase() ||
           c.databaseName?.toLowerCase() === m.serverColumn.toLowerCase()
@@ -906,7 +971,7 @@ return { success: false, message: 'No target tables specified.' };
         let converted: any;
 
         if (value === undefined) {
-          // 🔥 FORCE FK DEFAULT WHEN SOURCE MISSING
+          // FORCE FK DEFAULT WHEN SOURCE MISSING
           converted = await this.sanitizeForeignKey(
             m.serverColumn,
             null,
@@ -932,9 +997,9 @@ return { success: false, message: 'No target tables specified.' };
       entities.push(entity);
     }
 
-    // ✅ GUARD GOES HERE
+    //  GUARD GOES HERE
     if (entities.length === 0) {
-      this.logger.warn(`❌ No entities created for table ${tableName}`);
+      this.logger.warn(` No entities created for table ${tableName}`);
       return {
         success: false,
         inserted: 0,
@@ -985,7 +1050,7 @@ return { success: false, message: 'No target tables specified.' };
   async insertParentWithChildren(parentTable: string, body: any) {
 
     if (body.includeChildren !== true) {
-      this.logger.log('🚫 Child tables skipped (checkbox OFF)');
+      this.logger.log(' Child tables skipped (checkbox OFF)');
       return;
     }
 
@@ -1037,16 +1102,16 @@ return { success: false, message: 'No target tables specified.' };
       return true;
     });
     if (validMappingsForTable.length === 0) {
-      throw new Error(`❌ No valid mappings resolved for table: ${serverTable}`);
+      throw new Error(` No valid mappings resolved for table: ${serverTable}`);
     }
 
 
-    // 🔴 HARD VALIDATION FOR DPMASTER
+    //  HARD VALIDATION FOR DPMASTER
     if (serverTable.toLowerCase() === 'dpmaster') {
       const required = ['AC_NO', 'AC_TYPE'];
       for (const r of required) {
         if (!validMappingsForTable.some(m => m.serverColumn === r)) {
-          throw new Error(`❌ Missing mandatory mapping: ${r}`);
+          throw new Error(` Missing mandatory mapping: ${r}`);
         }
       }
     }
@@ -1086,7 +1151,7 @@ return { success: false, message: 'No target tables specified.' };
 
       const schemeCache = new Map<string, string>();
 
-      // 🔍 LOG SOURCE KEYS ONCE (DPMASTER ONLY)
+      //  LOG SOURCE KEYS ONCE (DPMASTER ONLY)
       if (serverTable.toLowerCase() === 'dpmaster' && rows.length > 0) {
         this.logger.debug(
           `DPMASTER SOURCE ROW KEYS => ${Object.keys(rows[0]).join(', ')}`
@@ -1102,13 +1167,13 @@ return { success: false, message: 'No target tables specified.' };
           String(acTypeRaw).match(/\d+/g)?.join('') ?? '101';
 
         if (serverTable.toLowerCase() === 'dpmaster' && !acNo) {
-          this.logger.warn(`⚠️ Skipping DPMASTER row: AC_NO missing`);
+          this.logger.warn(` Skipping DPMASTER row: AC_NO missing`);
           continue;
         }
 
 
         if (!acType) {
-          this.logger.warn(`⚠️ AC_TYPE missing → defaulting`);
+          this.logger.warn(` AC_TYPE missing → defaulting`);
         }
 
 
@@ -1143,14 +1208,14 @@ return { success: false, message: 'No target tables specified.' };
             converted = await this.sanitizeForeignKey(
               m.serverColumn,
               converted,
-              serverTable   // ✅ exists in performInsertion
+              serverTable   //  exists in performInsertion
             );
 
             return converted;
           })
         );
 
-        // ❌ REMOVE CONFLICT MASKING
+        //  REMOVE CONFLICT MASKING
         await qr.query(
           `INSERT INTO ${safeServerTable} (${serverColsList})
          VALUES (${rowValues.map((_, i) =>
