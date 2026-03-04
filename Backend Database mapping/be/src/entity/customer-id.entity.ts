@@ -11,17 +11,18 @@ import { OCCUPATIONMASTER } from './occupation-master.entity';
 //import { CASTMASTER } from './cast-master.entity'
 //import { OCCUPATIONMASTER } from './ocuupation-master.entity'
 //import { RISKCATEGORYMASTER } from './risk-category.entity'
-@Entity()
+@Entity({name:'idmaster'})
 @Unique(['AC_NO'])
 @Index("NDXIDMASTER", ["BRANCH_CODE", "AC_NO"])
 export class IDMASTER {
 
-    @PrimaryGeneratedColumn()
-    id: number;
+   @PrimaryGeneratedColumn()
+id: number;
 
-    @Column()
-    @Generated('increment')
-    AC_NO: number;
+@Column({ name: 'AC_NO', type: 'int' })
+AC_NO: number;  
+
+
 
     @Column({ nullable: true })
     AC_MEMBTYPE: number;
@@ -55,8 +56,8 @@ export class IDMASTER {
     @Column({ nullable: true })
     AC_RISKCATG: number;
 
-    @Column({ nullable: true })
-    AC_BIRTH_DT: string;
+   @Column({ type: 'varchar', nullable: true })
+AC_BIRTH_DT: string | null;
 
     @Column({ nullable: true })
     AC_PANNO: string;

@@ -1,6 +1,6 @@
 import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
 //mport { IDMASTER } from './customer-id.entity'
-@Entity()
+@Entity({name:'riskcategorymaster'})
 export class RISKCATEGORYMASTER {
   @PrimaryGeneratedColumn()
   id: number;

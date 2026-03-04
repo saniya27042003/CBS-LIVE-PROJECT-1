@@ -1,69 +1,83 @@
-import { Body, Controller, Get, Post, Param } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { DatabaseMappingService } from './database-mapping.service';
-
 
 @Controller('database-mapping')
 export class DatabaseMappingController {
 
+  constructor(private readonly db: DatabaseMappingService) {}
 
-
-  constructor(
-    private readonly db: DatabaseMappingService,
-  ) {}
+  // -------- CONNECT SERVER DB --------
   @Post('connect-server')
-  connectServer(@Body() config: any) {
+  async connectServer(@Body() config: any) {
     return this.db.connectServer(config);
   }
 
-  @Post('server/databases')
-  getServerDatabases(@Body() config: any) {
-    return this.db.getServerDatabases(config);
-  }
-
-
-  @Get('server/tables')
-  getServerTables() {
-    return this.db.getPrimaryTableNames();
-  }
-
-  @Post('server/columns')
-  getServerColumns(@Body('tableName') tableName: string) {
-    return this.db.getAllColumnsNames(tableName);
-  }
-
+  // -------- CONNECT CLIENT DB --------
   @Post('connect-client')
-  connectClient(@Body() config: any) {
-    return this.db.connect(config);
+  async connectClient(@Body() config: any) {
+    return this.db.connectClient(config);
   }
 
-  @Get('client/tables')
-  getClientTables() {
-    return this.db.getClientTableNames();
+  // -------- RUN IDMASTER MIGRATION --------
+  @Post('migrate/idmaster')
+  async migrateIDMASTER() {
+    return this.db.migrateIDMASTER();
   }
 
-  // @Get('client/diagnostic')
-  // getClientDiagnostic() {
-  //   return this.db.getClientDiagnostic();
-  // }
+//   @Post('connect-server')
+//   connectServer(@Body() config: any) {
+//     return this.db.connectServer(config);
+//   }
 
-  @Post('client/columns')
-  getClientColumns(@Body('tableName') tableName: string) {
-    return this.db.getClientColumns(tableName);
-  }
-
-  @Post('client/table-structure')
-  getTableStructure(@Body('tableName') tableName: string) {
-    return this.db.getTableStructure(tableName);
-  }
-
-  @Get('child-tables/:parentTable')
-getChildTables(@Param('parentTable') parentTable: string) {
-return this.db.getChildTables(parentTable);
-}
+//   @Post('server/databases')
+//   getServerDatabases(@Body() config: any) {
+//     return this.db.getServerDatabases(config);
+//   }
 
 
-  @Post('insert-data')
-  insertData(@Body() payload: any) {
-    return this.db.insertMappedData(payload);
-  }
+//   @Get('server/tables')
+//   getServerTables() {
+//     return this.db.getPrimaryTableNames();
+//   }
+
+//   @Post('server/columns')
+//   getServerColumns(@Body('tableName') tableName: string) {
+//     return this.db.getAllColumnsNames(tableName);
+//   }
+
+//   @Post('connect-client')
+//   connectClient(@Body() config: any) {
+//     return this.db.connect(config);
+//   }
+
+//   @Get('client/tables')
+//   getClientTables() {
+//     return this.db.getClientTableNames();
+//   }
+
+//   // @Get('client/diagnostic')
+//   // getClientDiagnostic() {
+//   //   return this.db.getClientDiagnostic();
+//   // }
+
+//   @Post('client/columns')
+//   getClientColumns(@Body('tableName') tableName: string) {
+//     return this.db.getClientColumns(tableName);
+//   }
+
+//   @Post('client/table-structure')
+//   getTableStructure(@Body('tableName') tableName: string) {
+//     return this.db.getTableStructure(tableName);
+//   }
+
+//   @Get('child-tables/:parentTable')
+// getChildTables(@Param('parentTable') parentTable: string) {
+// return this.db.getChildTables(parentTable);
+// }
+
+
+//   @Post('insert-data')
+//   insertData(@Body() payload: any) {
+//     return this.db.insertMappedData(payload);
+//   }
 }

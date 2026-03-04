@@ -1,116 +1,44 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
+import { DatabaseService } from '../database/database.service';
+import type { PostgresConfig, ClientDBConfig } from '../database/database.service';
 
-import { DatabaseMappingService } from '../database-mapping/database-mapping.service';
-
-
-
-@Controller('database-mapping')
-
+@Controller('db')
 export class DatabaseController {
+  private serverConnected = false;
+  private clientConnected = false;
 
-  constructor(private readonly db: DatabaseMappingService) {}
+  constructor(private readonly dbService: DatabaseService) {}
 
-
-
+  // ---------------- CONNECT SERVER (POSTGRES) ----------------
   @Post('connect-server')
+  async connectServer(@Body() config: PostgresConfig) {
+    await this.dbService.getServerDataSource(config);
+    this.serverConnected = true;
 
-  connectServer(@Body() config: any) {
-
-    return this.db.connectServer(config);
-
+    return {
+      success: true,
+      message: 'Server database connected successfully',
+    };
   }
 
-
-
-  @Post('server/databases')
-
-  getServerDatabases(@Body() config: any) {
-
-    return this.db.getServerDatabases(config);
-
-  }
-
-
-
-
-
-  @Get('server/tables')
-
-  getServerTables() {
-
-    return this.db.getPrimaryTableNames();
-
-  }
-
-
-
-  @Post('server/columns')
-
-  getServerColumns(@Body('tableName') tableName: string) {
-
-    return this.db.getAllColumnsNames(tableName);
-
-  }
-
-
-
+  // ---------------- CONNECT CLIENT (ANY DB) ----------------
   @Post('connect-client')
+  async connectClient(@Body() config: ClientDBConfig) {
+    await this.dbService.getClientConnection(config);
+    this.clientConnected = true;
 
-  connectClient(@Body() config: any) {
-
-    return this.db.connect(config);
-
+    return {
+      success: true,
+      message: `Client database (${config.type}) connected successfully`,
+    };
   }
 
-
-
-  @Get('client/tables')
-
-  getClientTables() {
-
-    return this.db.getClientTableNames();
-
+  // ---------------- STATUS CHECK ----------------
+  @Post('status')
+  getStatus() {
+    return {
+      serverConnected: this.serverConnected,
+      clientConnected: this.clientConnected,
+    };
   }
-
-
-
-  // @Get('client/diagnostic')
-
-  // getClientDiagnostic() {
-
-  //   return this.db.getClientDiagnostic();
-
-  // }
-
-
-
-  @Post('client/columns')
-
-  getClientColumns(@Body('tableName') tableName: string) {
-
-    return this.db.getClientColumns(tableName);
-
-  }
-
-
-
-  @Post('client/table-structure')
-
-  getTableStructure(@Body('tableName') tableName: string) {
-
-    return this.db.getTableStructure(tableName);
-
-  }
-
-
-
-  @Post('insert-data')
-
-  insertData(@Body() payload: any) {
-
-    return this.db.insertMappedData(payload);
-
-  }
-
 }
-

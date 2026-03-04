@@ -206,8 +206,7 @@ export class PGMASTER {
 @Column({
   name: 'idmasterID',
   nullable: true,
-  insert: false,
-  update: false,
+  
 })
 idmasterID?: number;
 

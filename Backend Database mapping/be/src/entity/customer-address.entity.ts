@@ -1,14 +1,12 @@
-import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-//import { IDMASTER } from './customer-id.entity'
-import { CITYMASTER } from './city-master.entity'
-@Entity('CUSTOMERADDRESS')
+import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity({ name: 'customeraddress' })
 export class CUSTOMERADDRESS {
 
-  @BeforeInsert()
-logInsert() {
-  console.log('🔥 BeforeInsert hook triggered');
-}
-
+  // @BeforeInsert()
+  // logInsert() {
+  //   console.log('🔥 BeforeInsert hook triggered');
+  // }
 
   @PrimaryGeneratedColumn()
   id: number;
@@ -42,17 +40,4 @@ logInsert() {
 
   @Column()
   idmasterID: number;
-
-  
-
-  // @ManyToOne(() => IDMASTER, (idmaster) => idmaster.custAddress, {
-  //   cascade: false
-  // })
-  // @JoinColumn({ name: 'idmasterID' })
-  // idmaster: IDMASTER;
-
-  @ManyToOne(() => CITYMASTER, { nullable: true })
-@JoinColumn({ name: 'CITY_CODE' }) // or your actual FK
-city?: CITYMASTER;
-
 }
