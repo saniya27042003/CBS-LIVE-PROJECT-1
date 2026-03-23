@@ -1,43 +1,43 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'customeraddress' })
 export class CUSTOMERADDRESS {
 
   // @BeforeInsert()
   // logInsert() {
-  //   console.log('🔥 BeforeInsert hook triggered');
+  //   console.log(' BeforeInsert hook triggered');
   // }
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ nullable: true })
-  AC_HONO: string;
+  AC_HONO!: string;
 
   @Column({ nullable: true })
-  AC_WARD: string;
+  AC_WARD!: string;
 
   @Column({ nullable: true })
-  AC_ADDR: string;
+  AC_ADDR!: string;
 
   @Column({ nullable: true })
-  AC_GALLI: string;
+  AC_GALLI!: string;
 
   @Column({ nullable: true })
-  AC_AREA: string;
+  AC_AREA!: string;
 
   @Column({ nullable: true })
-  AC_CTCODE: number;
+  AC_CTCODE!: number;
 
   @Column({ nullable: true })
-  AC_PIN: string;
+  AC_PIN!: string;
 
   @Column({ default: false })
-  AC_ADDFLAG: boolean;
+  AC_ADDFLAG!: boolean;
 
   @Column({ default: 'P' })
-  AC_ADDTYPE: string;
+  AC_ADDTYPE!: string;
 
   @Column()
-  idmasterID: number;
+  idmasterID!: number;
 }

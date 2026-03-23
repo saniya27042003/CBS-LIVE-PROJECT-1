@@ -1,21 +1,21 @@
-import { Column, Entity, Generated, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class ROLES {
 
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
 
 
     @Column({ nullable: true })
-    USERID: string
+    USERID!: string;
 
     @Column({ nullable: true })
-    NAME: string
+    NAME!: string;
 
     @Column({ nullable: true })
-    PASSWORD: string
+    PASSWORD!: string;
 
 
 

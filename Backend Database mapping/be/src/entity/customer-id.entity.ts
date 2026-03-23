@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Generated, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn, Index, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn, Index, JoinColumn, ManyToOne } from 'typeorm';
 //import { CUSTOMERADDRESS } from './customer-address.entity'
 import { SHMASTER } from './share-master.entity';
 //import { TDSFORMSUBMIT } from './tds-form.entity'
@@ -17,96 +17,97 @@ import { OCCUPATIONMASTER } from './occupation-master.entity';
 export class IDMASTER {
 
    @PrimaryGeneratedColumn()
-id: number;
-
-@Column({ name: 'AC_NO', type: 'int' })
-AC_NO: number;  
+    id!: number;
 
 
+    @Column({ name: 'AC_NO', type: 'int' })
+    AC_NO!: number;  
 
-    @Column({ nullable: true })
-    AC_MEMBTYPE: number;
+
 
     @Column({ nullable: true })
-    AC_MEMBNO: number;
+    AC_MEMBTYPE!: number;
 
     @Column({ nullable: true })
-    AC_TITLE: string;
+    AC_MEMBNO!: number;
 
     @Column({ nullable: true })
-    F_NAME: string;
+    AC_TITLE!: string;
 
     @Column({ nullable: true })
-    L_NAME: string;
+    F_NAME!: string;
 
     @Column({ nullable: true })
-    M_NAME: string;
+    L_NAME!: string;
 
     @Column({ nullable: true })
-    AC_NAME: string;
+    M_NAME!: string;
+
+    @Column({ nullable: true })
+    AC_NAME!: string;
 
     // @Column({ default: 0 })
-    @Column({ nullable: true })
-    AC_OCODE: number;
+   @Column({ type: 'int', nullable: true })
+AC_OCODE!: number | null;
 
     @Column({ nullable: true, length: 14 })
-    AC_ADHARNO: string;
+    AC_ADHARNO!: string;
 
     // @Column({ default: 0 })
-    @Column({ nullable: true })
-    AC_RISKCATG: number;
+   @Column({ type: 'int', nullable: true })
+AC_RISKCATG!: number | null;
 
    @Column({ type: 'varchar', nullable: true })
-AC_BIRTH_DT: string | null;
+    AC_BIRTH_DT!: string | null;
 
     @Column({ nullable: true })
-    AC_PANNO: string;
+    AC_PANNO!: string;
 
     // @Column({ nullable: true })
     // AC_SALARYDIVISION_CODE: string;
 
     @Column({ nullable: true, length: 13 })
-    AC_MOBILENO: string;
+    AC_MOBILENO!: string;
 
     @Column({ nullable: true })
-    AC_PHONE_RES: string;
+    AC_PHONE_RES!: string;
 
     @Column({ nullable: true })
-    AC_PHONE_OFFICE: string;
+    AC_PHONE_OFFICE!: string;
 
     @Column({ nullable: true })
-    AC_EMAILID: string;
+    AC_EMAILID!: string;
 
     @Column({ nullable: true, default: 0 })
-    TDSDOCUMNET: string;
+    TDSDOCUMNET!: string;
 
     // @Column({ nullable: true })
     // AC_IS_RECOVERY: string;
 
     @Column({ nullable: true, default: 0 })
-    TDS_REQUIRED: string;
+    TDS_REQUIRED!: string;
 
     @Column({ nullable: true, default: 0 })
-    SMS_REQUIRED: string;
+    SMS_REQUIRED!: string;
 
     @Column({ nullable: true, default: 0 })
-    IS_KYC_RECEIVED: string;
+    IS_KYC_RECEIVED!: string;
 
     @CreateDateColumn({ nullable: true })
-    SYSADD_DATETIME: Date;
+    SYSADD_DATETIME!: Date;
 
     @Column({ nullable: true })
-    SYSADD_LOGIN: string;
+    SYSADD_LOGIN!: string;
 
     @UpdateDateColumn()
-    SYSCHNG_DATETIME: Date;
+    SYSCHNG_DATETIME!: Date;
 
     @Column({ nullable: true })
-    SYSCHNG_LOGIN: string;
+    SYSCHNG_LOGIN!: string;
 
     @Index('IDMASTERBRANCH')
     @Column({ nullable: true })
-    BRANCH_CODE: number;
+    BRANCH_CODE!: number;
 
     // @OneToMany(() => CUSTOMERADDRESS, custAddress => custAddress.idmaster, {
     //     cascade: ["insert", "update"]
@@ -121,12 +122,12 @@ AC_BIRTH_DT: string | null;
     @OneToMany(() => SHMASTER, shareMaster => shareMaster.idmaster, {
         cascade: ["insert", "update"]
     })
-    shareMaster: SHMASTER[];
+    shareMaster!: SHMASTER[];
 
     @OneToMany(() => DPMASTER, dpmaster => dpmaster.idmaster, {
         cascade: ["insert", "update"]
     })
-    dpmaster: DPMASTER[];
+    dpmaster!: DPMASTER[];
 
     // @OneToMany(() => CUSTDOCUMENT, custdocument => custdocument.idmaster, {
     //     cascade: ["insert", "update"]
@@ -134,7 +135,7 @@ AC_BIRTH_DT: string | null;
     // custdocument: CUSTDOCUMENT[];
 
     @OneToMany(() => LNMASTER, ln => ln.idmaster)
-termLoan: LNMASTER[];
+    termLoan!: LNMASTER[];
 
 
     // @OneToMany(() => PGMASTER, pgmaster => pgmaster.idmaster, {
@@ -143,38 +144,41 @@ termLoan: LNMASTER[];
     // pgmaster: PGMASTER[];
 
     // @Column({ default: 0 })
-    @Column({ nullable: true })
-    AC_CAST: number;
+   
+@Column({ type: 'int', nullable: true })
+AC_CAST!: number | null;
 
     @Column({ nullable: true })
-    AC_TITLE_REG: string
+    AC_TITLE_REG!: string;
     @Column({ nullable: true })
-    F_NAME_REG: string
+    F_NAME_REG!: string;
     @Column({ nullable: true })
-    M_NAME_REG: string
+    M_NAME_REG!: string;
     @Column({ nullable: true })
-    L_NAME_REG: string
+    L_NAME_REG!: string;
     @Column({ nullable: true })
-    AC_ADD_REG: string
+    AC_ADD_REG!: string;
 
 
     @Column({ nullable: true })
-    ORA_AC_NO: number;
+    ORA_AC_NO!: number;
 
     @Column({ nullable: true })
-    ORA_BRANCH: number;
+    ORA_BRANCH!: number;
 
 //    @ManyToOne(() => CASTMASTER)
 // @JoinColumn({ name: "AC_CAST" })
 // castMaster: CASTMASTER;
 
 
-@ManyToOne(() => OCCUPATIONMASTER)
-@JoinColumn({ name: "AC_OCODE" })
-occupMaster: OCCUPATIONMASTER;
 
-@ManyToOne(() => RISKCATEGORYMASTER)
-@JoinColumn({ name: "AC_RISKCATG" })
-riskCategory: RISKCATEGORYMASTER;
+    @ManyToOne(() => OCCUPATIONMASTER)
+    @JoinColumn({ name: "AC_OCODE" })
+    occupMaster!: OCCUPATIONMASTER;
+
+
+    @ManyToOne(() => RISKCATEGORYMASTER)
+    @JoinColumn({ name: "AC_RISKCATG" })
+    riskCategory!: RISKCATEGORYMASTER;
 
 }

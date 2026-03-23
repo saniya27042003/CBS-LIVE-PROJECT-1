@@ -1,72 +1,62 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CITYMASTER } from './city-master.entity';
 import { DPMASTER } from './dpmaster.entity';
-import { PGMASTER } from './pgmaster.entity';
 import { SHMASTER } from './share-master.entity';
-
 @Entity()
 export class NOMINEELINK {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ nullable: true })
-  AC_NNAME: string;
+  AC_NNAME!: string;
 
   @Column({ nullable: true })
-  AC_NRELA: string;
+  AC_NRELA!: string;
 
   @Column({ nullable: true })
-  AC_NDATE: string;
+  AC_NDATE!: string;
 
   @Column({ nullable: true })
-  AGE: string;
+  AGE!: string;
 
   @Column({ nullable: true })
-  AC_NHONO: string;
+  AC_NHONO!: string;
 
   @Column({ nullable: true })
-  AC_NWARD: string;
+  AC_NWARD!: string;
 
   @Column({ nullable: true })
-  AC_NADDR: string;
+  AC_NADDR!: string;
 
   @Column({ nullable: true })
-  AC_NGALLI: string;
+  AC_NGALLI!: string;
 
   @Column({ nullable: true })
-  AC_NAREA: string;
+  AC_NAREA!: string;
 
   @Column({ nullable: true })
-  AC_CITYNAME: string;
-
- 
-  @Column({ nullable: true })
-  sharesID: number;
+  AC_CITYNAME!: string;
 
   @Column({ nullable: true })
-  DPMasterID: number;
+  sharesID!: number;
 
   @Column({ nullable: true })
-  PGMasterID: number;
+  DPMasterID!: number;
 
-@Column({ nullable: true })
-AC_NCTCODE: number;
+  @Column({ nullable: true })
+  AC_NCTCODE!: number;
 
-@ManyToOne(() => CITYMASTER, { nullable: true })
-@JoinColumn({ name: 'AC_NCTCODE' })
-city?: CITYMASTER;
+  @ManyToOne(() => CITYMASTER, { nullable: true })
+  @JoinColumn({ name: 'AC_NCTCODE' })
+  city?: CITYMASTER;
 
-@ManyToOne(() => SHMASTER, { nullable: true })
-@JoinColumn({ name: 'sharesID' })
-shares?: SHMASTER;
+  @ManyToOne(() => SHMASTER, { nullable: true })
+  @JoinColumn({ name: 'sharesID' })
+  shares?: SHMASTER;
 
-@ManyToOne(() => DPMASTER, { nullable: true })
-@JoinColumn({ name: 'DPMasterID' })
-dpmaster?: DPMASTER;
-
-@ManyToOne(() => PGMASTER, { nullable: true })
-@JoinColumn({ name: 'PGMasterID' })
-pgmaster?: PGMASTER;
+  @ManyToOne(() => DPMASTER, { nullable: true })
+  @JoinColumn({ name: 'DPMasterID' })
+  dpmaster?: DPMASTER;
 
 }

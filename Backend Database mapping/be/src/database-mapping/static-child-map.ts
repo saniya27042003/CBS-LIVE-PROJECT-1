@@ -3,7 +3,6 @@ export const STATIC_CHILD_MAP: Record<string, string[]> = {
   idmaster: [
     // child
     'customeraddress',
-
   ],
 
   dpmaster: [

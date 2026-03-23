@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseMappingService } from './database-mapping.service';
+import { describe, beforeEach, it } from 'node:test';
 
 describe('DatabaseMappingService', () => {
   let service: DatabaseMappingService;
@@ -16,3 +19,6 @@ describe('DatabaseMappingService', () => {
     expect(service).toBeDefined();
   });
 });
+
+// removed local expect helper to avoid shadowing the testing framework's global expect
+

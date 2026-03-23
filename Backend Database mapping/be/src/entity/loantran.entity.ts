@@ -7,143 +7,143 @@ import { Column, Entity, PrimaryGeneratedColumn, Check, Index } from "typeorm";
 @Index("NDXLOANTRAN1", ["BRANCH_CODE", "TRAN_DATE", "TRAN_NO", "SERIAL_NO"])
 export class LOANTRAN {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column()
-    TRAN_NO: number;
+    TRAN_NO!: number;
 
     @Column()
-    SERIAL_NO: number;
+    SERIAL_NO!: number;
 
     @Column()
-    BRANCH_CODE: number;
+    BRANCH_CODE!: number;
 
     @Column()
-    TRAN_DATE: string;
+    TRAN_DATE!: string;
 
     @Column()
-    TRAN_TIME: string;
+    TRAN_TIME!: string;
 
     @Column()
-    TRAN_TYPE: string;
+    TRAN_TYPE!: string;
 
     @Column()
-    TRAN_DRCR: string;
+    TRAN_DRCR!: string;
 
     @Column()
-    TRAN_ACNOTYPE: string;
+    TRAN_ACNOTYPE!: string;
 
     @Column()
-    TRAN_ACTYPE: number;
+    TRAN_ACTYPE!: number;
 
     @Column({ length: 15 })
-    TRAN_ACNO: string;
+    TRAN_ACNO!: string;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    TRAN_AMOUNT: number;
+    TRAN_AMOUNT!: number;
 
     @Column({ nullable: true })
-    TRAN_GLACNO: number;
+    TRAN_GLACNO!: number;
 
     @Column({ nullable: true })
-    TRAN_SOURCE_TYPE: string
+    TRAN_SOURCE_TYPE!: string;
 
     @Column({ nullable: true })
-    CHEQUE_DATE: string;
+    CHEQUE_DATE!: string;
 
     @Column({ nullable: true })
-    CHEQUE_SERIES: string;
+    CHEQUE_SERIES!: string;
 
     @Column({ nullable: true })
-    CHEQUE_NO: string;
+    CHEQUE_NO!: string;
 
     @Column({ nullable: true })
-    NARRATION: string;
+    NARRATION!: string;
 
     @Column({ nullable: true })
-    PASSBOOK_PRINTED: string;
+    PASSBOOK_PRINTED!: string;
 
     @Column({ nullable: true })
-    USER_CODE: string;
+    USER_CODE!: string;
 
     @Column({ nullable: true })
-    OFFICER_CODE: string;
+    OFFICER_CODE!: string;
 
     @Column({ nullable: true })
-    CASHIER_CODE: string;
+    CASHIER_CODE!: string;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    NORMAL_INTEREST: number;
+    NORMAL_INTEREST!: number;
 
     @Column({ nullable: true })
-    INTEREST_DATE: string;
+    INTEREST_DATE!: string;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    PENAL_INTEREST: number;
+    PENAL_INTEREST!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    RECPAY_INT_AMOUNT: number;
+    RECPAY_INT_AMOUNT!: number;
 
     @Column({ nullable: true })
-    INTEREST_GLACNO: number;
+    INTEREST_GLACNO!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    INTEREST_AMOUNT: number;
+    INTEREST_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER1_AMOUNT: number;
+    OTHER1_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER2_AMOUNT: number;
+    OTHER2_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER3_AMOUNT: number;
+    OTHER3_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER4_AMOUNT: number;
+    OTHER4_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER5_AMOUNT: number;
+    OTHER5_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER6_AMOUNT: number;
+    OTHER6_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER7_AMOUNT: number;
+    OTHER7_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER8_AMOUNT: number;
+    OTHER8_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER9_AMOUNT: number;
+    OTHER9_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER10_AMOUNT: number;
+    OTHER10_AMOUNT!: number;
 
     @Column({ default: 0 })
-    TRAN_MODE: number;
+    TRAN_MODE!: number;
 
     @Column({ nullable: true })
-    IS_INTEREST_ENTRY: string;
+    IS_INTEREST_ENTRY!: string;
 
     @Column({ nullable: true })
-    WITHDRAW_NO: string;
+    WITHDRAW_NO!: string;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    ADDED_PENAL_INTEREST: number;
+    ADDED_PENAL_INTEREST!: number;
 
     @Column({ nullable: true })
-    TRAN_ENTRY_TYPE: string;
+    TRAN_ENTRY_TYPE!: string;
 
     @Column({ nullable: true })
-    TRAN_PROCESS_YEAR: number;
+    TRAN_PROCESS_YEAR!: number;
 
     @Column({ nullable: true })
-    TRAN_PROCESS_MONTH: number;
+    TRAN_PROCESS_MONTH!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    REC_PENAL_INT_AMOUNT: number;
+    REC_PENAL_INT_AMOUNT!: number;
 
     @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-    OTHER11_AMOUNT: number;
+    OTHER11_AMOUNT!: number;
 }

@@ -24,6 +24,36 @@ export class DatabaseMappingController {
     return this.db.migrateIDMASTER();
   }
 
+
+   @Post('migrate/dpmaster')
+  async migrateDPMASTER() {
+    return this.db.migrateDPMASTER();
+  }
+
+   @Post('migrate/lnmaster')
+  async migrateLNMASTER() {
+    return this.db.migrateLNMASTER();
+  }
+
+   @Post('migrate/pgmaster')
+  async migratePGMASTER() {
+    return this.db.migratePGMASTER();
+  }
+  
+
+   @Post('migrate/shmaster')
+  async migrateSHMASTER() {
+    return this.db.migrateSHMASTER();
+  }
+
+  @Post('migrate/single-table')
+async migrateSingleTable(@Body() body: {
+  oracleTable: string;
+  targetTable: string;
+}) {
+  return this.db.migrateSingleTable(body);
+}
+
 //   @Post('connect-server')
 //   connectServer(@Body() config: any) {
 //     return this.db.connectServer(config);

@@ -18,127 +18,128 @@ import { Column, Entity, Generated, OneToMany, PrimaryGeneratedColumn } from 'ty
 export class SECURITYMASTER {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
   @Generated('increment')
-  SECU_CODE: number;
+  SECU_CODE!: number;
 
   @Column({ nullable: true })
-  SECU_NAME: string;
+  SECU_NAME!: string;
 
   @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
-  MARGIN: number;
+  MARGIN!: number;
 
   @Column({ default: 0 })
-  FIRE_POLICY: number;
+  FIRE_POLICY!: number;
 
   @Column({ default: 0 })
-  MARKET_SHARE: number;
+  MARKET_SHARE!: number;
 
   @Column({ default: 0 })
-  BOOK_DEBTS: number;
+  BOOK_DEBTS!: number;
 
   @Column({ default: 0 })
-  PLEDGE_STOCK: number;
+  PLEDGE_STOCK!: number;
 
   @Column({ default: 0 })
-  STOCK_STATEMENT: number;
+  STOCK_STATEMENT!: number;
 
   @Column({ default: 0 })
-  GOVT_SECU_LIC: number;
+  GOVT_SECU_LIC!: number;
 
   @Column({ default: 0 })
-  PLANT_MACHINARY: number
+  PLANT_MACHINARY!: number;
 
   @Column({ default: 0 })
-  FURNITURE_FIXTURE: number;
+  FURNITURE_FIXTURE!: number;
 
   @Column({ default: 0 })
-  VEHICLE: number;
+  VEHICLE!: number;
 
   @Column({ default: 0 })
-  OWN_DEPOSIT: number;
+  OWN_DEPOSIT!: number;
 
   @Column({ default: 0 })
-  LAND_BUILDING: number;
+  LAND_BUILDING!: number;
 
   @Column({ default: 0 })
-  GOLD_SILVER: number;
+  GOLD_SILVER!: number;
 
   @Column({ default: 0 })
-  OTHER_SECURITY: number;
+  OTHER_SECURITY!: number;
 
   @Column({ default: 0 })
-  CUST_INSURANCE: number;
+  CUST_INSURANCE!: number;
 
   @OneToMany(() => BOOKDEBTS, bookdebts => bookdebts.bookdebts, {
     cascade: ["insert", "update"]
   })
-  bookdebts: BOOKDEBTS[];
+  bookdebts!: BOOKDEBTS[];
 
   @OneToMany(() => SECINSURANCE, custinsurance => custinsurance.custinsurance, {
     cascade: ["insert", "update"]
   })
-  custinsurance: SECINSURANCE[];
+  custinsurance!: SECINSURANCE[];
 
   @OneToMany(() => FIREPOLICY, firepolicy => firepolicy.firepolicy, {
     cascade: ["insert", "update"]
   })
-  firepolicy: FIREPOLICY[];
+  firepolicy!: FIREPOLICY[];
 
   @OneToMany(() => FURNITURE, furfixture => furfixture.furfixture, {
     cascade: ["insert", "update"]
   })
-  furfixture: FURNITURE[];
+  furfixture!: FURNITURE[];
 
   @OneToMany(() => GOLDSILVER, silvergold => silvergold.silvergold, {
     cascade: ["insert", "update"]
   })
-  silvergold: GOLDSILVER[];
+  silvergold!: GOLDSILVER[];
 
   @OneToMany(() => GOVTSECULIC, govtseclic => govtseclic.govtseclic, {
     cascade: ["insert", "update"]
   })
-  govtseclic: GOVTSECULIC[];
+  govtseclic!: GOVTSECULIC[];
 
   @OneToMany(() => LANDBUILDING, landbuilding => landbuilding.landbuilding, {
     cascade: ["insert", "update"]
   })
-  landbuilding: LANDBUILDING[];
+  landbuilding!: LANDBUILDING[];
 
   @OneToMany(() => MARKETSHARE, share => share.share, {
     cascade: ["insert", "update"]
   })
-  share: MARKETSHARE[];
+  share!: MARKETSHARE[];
 
   @OneToMany(() => OTHERSECURITY, other => other.other, {
     cascade: ["insert", "update"]
   })
-  other: OTHERSECURITY[];
+  other!: OTHERSECURITY[];
 
-@OneToMany(() => OWNDEPOSIT, o => o.security)
-deposits: OWNDEPOSIT[];
+
+  @OneToMany(() => OWNDEPOSIT, o => o.security)
+  deposits!: OWNDEPOSIT[];
 
 
   @OneToMany(() => PLANTMACHINARY, plant => plant.plant, {
     cascade: ["insert", "update"]
   })
-  plant: PLANTMACHINARY[];
+  plant!: PLANTMACHINARY[];
 
   @OneToMany(() => PLEDGESTOCK, stock => stock.stock, {
     cascade: ["insert", "update"]
   })
-  stock: PLEDGESTOCK[];
+  stock!: PLEDGESTOCK[];
 
   @OneToMany(() => STOCKSTATEMENT, stockstat => stockstat.stockstat, {
     cascade: ["insert", "update"]
   })
-  stockstat: STOCKSTATEMENT[];
+  stockstat!: STOCKSTATEMENT[];
 
   @OneToMany(() => VEHICLE, vehiclesec => vehiclesec.vehiclesec, {
     cascade: ["insert", "update"]
   })
-  vehiclesec: VEHICLE[];
+  vehiclesec!: VEHICLE[];
 
 }

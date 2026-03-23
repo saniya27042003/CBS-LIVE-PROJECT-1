@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import * as oracledb from 'oracledb';
@@ -56,18 +58,21 @@ export class DatabaseService {
   }
 
   // ---------------- SOURCE CLIENT DB ----------------
-  async getClientConnection(config: ClientDBConfig) {
+ async getClientConnection(config: ClientDBConfig): Promise<any> {
     switch (config.type) {
 
       // ---------- ORACLE ----------
-      case 'oracle':
-  this.logger.log(`Connecting to Oracle...`);
-  return oracledb.getConnection({
+ case 'oracle':
+   this.logger.log(`Connecting to Oracle...`);
+
+  // eslint-disable-next-line no-case-declarations
+  const conn = await oracledb.getConnection({
     user: config.username,
     password: config.password,
-    connectString: `${config.host}:${config.port}/${config.database}`,
+    connectString: `${config.host!}:${config.port!}/${config.database!}`,
   });
 
+  return conn; 
       // ---------- MYSQL ----------
       case 'mysql':
         this.logger.log(`Connecting to MySQL...`);
@@ -95,15 +100,16 @@ export class DatabaseService {
         });
 
       // ---------- MONGODB ----------
-      case 'mongodb':
-        this.logger.log(`Connecting to MongoDB...`);
-        const client = new MongoClient(config.url!);
-        await client.connect();
-        return client.db(config.database);
-
-      default:
-        throw new Error(`Unsupported DB type: ${config.type}`);
+     case 'mongodb': {
+      this.logger.log(`Connecting to MongoDB...`);
+      const client = new MongoClient(config.url!);
+      await client.connect();
+      return client.db(config.database);
     }
+    default:
+      throw new Error(`Unsupported DB type: ${config.type}`);
+  }
+
   }
 
   // ---------------- CLOSE SERVER DB ----------------

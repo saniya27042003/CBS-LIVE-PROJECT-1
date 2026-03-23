@@ -1,51 +1,51 @@
-import { SCHEMAST } from './schemeParameters.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+// import { SCHEMAST } from './schemeParameters.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { LNMASTER } from './term-loan-master.entity';
 
 @Entity()
 export class LNACINTRATE {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column()
-    AC_ACNOTYPE: string
+    AC_ACNOTYPE!: string;
 
     @Column({ type: 'date' })
-    EFFECT_DATE: string
+    EFFECT_DATE!: string;
 
-    @Column({default:0})
-    AC_TYPE: number
+    @Column({ default: 0 })
+    AC_TYPE!: number;
 
-    @Column({default:0})
-    AC_NO: number
+    @Column({ default: 0 })
+    AC_NO!: number;
 
-    @Column({length:15})
-    BANKACNO: string
-
-    @Column()
-    BRANCH_CODE: number;
-
-    @Column({ default: 1 })
-    OPENING_ENTRY: number
-
-    @Column({ default: 1 })
-    SERIAL_NO: number
-
-    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
-    INT_RATE: number
-
-    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
-    PENAL_INT_RATE: number
-
-    @Column({ default: 1 })
-    UPDATEFLAG: Number
+    @Column({ length: 15 })
+    BANKACNO!: string;
 
     @Column()
-    LNMASTERID: number
+    BRANCH_CODE!: number;
+
+    @Column({ default: 1 })
+    OPENING_ENTRY!: number;
+
+    @Column({ default: 1 })
+    SERIAL_NO!: number;
+
+    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
+    INT_RATE!: number;
+
+    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
+    PENAL_INT_RATE!: number;
+
+    @Column({ default: 1 })
+    UPDATEFLAG!: number;
+
+    @Column()
+    lnmasterID!: number;
 
     @ManyToOne(() => LNMASTER, (termLoan) => termLoan.termLoan, {
         cascade: true
     })
-    @JoinColumn({ name: "LNMASTERID" })
-    termLoan: LNMASTER[];
+    @JoinColumn({ name: "lnmasterID" })
+    termLoan!: LNMASTER[];
 }

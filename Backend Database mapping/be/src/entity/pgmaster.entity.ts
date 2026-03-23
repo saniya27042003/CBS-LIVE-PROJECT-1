@@ -9,7 +9,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, Pri
 //import { SCHEMAST } from './schemeParameters.entity';
 import { PIGMYCHART } from './pigmy-chart.entity';
 //import { ATTERONEYLINK} from './atteroneylink.entity';
-import { NOMINEELINK } from './nominee.entity';
+//import { NOMINEELINK } from './nominee.entity';
 import { JointAcLink } from './joint-account.entity';
 import { IDMASTER } from './customer-id.entity';
 
@@ -20,186 +20,186 @@ import { IDMASTER } from './customer-id.entity';
 export class PGMASTER {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Index('pgmasteracnotype')
   @Column()
-  AC_ACNOTYPE: string;
+  AC_ACNOTYPE!: string;
 
   @Index('pgmasteractype')
   @Column()
-  AC_TYPE: number;
+  AC_TYPE!: number;
 
   @Column({ nullable: true })
-  AC_NAME: string;
+  AC_NAME!: string;
 
   @Index('pgmasteracno')
   @Column()
-  AC_NO: number;
+  AC_NO!: number;
 
   @Index('pgmasterbankacno')
   @Column({ length: 15 })
-  BANKACNO: string
+  BANKACNO!: string;
 
   @Column({ nullable: true })
-  AC_CUSTID: number;
+  AC_CUSTID!: number;
 
   @Column({ nullable: true })
-  AC_SHORT_NAME: string;
+  AC_SHORT_NAME!: string;
 
   @Column({ nullable: true })
-  REF_ACNO: string;
+  REF_ACNO!: string;
 
   @Column({ nullable: true })
-  AC_MEMBTYPE: number;
+  AC_MEMBTYPE!: number;
 
   @Column({ nullable: true })
-  AC_MEMBNO: number;
+  AC_MEMBNO!: number;
 
   @Column({ nullable: true })
-  AC_AGE: number;
+  AC_AGE!: number;
 
   @Column({ nullable: true })
-  AC_OPDATE: string;
+  AC_OPDATE!: string;
 
   @Column({ nullable: true })
-  AC_RENEW_DATE: string;
+  AC_RENEW_DATE!: string;
 
   @Column({ nullable: true })
-  AC_LINTEDT: string;
+  AC_LINTEDT!: string;
 
 
   @Column({ nullable: true })
-  AC_EXPDT: string;
+  AC_EXPDT!: string;
 
   @Column({ nullable: true })
-  AC_OCODE: string;
+  AC_OCODE!: string;
 
   @Column({ nullable: true })
-  AC_CATG: number;
+  AC_CATG!: number;
 
   @Column({ nullable: true })
-  AC_OPR_CODE: number;
+  AC_OPR_CODE!: number;
 
   @Column({ nullable: true })
-  AC_INTCATA: number;
+  AC_INTCATA!: number;
 
   @Column({ nullable: true })
-  AC_MONTHS: number;
+  AC_MONTHS!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_SCHMAMT: number;
+  AC_SCHMAMT!: number;
 
   @Column({ nullable: true })
-  AGENT_BRANCH: number;
+  AGENT_BRANCH!: number;
 
   @Column({ nullable: true })
-  AGENT_ACTYPE: number;
+  AGENT_ACTYPE!: number;
 
   @Column({ nullable: true, length: 15 })
-  AGENT_ACNO: string;
+  AGENT_ACNO!: string;
 
   @Column({ nullable: true, default: 0 })
-  AC_MINOR: number
+  AC_MINOR!: number;
 
   @Column({ nullable: true })
-  AC_MBDATE: string
+  AC_MBDATE!: string;
 
   @Column({ nullable: true })
-  AC_GRDNAME: string;
+  AC_GRDNAME!: string;
 
   @Column({ nullable: true })
-  AC_GRDRELE: string;
+  AC_GRDRELE!: string;
 
   @Column({ nullable: true })
-  AC_INTROBRANCH: string;
+  AC_INTROBRANCH!: string;
 
   @Column({ nullable: true })
-  AC_INTROID: number;
+  AC_INTROID!: number;
 
   @Column({ nullable: true })
-  AC_INTRACNO: string;
+  AC_INTRACNO!: string;
 
   @Column({ nullable: true })
-  AC_INTRNAME: string;
+  AC_INTRNAME!: string;
 
   @Column({ nullable: true })
-  SIGNATURE_AUTHORITY: string
+  SIGNATURE_AUTHORITY!: string;
 
   @Column({ nullable: true, default: 0 })
-  PG_COMM_TYPE: string;
+  PG_COMM_TYPE!: string;
 
   @Column({ nullable: true })
-  AC_IS_RECOVERY: boolean;
+  AC_IS_RECOVERY!: boolean;
 
   @Column({ nullable: true })
-  AC_REF_RECEIPTNO: string
+  AC_REF_RECEIPTNO!: string;
 
   @Column({ nullable: true })
-  AC_ASON_DATE: string;
+  AC_ASON_DATE!: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_MATUAMT: number;
+  AC_MATUAMT!: number;
 
   @Column({ nullable: true })
-  IS_DISCOUNTED_INT_RATE: boolean;
+  IS_DISCOUNTED_INT_RATE!: boolean;
 
   //freez account fields
   @Column({ nullable: true })
-  AC_FREEZE_STATUS: string
+  AC_FREEZE_STATUS!: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_FREEZE_AMOUNT: number
+  AC_FREEZE_AMOUNT!: number;
 
   @Column({ nullable: true })
-  AC_FREEZE_DATE: string
+  AC_FREEZE_DATE!: string;
 
   @Column({ nullable: true })
-  AC_FREEZE_REASON: string
+  AC_FREEZE_REASON!: string;
 
   @Column({ default: 0 })
-  IS_POST_INT_AC: number
+  IS_POST_INT_AC!: number;
 
   //dormant field
   @Column({ default: false })
-  IS_DORMANT: boolean;
+  IS_DORMANT!: boolean;
 
   //overdraft fields
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_ODAMT: number
+  AC_ODAMT!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_SODAMT: number
+  AC_SODAMT!: number;
 
   @Column({ nullable: true })
-  AC_ODDAYS: number
+  AC_ODDAYS!: number;
 
   @Column({ nullable: true })
-  AC_ODDATE: string
+  AC_ODDATE!: string;
 
   @Column({ nullable: true, default: 1 })
-  status: number
+  status!: number;
 
   @Column({ nullable: true })
-  AC_CLOSEDT: string
+  AC_CLOSEDT!: string;
 
   @CreateDateColumn()
-  SYSADD_DATETIME: Date;
+  SYSADD_DATETIME!: Date;
 
   @Column({ nullable: true })
-  SYSADD_LOGIN: string;
+  SYSADD_LOGIN!: string;
 
   @UpdateDateColumn()
-  SYSCHNG_DATETIME: Date;
+  SYSCHNG_DATETIME!: Date;
 
   @Column({ nullable: true })
-  SYSCHNG_LOGIN: string;
+  SYSCHNG_LOGIN!: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AUTO_MATURED_PAYABLEAMT: number
+  AUTO_MATURED_PAYABLEAMT!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AUTO_MATURED_INTERESTAMT: number
+  AUTO_MATURED_INTERESTAMT!: number;
   //relation
 
 // 👇 virtual column (NOT physically written)
@@ -211,9 +211,10 @@ export class PGMASTER {
 idmasterID?: number;
 
 // 👇 relation uses the same column
-@ManyToOne(() => IDMASTER, { nullable: false })
-@JoinColumn({ name: 'idmasterID' })
-idmaster: IDMASTER;
+
+  @ManyToOne(() => IDMASTER, { nullable: false })
+  @JoinColumn({ name: 'idmasterID' })
+  idmaster!: IDMASTER;
 
 
 
@@ -234,7 +235,7 @@ idmaster: IDMASTER;
   // powerOfAttorney: ATTERONEYLINK[]
 
   @Column({ nullable: true })
-  BRANCH_CODE: number;
+  BRANCH_CODE!: number;
 
 
 //   @ManyToOne(() => OWNBRANCHMASTER, { nullable: true })
@@ -250,17 +251,19 @@ idmaster: IDMASTER;
   // PGMaster: SCHEMAST[];
 
 
-@OneToMany(() => PIGMYCHART, pigmy => pigmy.pgmaster)
-pigmycharts: PIGMYCHART[];
+
+
+  @OneToMany(() => PIGMYCHART, pigmy => pigmy.pgmaster)
+  pigmycharts!: PIGMYCHART[];
 
 
 
 
     @OneToMany(() => JointAcLink, joint => joint.pgmaster)
-  jointAccounts: JointAcLink[];
+  jointAccounts!: JointAcLink[];
 
-  @OneToMany(() => NOMINEELINK, nominee => nominee.pgmaster)
-  nomineeDetails: NOMINEELINK[];
+  // @OneToMany(() => NOMINEELINK, nominee => nominee.pgmaster)
+  // nomineeDetails!: NOMINEELINK[];
 
 //  @OneToMany(
 //     () => ATTERONEYLINK,
@@ -275,32 +278,32 @@ pigmycharts: PIGMYCHART[];
   // pgmasterdata: DPMASTER[]
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_PAYBLEINT_OP: number;
+  AC_PAYBLEINT_OP!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_OP_BAL: number;
+  AC_OP_BAL!: number;
 
   @Column({ nullable: true })
-  AC_OP_CD: string
+  AC_OP_CD!: string;
 
   @Column({ default: 0 })
-  AC_CLOSED: number
+  AC_CLOSED!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  AC_PRODUCT: number
+  AC_PRODUCT!: number;
 
   @Column({ nullable: true })
-  AC_BALDATE: string
+  AC_BALDATE!: string;
 
   @Column({ nullable: true })
-  AC_ACTDATE: string
+  AC_ACTDATE!: string;
 
   @Column({ nullable: true })
-  AC_LINTDT: string
+  AC_LINTDT!: string;
 
   @Column({ nullable: true })
-  LAST_OD_INT_DATE: string;
+  LAST_OD_INT_DATE!: string;
 
   @Column({ nullable: true })
-  AC_RECOMMEND_BY: number
+  AC_RECOMMEND_BY!: number;
 }

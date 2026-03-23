@@ -1,13 +1,13 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { SECURITYDETAILS } from './security.entity';
 //import { IDMASTER } from './customer-id.entity';
-import { GUARANTERDETAILS } from './guarantor.entity';
+// import { GUARANTERDETAILS } from './guarantor.entity';
 import { LNMASTER } from './term-loan-master.entity';
 
 @Entity()
 export class LNDISPUTEDETAILS {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   // AC_ACNOTYPE:string;
   // basic 
@@ -270,73 +270,73 @@ export class LNDISPUTEDETAILS {
   // AC_REMARK: string;
   // // documents
   @Column({ nullable: true })
-  AC_ACNOTYPE: string;
+  AC_ACNOTYPE!: string;
 
   @Column({ nullable: true })
-  AC_TYPE: number;
+  AC_TYPE!: number;
 
   @Column({ nullable: true })
-  AC_NO: number;
+  AC_NO!: number;
 
   @Column({ nullable: true })
-  AC_NAME: string;
+  AC_NAME!: string;
 
   @Column({ nullable: true })
-  REF_AC_ACNOTYPE: string;
+  REF_AC_ACNOTYPE!: string;
 
   @Column({ nullable: true })
-  REF_AC_TYPE: string;
+  REF_AC_TYPE!: string;
 
   @Column({ nullable: true })
-  REF_AC_NO: number;
+  REF_AC_NO!: number;
 
   @Column({ nullable: true })
-  REF_OLD_AC_NO: string;
+  REF_OLD_AC_NO!: string;
 
   @Column({ nullable: true })
-  COURT: string;
+  COURT!: string;
 
   @Column({ nullable: true })
-  CASE_SUITE_DATE: string;
+  CASE_SUITE_DATE!: string;
 
   @Column({ nullable: true })
-  COURT_ORDER_DATE: string;
+  COURT_ORDER_DATE!: string;
 
   @Column({ nullable: true })
-  COURT_RESULT_DATE: string;
+  COURT_RESULT_DATE!: string;
 
   @Column({ nullable: true })
-  COURT_CASE_NO: string;
+  COURT_CASE_NO!: string;
 
   @Column({ nullable: true })
-  COURT_INT_RATE: string;
+  COURT_INT_RATE!: string;
 
   @Column({ nullable: true })
-  SUITE_AMT: string;
+  SUITE_AMT!: string;
 
   @Column({ nullable: true })
-  COURT_INSTALLMENT: string;
+  COURT_INSTALLMENT!: string;
 
   @Column({ nullable: true })
-  RECOVERABLE_AMT: string;
+  RECOVERABLE_AMT!: string;
 
   @Column({ nullable: true })
-  RECOVERABLE_INT: string;
+  RECOVERABLE_INT!: string;
 
   @Column({ nullable: true })
-  INT_CALC_DATE: string;
+  INT_CALC_DATE!: string;
 
   @Column({ nullable: true })
-  LOAN_STAGE: string;
+  LOAN_STAGE!: string;
 
   @Column({ nullable: true })
-  ADVOCATE: string;
+  ADVOCATE!: string;
 
   @Column({ nullable: true })
-  REF_OLD_AC_TYPE: string;
+  REF_OLD_AC_TYPE!: string;
 
   @Column({ nullable: true })
-  AC_REMARK: string;
+  AC_REMARK!: string;
 
 
 
@@ -349,21 +349,21 @@ export class LNDISPUTEDETAILS {
 
 
  @ManyToOne(() => LNMASTER, ln => ln.disputeloanMaster)
-@JoinColumn({ name: 'LNMASTER_ID' })   // real FK column
-lnmaster: LNMASTER;
+  @JoinColumn({ name: 'LNMASTER_ID' }) // real FK column
+  lnmaster!: LNMASTER;
 
 
 
-  @OneToMany(() => GUARANTERDETAILS, guaranterMaster => guaranterMaster.lnmaster, {
-    cascade: ["insert", "update"]
-  })
-  guaranterMaster: GUARANTERDETAILS[];
+  // @OneToMany(() => GUARANTERDETAILS, guaranterMaster => guaranterMaster.lnmaster, {
+  //   cascade: ["insert", "update"]
+  // })
+  // guaranterMaster!: GUARANTERDETAILS[];
 
 
   @OneToMany(() => SECURITYDETAILS, securityMaster => securityMaster.lnmaster, {
     cascade: ["insert", "update"]
   })
-  securityMaster: SECURITYDETAILS[];
+  securityMaster!: SECURITYDETAILS[];
   // securityMaster: SECURITYDETAILS[];
   // AC_ADDFLAG: boolean;
   // AC_THONO: string;

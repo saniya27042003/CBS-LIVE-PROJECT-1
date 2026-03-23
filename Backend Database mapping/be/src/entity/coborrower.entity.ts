@@ -6,31 +6,31 @@ import { LNMASTER } from './term-loan-master.entity';
 export class COBORROWER {
 
     @PrimaryGeneratedColumn()
-    id: number;
+  id!: number;
 
     @Column({ nullable: true })
-    AC_TYPE: string
+  AC_TYPE!: string;
 
     @Column({ nullable: true })
-    AC_ACNOTYPE: string
+  AC_ACNOTYPE!: string;
 
     @Column({ length: 15 })
-    AC_NO: string
+  AC_NO!: string;
 
     @Column({ nullable: true })
-    AC_NAME: string
+  AC_NAME!: string;
 
     @Column()
-    @Generated('increment')
-    SERIAL_NO: number
+  @Generated('increment')
+  SERIAL_NO!: number;
 
     @Column({ nullable: true })
-    CAC_CUSTID: string
+  CAC_CUSTID!: string;
 
     @Column()
-    lnmasterID: number
+  lnmasterID!: number;
     
    @ManyToOne(() => LNMASTER, ln => ln.CoborrowerMaster)
-  @JoinColumn({ name: 'LNMASTER_ID' }) // use your real FK column
-  lnmaster: LNMASTER;
+  @JoinColumn({ name: 'lnmasterID' }) // use your real FK column
+  lnmaster!: LNMASTER;
 }

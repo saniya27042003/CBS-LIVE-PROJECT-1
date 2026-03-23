@@ -4,10 +4,10 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { DPMASTER } from './dpmaster.entity';
+//import { DPMASTER } from './dpmaster.entity';
 //import { DEPOCLOSETRANSAC } from './DEPOCLOSETRANSAC.entity';
 import { LNMASTER } from './term-loan-master.entity';
-import { SHMASTER } from './share-master.entity';
+//import { SHMASTER } from './share-master.entity';
 //import { RENEWALHISTORY } from './RENEWALHISTORY.entity';
 //import { PIGMYCHART } from './pigmy-chart.entity';
 //import { HISTORYTRAN } from './HISTORYTRAN.entity';
@@ -54,19 +54,19 @@ import { SHMASTER } from './share-master.entity';
 @Entity()
 export class SCHEMAST {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   /* ============================
      DPMASTER RELATIONS (FIXED)
      ============================ */
 
-  // AC_TYPE → DPMASTER
-  @OneToMany(() => DPMASTER, (dp) => dp.DPMasterScheme)
-  DPschemecode: DPMASTER[];
+//   // AC_TYPE → DPMASTER
+//   @OneToMany(() => DPMASTER, d => d.schema)
+// DPschemecode!: DPMASTER[];
 
-  // PIGMY_ACTYPE → DPMASTER
-  @OneToMany(() => DPMASTER, (dp) => dp.PGDPMaster)
-  PGDPMaster: DPMASTER[];
+//   // PIGMY_ACTYPE → DPMASTER
+//   @OneToMany(() => DPMASTER, (dp) => dp.PGDPMaster)
+//   PGDPMaster: DPMASTER[] = [];
 
   /* ============================
      EXISTING RELATIONS (UNCHANGED)
@@ -77,11 +77,10 @@ export class SCHEMAST {
   // @OneToMany(() => DEPOCLOSETRANSAC, d => d.depoCloseTranAc)
   // depoCloseTranAc: DEPOCLOSETRANSAC[];
 
-  @OneToMany(() => LNMASTER, l => l.LNCCMaster)
-  lncccode: LNMASTER[];
-
-  @OneToMany(() => SHMASTER, s => s.shareMaster)
-  shareCode: SHMASTER[];
+ @OneToMany(() => LNMASTER, l => l.LNCCMaster)
+lncccode!: LNMASTER[];
+  // @OneToMany(() => SHMASTER, s => s.shareMaster)
+  // shareCode: SHMASTER[] = [];
 
   // @OneToMany(() => RENEWALHISTORY, r => r.renewalHistory)
   // renewalHistory: RENEWALHISTORY[];
