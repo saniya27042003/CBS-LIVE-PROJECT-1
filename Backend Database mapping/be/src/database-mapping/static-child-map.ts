@@ -36,4 +36,11 @@ export const STATIC_CHILD_MAP: Record<string, string[]> = {
     'lnacintrate',
   ],
 
+
+  //BRANCHMASTER
+  //CASTMASTER
+  //SCHEMAST
+  //syspara
+  //
+
 };

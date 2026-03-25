@@ -46,13 +46,37 @@ export class DatabaseMappingController {
     return this.db.migrateSHMASTER();
   }
 
-  @Post('migrate/single-table')
-async migrateSingleTable(@Body() body: {
-  oracleTable: string;
-  targetTable: string;
-}) {
-  return this.db.migrateSingleTable(body);
-}
+
+
+  @Post('migrate/branchmaster')
+  async migrateBRANCHMASTER() {
+    return await this.db.migrateBRANCHMASTER();
+  }
+
+  @Post('migrate/castmaster')
+  async migrateCASTMASTER() { 
+    return this.db.migrateCASTMASTER();
+  }
+
+   @Post('migrate/schemast')
+  async migrate() { 
+    return this.db.migrateSCHEMAST();
+  }
+
+   @Post('migrate/syspara')
+  async migrateSYSPARA() { 
+    return this.db.migrateSCHEMAST();
+  }
+
+    @Post('migrate/guaranterdetails')
+  async migrateGUARANTERDETAILS() { 
+    return this.db.migrateGUARANTERDETAILS();
+  }
+
+    @Post('migrate/acmaster')
+  async migrateACMASTER() { 
+    return this.db.migrateACMASTER();
+  }
 
 //   @Post('connect-server')
 //   connectServer(@Body() config: any) {
