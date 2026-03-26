@@ -7,7 +7,7 @@ export class DatabaseController {
   private serverConnected = false;
   private clientConnected = false;
 
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(private readonly dbService: DatabaseService) { }
 
   // ---------------- CONNECT SERVER (POSTGRES) ----------------
   @Post('connect-server')
@@ -20,6 +20,9 @@ export class DatabaseController {
       message: 'Server database connected successfully',
     };
   }
+
+
+
 
   // ---------------- CONNECT CLIENT (ANY DB) ----------------
   @Post('connect-client')

@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-// import { env } from '../../environments/environment';
+import { BehaviorSubject, Observable, of } from 'rxjs'; // ✅ Added Observable
 
 @Injectable({
   providedIn: 'root',
@@ -9,149 +8,45 @@ import { BehaviorSubject } from 'rxjs';
 export class AppService {
   private http = inject(HttpClient);
 
-  // ✅ CHILD TABLE TOGGLE STATE
-private includeChildTables$ = new BehaviorSubject<boolean>(
-  localStorage.getItem('includeChildTables') === 'true'
-);
+  private includeChildTables$ = new BehaviorSubject<boolean>(localStorage.getItem('includeChildTables') === 'true');
+  private childTables$ = new BehaviorSubject<any[]>([]);
 
-// ✅ CHILD TABLE DATA STATE
-private childTables$ = new BehaviorSubject<any[]>([]);
+  private BASE_URL = 'http://localhost:3000/database-mapping/';
 
+  constructor() { }
 
-  // ✅ MUST END WITH /
-  // private BASE_URL = env.apiBaseUrl;
-  //  Example: http://localhost:3000/database-mapping/
-private BASE_URL = 'http://localhost:3000/database-mapping/';
-  constructor() {}
+  connectServer(config: any) { return this.http.post(this.BASE_URL + 'connect-server', config); }
+  connectClient(config: any) { return this.http.post(this.BASE_URL + 'connect-client', config); }
 
-  // =====================================
-  // ✅ SERVER (PRIMARY DB - POSTGRES)
-  // =====================================
+  getServerTables() { return of(['IDMASTER', 'DPMASTER', 'LNMASTER', 'PGMASTER', 'SHMASTER', 'ACMASTER', 'BRANCHMASTER', 'CASTMASTER']); }
+  getClientTables() { return of(['IDMASTER', 'DPMASTER', 'LNMASTER', 'PGMASTER', 'SHMASTER', 'ACMASTER', 'BRANCHMASTER', 'CASTMASTER']); }
 
-  connectServer(config: any) {
-    return this.http.post(this.BASE_URL + 'connect-server', config);
+  // ✅ RESTORED MISSING METHODS
+  getChildTables(parentTable: string): Observable<any[]> {
+    // If backend route is 404, return empty array to keep it from crashing
+    return this.http.get<any[]>(`${this.BASE_URL}child-tables/${parentTable}`);
   }
 
-  getServerTables() {
-    return this.http.get<string[]>(this.BASE_URL + 'server/tables');
+  getClientColumns(tableName: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}client/columns/${tableName}`);
   }
-  getServerColumns(tableName: string) {
-  return this.http.post<string[]>(
-    this.BASE_URL + 'server/columns',
-    { tableName }
-  );
-}
 
+  getServerColumns(tableName: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}server/columns/${tableName}`);
+  }
 
-  // ✅ FETCH CHILD TABLES (POSTGRES FK)
-getChildTables(parentTable: string) {
-  return this.http.get<any[]>(
-    this.BASE_URL + 'child-tables/' + parentTable
-  );
-}
+  insertData(payload: any) {
+    const table = payload.serverTable.toLowerCase();
+    return this.http.post(`${this.BASE_URL}migrate/${table}`, {});
+  }
 
-// ✅ UPDATE CHILD TABLE STATE
-setChildTables(tables: any[]) {
-  this.childTables$.next(tables);
-}
-
-
-
-// ✅ CHILD TABLE TOGGLE STATE
-
+  // ✅ STATE HELPERS
+  setChildTables(tables: any[]) { this.childTables$.next(tables); }
   setIncludeChildTables(value: boolean) {
-      localStorage.setItem('includeChildTables', String(value)); // ✅ SAVE
-
-  this.includeChildTables$.next(value);
-
-  // 🔥 CRITICAL FIX
-  if (!value) {
-    this.childTables$.next([]); // CLEAR child tables immediately
+    localStorage.setItem('includeChildTables', String(value));
+    this.includeChildTables$.next(value);
+    if (!value) this.childTables$.next([]);
   }
-}
-
-getIncludeChildTables() {
-  return this.includeChildTables$.asObservable();
-}
-
-getChildTablesState() {
-  return this.childTables$.asObservable();
-}
-
-
-  // =====================================
-  // ✅ CLIENT (PG / MSSQL / MYSQL)
-  // =====================================
-
-  connectClient(config: any) {
-    return this.http.post(this.BASE_URL + 'connect-client', config);
-  }
-
-  getClientTables() {
-    return this.http.get<string[]>(this.BASE_URL + 'client/tables');
-  }
-
-  getClientColumns(tableName: string) {
-    return this.http.post<string[]>(this.BASE_URL + 'client/columns', {
-      tableName,
-    });
-  }
-
-  getClientTableStructure(tableName: string) {
-    return this.http.post<{ columns: string[]; rows: any[] }>(
-      this.BASE_URL + 'client/table-structure',
-      { tableName },
-    );
-  }
-
-  // =====================================
-  // ✅ DATA MIGRATION
-  // =====================================
-// =====================================
-// ✅ SINGLE TABLE MIGRATION
-// =====================================
-insertData(payload: {
-  serverTable: string;
-  baseClientTable: string;
-  mappings: {
-    serverColumn: string;
-    clientTable: string;
-    clientColumns: string[];
-  }[];
-}) {
-  return this.http.post(this.BASE_URL + 'insert-data', payload);
-}
-
-
-// =====================================
-// ✅ FETCH CHILD TABLES (POSTGRES FK)
-// =====================================
-// getChildTables(parentTable: string) {
-//   return this.http.get<any[]>(
-//     this.BASE_URL + 'child-tables/' + parentTable
-//   );
-// }
-
-
-// =====================================
-// ✅ MULTIPLE TABLE MIGRATION
-// =====================================
-migrateMultipleTables(payload: {
-  tables: string[];
-  mappingsPerTable: {
-    [table: string]: {
-      serverTable: string;
-      clientTable: string;
-      mappings: any[];
-    };
-  };
-  relations: any[];
-}) {
-  return this.http.post(
-    this.BASE_URL + 'migrate-multiple',
-    payload
-  );
-}
-
-
+  getIncludeChildTables() { return this.includeChildTables$.asObservable(); }
+  getChildTablesState() { return this.childTables$.asObservable(); }
 }

@@ -6,20 +6,13 @@ import { CUSTOMERADDRESS } from '../entity/customer-address.entity';
 import { OCCUPATIONMASTER } from '../entity/occupation-master.entity';
 import { CASTMASTER } from '../entity/cast-master.entity';
 import { RISKCATEGORYMASTER } from '../entity/risk-category.entity';
-import  moment from 'moment';
-import unidev from 'unidev';
+import moment from 'moment';
+import { unidev } from 'unidev';
 import { ManualSymbolMapper } from '../legacy-font/manual-symbol-maps';
 import Sanscript from '@indic-transliteration/sanscript';
 import { DataSource } from 'typeorm';
 import { QueryRunner } from 'typeorm';
 import { CATEGORYMASTER } from '../entity/category-master.entity';
-import { BRANCHMASTER } from '../entity/clearing-branch-master.entity';
-import { SCHEMAST } from '../entity/schemeParameters.entity';
-import { HttpException, HttpStatus } from '@nestjs/common';
-
-// import { PGMASTER } from '../entity/pgmaster.entity';
-
-
 // import * as oracledb from 'oracledb';
 // import { LNMASTER } from '../entity/term-loan-master.entity';
 // import { SECURITYDETAILS } from '../entity/security.entity';
@@ -32,32 +25,32 @@ export class DatabaseMappingService {
   [x: string]: any;
   private readonly logger = new Logger(DatabaseMappingService.name);
 
-    private clientConn!: {
-      execute: (
-        query: string,
-        params?: any[]
-      ) => Promise<{
-        rows: any[];
-        metaData: { name: string }[];
-      }>;
-    };
+  private clientConn!: {
+    execute: (
+      query: string,
+      params?: any[]
+    ) => Promise<{
+      rows: any[];
+      metaData: { name: string }[];
+    }>;
+  };
 
-    private serverDB!: DataSource;
+  private serverDB!: DataSource;
 
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(private readonly dbService: DatabaseService) { }
 
   // store connections after controller call
-    async connectServer(config: any) {
-      this.serverDB = await this.dbService.getServerDataSource(config);
-      return { success: true };
-    }
+  async connectServer(config: any) {
+    this.serverDB = await this.dbService.getServerDataSource(config);
+    return { success: true };
+  }
 
-    async connectClient(config: any) {
-      this.clientConn = await this.dbService.getClientConnection(config);
-      return { success: true };
-    }
+  async connectClient(config: any) {
+    this.clientConn = await this.dbService.getClientConnection(config);
+    return { success: true };
+  }
 
-  
+
   private resolveAnusvara(iast: string): string {
     return iast
       .replace(/ṃ(?=[pbm])/g, 'm').replace(/ṃ(?=[kg])/g, 'n').replace(/ṃ(?=[tdn])/g, 'n')
@@ -65,90 +58,90 @@ export class DatabaseMappingService {
   }
 
   private safe(value: any): any {
-  if (value === undefined || value === null || value === '') {
-    return null;
+    if (value === undefined || value === null || value === '') {
+      return null;
+    }
+    return value;
   }
-  return value;
-}
 
   private transformValue(raw: any): any {
-  if (raw === null || raw === undefined || raw === '') return null;
+    if (raw === null || raw === undefined || raw === '') return null;
 
-  const strRaw = String(raw);
+    const strRaw = String(raw);
 
-  // 1. Detect mojibake / legacy corruption
-  const looksCorrupted =
-    /�|Ã|Â|¤|§|ª|©/.test(strRaw) ||
-    /[A-Za-z]�[A-Za-z]/.test(strRaw);
+    // 1. Detect mojibake / legacy corruption
+    const looksCorrupted =
+      /�|Ã|Â|¤|§|ª|©️/.test(strRaw) ||
+      /[A-Za-z]�[A-Za-z]/.test(strRaw);
 
-  if (!looksCorrupted && /^[\x20-\x7E\s]*$/.test(strRaw)) {
-    return strRaw; // safe English
+    if (!looksCorrupted && /^[\x20-\x7E\s]*$/.test(strRaw)) {
+      return strRaw; // safe English
+    }
+
+    // 2. PURE Unicode Devanagari → leave untouched
+    const isPureUnicodeDevanagari =
+      /[\u0900-\u097F]/.test(strRaw) &&
+      !/[A-Za-z]/.test(strRaw);
+
+    if (isPureUnicodeDevanagari) return strRaw;
+
+    // 3. Legacy font detection
+    const looksLegacy = /[^\u0900-\u097F]/.test(strRaw);
+    if (!looksLegacy) return strRaw;
+
+    try {
+      const unidevFn = unidev as unknown as (a: string, b: string, c: string) => string;
+      let marathi = unidevFn(strRaw, 'hindi', 'DVBW-TTYogeshEn');
+      marathi = ManualSymbolMapper.normalize(marathi);
+
+      let english = Sanscript.t(marathi, 'devanagari', 'iast');
+      english = this.resolveAnusvara(english);
+
+      english = english
+        .toLowerCase()
+        .replace(/ā/g, 'a')
+        .replace(/ī/g, 'i')
+        .replace(/ū/g, 'u')
+        .replace(/ṛ|ṝ/g, 'r')
+        .replace(/ḷ|ḹ/g, 'l')
+        .replace(/c/g, 'ch')
+        .replace(/ṭ/g, 't')
+        .replace(/ḍ/g, 'd')
+        .replace(/ś|ṣ/g, 'sh')
+        .replace(/ṅ|ñ|ṇ/g, 'n')
+        .replace(/ḥ/g, 'h')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/aa+/g, 'a')
+        .replace(/ii+/g, 'i')
+        .replace(/uu+/g, 'u')
+        .replace(/a$/i, '')
+        .replace(/\b([a-z]+)(dr|tr|kr|gr)\b/gi, '$1$2a')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+      return english.trim() === '' ? strRaw : english;
+    } catch {
+      return strRaw;
+    }
   }
-
-  // 2. PURE Unicode Devanagari → leave untouched
-  const isPureUnicodeDevanagari =
-    /[\u0900-\u097F]/.test(strRaw) &&
-    !/[A-Za-z]/.test(strRaw);
-
-  if (isPureUnicodeDevanagari) return strRaw;
-
-  // 3. Legacy font detection
-  const looksLegacy = /[^\u0900-\u097F]/.test(strRaw);
-  if (!looksLegacy) return strRaw;
-
-  try {
-    const unidevFn = unidev as unknown as (a: string, b: string, c: string) => string;
-    let marathi = unidevFn(strRaw, 'hindi', 'DVBW-TTYogeshEn');
-    marathi = ManualSymbolMapper.normalize(marathi);
-
-    let english = Sanscript.t(marathi, 'devanagari', 'iast');
-    english = this.resolveAnusvara(english);
-
-    english = english
-      .toLowerCase()
-      .replace(/ā/g, 'a')
-      .replace(/ī/g, 'i')
-      .replace(/ū/g, 'u')
-      .replace(/ṛ|ṝ/g, 'r')
-      .replace(/ḷ|ḹ/g, 'l')
-      .replace(/c/g, 'ch')
-      .replace(/ṭ/g, 't')
-      .replace(/ḍ/g, 'd')
-      .replace(/ś|ṣ/g, 'sh')
-      .replace(/ṅ|ñ|ṇ/g, 'n')
-      .replace(/ḥ/g, 'h')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/aa+/g, 'a')
-      .replace(/ii+/g, 'i')
-      .replace(/uu+/g, 'u')
-      .replace(/a$/i, '')
-      .replace(/\b([a-z]+)(dr|tr|kr|gr)\b/gi, '$1$2a')
-      .replace(/\b\w/g, c => c.toUpperCase());
-
-    return english.trim() === '' ? strRaw : english;
-  } catch {
-    return strRaw;
-  }
-}
 
   // ---------------- IDMASTER MIGRATION ----------------
   async migrateIDMASTER() {
 
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
+    if (!this.clientConn) throw new Error('Client DB not connected');
+    if (!this.serverDB) throw new Error('Server DB not connected');
 
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+    const queryRunner = this.serverDB.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  try {
-   
-    const occupationData = await queryRunner.manager.find(OCCUPATIONMASTER);
-    const castData = await queryRunner.manager.find(CASTMASTER);
-    const riskData = await queryRunner.manager.find(RISKCATEGORYMASTER);
+    try {
 
-    const result = await this.clientConn.execute(`
+      const occupationData = await queryRunner.manager.find(OCCUPATIONMASTER);
+      const castData = await queryRunner.manager.find(CASTMASTER);
+      const riskData = await queryRunner.manager.find(RISKCATEGORYMASTER);
+
+      const result = await this.clientConn.execute(`
   SELECT IDMASTER.*, 
          OCCUPATIONMASTER.CODE AS OCCUPATION,
          CASTMASTER.CODE AS CASTMASTER,
@@ -163,1196 +156,1200 @@ export class DatabaseMappingService {
   ORDER BY IDMASTER.AC_NO
 `);
 
-    const rows = this.convertOracleRows(result as {
-      rows: any[];
-      metaData: { name: string }[]; 
-    });
+      const rows = this.convertOracleRows(result as {
+        rows: any[];
+        metaData: { name: string }[];
+      });
 
-    const branch = await queryRunner.manager.query(
+      const branch = await queryRunner.manager.query(
 
-      `SELECT id FROM ownbranchmaster WHERE "CODE" = 101`
-    );
+        `SELECT id FROM ownbranchmaster WHERE "CODE" = 101`
+      );
 
-    const branchId = branch[0]?.id;
+      const branchId = branch[0]?.id;
 
-    if (!branchId) {
-      throw new Error('Branch not found in ownbranchmaster');
-    }
-
-    for (const ele of rows) {
-
-      const newObj = new IDMASTER();
-
-      const namearr = String(ele.AC_NAME || '').trim().split(/\s+/);
-
-      newObj.AC_NO = ele.AC_NO;
-      newObj.AC_TITLE = this.transformValue(ele.AC_TITLE);
-      newObj.AC_NAME = this.transformValue(ele.AC_NAME);
-      newObj['L_NAME'] = this.transformValue(namearr[0] || null);
-      newObj['F_NAME'] = this.transformValue(namearr[1] || null);
-      newObj['M_NAME'] = this.transformValue(namearr[2] || null);
-      newObj['AC_ADHARNO'] = ele.AC_ADHARNO;
-      newObj['AC_BIRTH_DT'] = ele.AC_BIRTH_DT
-        ? moment(ele.AC_BIRTH_DT as unknown as Date).format('DD/MM/YYYY')
-        : null;
-
-      newObj['AC_PANNO'] = ele.AC_PANNO;
-      newObj['AC_MOBILENO'] = ele.AC_MOBILENO;
-      newObj['AC_PHONE_RES'] = ele.AC_PHONE_RES;
-      newObj['AC_PHONE_OFFICE'] = ele.AC_PHONE_OFFICE;
-      newObj['AC_EMAILID'] = ele.AC_EMAIL;
-      newObj['TDSDOCUMNET'] = '0';
-      newObj['TDS_REQUIRED'] = ele.TDS_REQUIRED ? '1' : '0';
-      newObj['SMS_REQUIRED'] = ele.SMS_REQUIRED ? '1' : '0';
-      newObj['IS_KYC_RECEIVED'] = ele.IS_KYC_RECEIVED ? '1' : '0';
-      
-      const occ = occupationData.find(x => x.CODE == ele.OCCUPATION);
-      newObj['AC_OCODE'] = occ ? occ.id : null;
-
-      const cast = castData.find(x => x.CODE == ele.CASTMASTER);
-      newObj['AC_CAST'] = cast ? cast.id : null;
-
-      const risk = riskData.find(x => x.CODE == ele.RISKCATEGORYMASTER);
-      newObj['AC_RISKCATG'] = risk ? risk.id : null;
-      newObj['ORA_AC_NO'] = ele.AC_NO;
-      newObj['ORA_BRANCH'] = ele.AC_BRANCH;   // change if dynamic
-      newObj['BRANCH_CODE'] = branchId;
-
-      const saved = await queryRunner.manager.save(IDMASTER, newObj);
-
-   const address = new CUSTOMERADDRESS();
-
-      address['idmasterID'] = saved.id;
-
-      address['AC_GALLI'] = this.safe(ele.AC_ADDR1);  
-      address['AC_AREA']  = this.safe(ele.AC_ADDR2);  
-      address['AC_ADDR']  = this.safe(ele.AC_ADDR3);  
-
-      address['AC_PIN'] = ele.AC_PIN || null;
-      address['AC_ADDFLAG'] = true;
-      address['AC_ADDTYPE'] = 'P';
-      address['AC_PIN'] = ele.AC_PIN || null;
-      address['AC_ADDFLAG'] = true;
-      address['AC_ADDTYPE'] = 'P';
-
-      await queryRunner.manager.save(CUSTOMERADDRESS, address);
-    }
-
-    await queryRunner.commitTransaction();
-    this.logger.log('IDMASTER migration completed');
-
-    return { success: true };
-
-  } catch (err) {
-    await queryRunner.rollbackTransaction();
-    throw err;
-  } finally {
-    await queryRunner.release();
-  }
-}
-  // helper
-  private convertOracleRows(result: {
-  rows: any[];
-  metaData: { name: string }[];
-}) {
-  return result.rows.map((row: any[]) => {
-    const obj: Record<string, any> = {};
-    result.metaData.forEach((m, i) => {
-      obj[m.name] = row[i];
-    });
-    return obj;
-  });
-}
-
-
-private generateBankAcNo(
-  bankCode: number,
-  branchCode: number,
-  schemeCode: number,
-  acNo: number
-): string {
-
-  const bank = String(bankCode).padStart(3, '0');
-  const branch = String(branchCode).padStart(3, '0');
-  const scheme = String(schemeCode).padStart(3, '0');
-  const account = String(acNo).padStart(6, '0');
-
-  return `${bank}${branch}${scheme}${account}`;
-}
-
-//---------------------DPMASTER MIGRATION---------------------
-
-
-// async migrateDPMASTER() {
-
-//   if (!this.clientConn) throw new Error('Client DB not connected');
-//   if (!this.serverDB) throw new Error('Server DB not connected');
-
-//   const queryRunner = this.serverDB.createQueryRunner();
-//   await queryRunner.connect();
-//   await queryRunner.startTransaction();
-
-//   try {
-
-//     /* ---------------- LOAD IDMASTER ---------------- */
-
-//     const idmasterData = await queryRunner.manager.find(IDMASTER);
-
-//     const idMasterMap = new Map(
-//       idmasterData.map(x => [x.ORA_AC_NO, x])
-//     );
-
-//     /* ---------------- LOAD SCHEMAS ---------------- */
-
-//     type SchemaType = {
-//       id: number;
-//       S_APPL: number;
-//     };
-
-//     const schemaData: SchemaType[] = await queryRunner.manager.query(
-//       `SELECT id,"S_APPL" FROM schemast`
-//     );
-
-//     const schemaMap = new Map<number, SchemaType>(
-//       schemaData.map(x => [Number(x.S_APPL), x])
-//     );
-
-//     /* ---------------- SYS PARAMETERS ---------------- */
-
-//     const syspara = await queryRunner.manager.query(
-//       `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
-//     );
-
-//     const bankCode = syspara[0].BANK_CODE;
-//     const branchCode = syspara[0].BRANCH_CODE;
-
-//     const branch = await queryRunner.manager.query(
-//       `SELECT id FROM ownbranchmaster WHERE "CODE" = ${branchCode}`
-//     );
-
-//     const branchId = branch[0].id;
-
-//     /* ---------------- LOAD DPMASTER ---------------- */
-
-//     const result = await this.clientConn.execute(`
-//       SELECT *
-//       FROM DPMASTER
-//       ORDER BY AC_NO
-//     `);
-
-//     const rows = this.convertOracleRows(result as {
-//       rows: any[];
-//       metaData: { name: string }[];
-//     });
-
-//     for (const ele of rows) {
-
-//       /* ---------------- SCHEMA ---------------- */
-//       if (!ele.AC_TYPE) {
-//         this.logger.warn(`Schema not found for AC_TYPE: ${ele.AC_TYPE}`);
-//         continue;
-//       }
-
-//       /* convert 20100 -> 201 */
-//       let schemaCode = Number(ele.AC_TYPE);
-
-//       if (schemaCode > 999) {
-//         schemaCode = Math.floor(schemaCode / 100);
-//       }
-
-//       const schema = schemaMap.get(schemaCode);
-
-//       if (!schema) {
-//         this.logger.warn(`Schema not found for AC_TYPE: ${schemaCode}`);
-//         continue;
-//       }
-                  
-//       /* ---------------- BANKACNO ---------------- */
-
-//       const schemeCode = schema.S_APPL;
-
-//       const BANKACNO = this.generateBankAcNo(
-//         bankCode,
-//         branchCode,
-//         schemeCode,
-//         ele.AC_NO
-//       );
-
-//       const acno = 100000 + Number(ele.AC_NO);
-
-//       /* ---------------- CUSTOMER ---------------- */
-
-//       const idmaster = idMasterMap.get(ele.AC_CUSTID);
-
-//       if (!idmaster) {
-//         this.logger.warn(`Customer not found in IDMASTER: ${ele.AC_CUSTID}`);
-//         continue;
-//       }
-
-//       const newObj: any = {};
-
-//       newObj.AC_NO = acno;
-//       newObj.BANKACNO = BANKACNO;
-//       newObj.AC_TYPE = schema.id;
-//       newObj.AC_ACNOTYPE = schema.S_APPL;
-
-//       newObj.AC_CUSTID = idmaster.id;
-//       newObj.idmasterID = idmaster.id;
-
-//       newObj.AC_NAME = idmaster?.AC_NAME ?? ele.AC_NAME;
-//       newObj.ORA_AC_NAME = ele.AC_NAME;
-
-//       newObj.AC_OPDATE = ele.AC_OPDATE
-//         ? moment(ele.AC_OPDATE).format('DD/MM/YYYY')
-//         : null;
-
-//       newObj.AC_INTRATE = ele.AC_INTRATE ?? 0;
-//       newObj.AC_SCHMAMT = ele.AC_SCHMAMT ?? 0;
-//       newObj.AC_MATUAMT = ele.AC_MATUAMT ?? 0;
-
-//       newObj.ORA_CUSTID = ele.AC_CUSTID;
-//       newObj.BRANCH_CODE = branchId;
-//       newObj.OID = ele.AC_NO;
-
-//       const saved = await queryRunner.manager.insert('dpmaster', newObj);
-
-//       const dpmasterId = saved.identifiers[0].id;
-
-//       /* ---------------- CHILD TABLES ---------------- */
-      
-
-//       await this.migrateNominee(ele, dpmasterId, BANKACNO, branchId, queryRunner);
-//       await this.migrateAttorney(ele, dpmasterId, branchId, queryRunner);
-//       await this.migrateJoint(ele, dpmasterId, BANKACNO, branchId, queryRunner);
-
-//     }
-  
-//     await queryRunner.commitTransaction();
-
-//     this.logger.log('DPMASTER migration completed');
-
-//     return { success: true };
-
-//   } catch (err) {
-
-//     await queryRunner.rollbackTransaction();
-//     throw err;
-
-//   } finally {
-
-//     await queryRunner.release();
-
-//   }
-
-// }
-
-
-//=================================DPMASTER TABLE INSERTION =============================================
-
-async migrateDPMASTER() {
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  this.logger.log('Pre-fetching child data from Oracle...');
-
-  // 1. Fetch lookup data upfront to avoid N+1 queries
-  const [nomRows, attRows, jntRows] = await Promise.all([
-    this.clientConn.execute(`SELECT * FROM NOMINEELINK`),
-    this.clientConn.execute(`SELECT * FROM ATTERONEYLINK`),
-    this.clientConn.execute(`SELECT * FROM JOINTACLINK`)
-  ]);
-
-  const nomineeMap = this.groupByRelation(this.convertOracleRows(nomRows as any));
-  const attorneyMap = this.groupByRelation(this.convertOracleRows(attRows as any));
-  const jointMap = this.groupByRelation(this.convertOracleRows(jntRows as any));
-
-  // 2. Prepare Server Data Maps
-  const idmasterData = await this.serverDB.manager.find(IDMASTER);
-  const idMasterMap = new Map(idmasterData.map(x => [x.ORA_AC_NO, x]));
-
-  const schemaData: any[] = await this.serverDB.manager.query(`SELECT id, "S_APPL" FROM schemast`);
-  const schemaMap = new Map(schemaData.map(x => [Number(x.S_APPL), x]));
- // const validSchemaSet = new Set(schemaData.map(s => Number(s.S_APPL)));
-
-  const syspara = await this.serverDB.manager.query(`SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`);
-  const { BANK_CODE: bankCode, BRANCH_CODE: branchCode } = syspara[0];
-
-  const branch = await this.serverDB.manager.query(`SELECT id FROM ownbranchmaster WHERE "CODE"=$1`, [branchCode]);
-  const branchId = branch[0]?.id;
-
-  // 3. Fetch Main Data
-  const result = await this.clientConn.execute(`SELECT * FROM DPMASTER ORDER BY AC_NO`);
-  const rows = this.convertOracleRows(result);
-  this.logger.log(`Total Oracle Rows: ${rows.length}`);
-
-  let inserted = 0;
-  let failed = 0;
-
-  for (const ele of rows) {
-    // Start a fresh transaction per record so one failure doesn't stop the whole migration
-    const queryRunner = this.serverDB.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      if (!ele.AC_TYPE) throw new Error('Missing AC_TYPE');
-
-      /* ================= STRICT SCHEMA LOGIC ================= */
-
-      const rawType = String(ele.AC_TYPE).match(/\d+/g)?.join('') || '';
-      let schemaCode = Number(rawType);
-
-      if (schemaCode > 999) {
-        schemaCode = Math.floor(schemaCode / 100);
+      if (!branchId) {
+        throw new Error('Branch not found in ownbranchmaster');
       }
 
-      // 1. Try to find the real schema
-      let schema = schemaMap.get(schemaCode);
+      for (const ele of rows) {
 
-      // 2. IF MISSING (207, 213, etc.), assign the ID of a valid record (e.g., 201)
-      if (!schema) {
-        this.logger.warn(`AC_NO ${ele.AC_NO}: Schema ${schemaCode} missing. Mapping to existing ID for migration.`);
-        
-        // Use code 201 as the structural fallback so the "NOT NULL" constraint is satisfied
-        const fallbackSchema = schemaMap.get(201); 
-        
-        schema = {
-          id: fallbackSchema ? fallbackSchema.id : 1, 
-          S_APPL: schemaCode 
-        };
+        const newObj = new IDMASTER();
+
+        const namearr = String(ele.AC_NAME || '').trim().split(/\s+/);
+
+        newObj.AC_NO = ele.AC_NO;
+        newObj.AC_TITLE = this.transformValue(ele.AC_TITLE);
+        newObj.AC_NAME = this.transformValue(ele.AC_NAME);
+        newObj['L_NAME'] = this.transformValue(namearr[0] || null);
+        newObj['F_NAME'] = this.transformValue(namearr[1] || null);
+        newObj['M_NAME'] = this.transformValue(namearr[2] || null);
+        newObj['AC_ADHARNO'] = ele.AC_ADHARNO;
+        newObj['AC_BIRTH_DT'] = ele.AC_BIRTH_DT
+          ? moment(ele.AC_BIRTH_DT as unknown as Date).format('DD/MM/YYYY')
+          : null;
+
+        newObj['AC_PANNO'] = ele.AC_PANNO;
+        newObj['AC_MOBILENO'] = ele.AC_MOBILENO;
+        newObj['AC_PHONE_RES'] = ele.AC_PHONE_RES;
+        newObj['AC_PHONE_OFFICE'] = ele.AC_PHONE_OFFICE;
+        newObj['AC_EMAILID'] = ele.AC_EMAIL;
+        newObj['TDSDOCUMNET'] = '0';
+        newObj['TDS_REQUIRED'] = ele.TDS_REQUIRED ? '1' : '0';
+        newObj['SMS_REQUIRED'] = ele.SMS_REQUIRED ? '1' : '0';
+        newObj['IS_KYC_RECEIVED'] = ele.IS_KYC_RECEIVED ? '1' : '0';
+
+        const occ = occupationData.find(x => x.CODE == ele.OCCUPATION);
+        newObj['AC_OCODE'] = occ ? occ.id : null;
+
+        const cast = castData.find(x => x.CODE == ele.CASTMASTER);
+        newObj['AC_CAST'] = cast ? cast.id : null;
+
+        const risk = riskData.find(x => x.CODE == ele.RISKCATEGORYMASTER);
+        newObj['AC_RISKCATG'] = risk ? risk.id : null;
+        newObj['ORA_AC_NO'] = ele.AC_NO;
+        newObj['ORA_BRANCH'] = ele.AC_BRANCH;   // change if dynamic
+        newObj['BRANCH_CODE'] = branchId;
+
+        const saved = await queryRunner.manager.save(IDMASTER, newObj);
+
+        const address = new CUSTOMERADDRESS();
+
+        address['idmasterID'] = saved.id;
+
+        address['AC_GALLI'] = this.safe(ele.AC_ADDR1);
+        address['AC_AREA'] = this.safe(ele.AC_ADDR2);
+        address['AC_ADDR'] = this.safe(ele.AC_ADDR3);
+
+        address['AC_PIN'] = ele.AC_PIN || null;
+        address['AC_ADDFLAG'] = true;
+        address['AC_ADDTYPE'] = 'P';
+        address['AC_PIN'] = ele.AC_PIN || null;
+        address['AC_ADDFLAG'] = true;
+        address['AC_ADDTYPE'] = 'P';
+
+        await queryRunner.manager.save(CUSTOMERADDRESS, address);
       }
-      /* ================= DATA MAPPING ================= */
-      const BANKACNO = this.generateBankAcNo(bankCode, branchCode, schema.S_APPL, ele.AC_NO);
-      const idmaster = idMasterMap.get(ele.AC_CUSTID);
 
-      const newObj: any = {
-        AC_NO: 100000 + Number(ele.AC_NO),
-        BANKACNO: BANKACNO,
-        AC_TYPE: schema.id,
-        AC_ACNOTYPE: schema.S_APPL,
-        AC_CUSTID: idmaster?.id || null,
-        idmasterID: idmaster?.id || null,
-        AC_NAME: idmaster?.AC_NAME ?? ele.AC_NAME,
-        ORA_AC_NAME: ele.AC_NAME,
-        AC_OPDATE: ele.AC_OPDATE ? moment(ele.AC_OPDATE).format('DD/MM/YYYY') : null,
-        AC_INTRATE: ele.AC_INTRATE ?? 0,
-        AC_SCHMAMT: ele.AC_SCHMAMT ?? 0,
-        AC_MATUAMT: ele.AC_MATUAMT ?? 0,
-        ORA_CUSTID: ele.AC_CUSTID,
-        BRANCH_CODE: branchId,
-        OID: ele.AC_NO
-      };
-
-      const saved = await queryRunner.manager
-        .createQueryBuilder()
-        .insert()
-        .into('dpmaster')
-        .values(newObj)
-        .orIgnore() // Skips if OID/Primary Key already exists
-        .execute();
-
-      let dpmasterId: number;
-
-      if (!saved.identifiers || saved.identifiers.length === 0) {
-        const existing = await queryRunner.manager.query(
-          `SELECT id FROM dpmaster WHERE "OID" = $1`, [ele.AC_NO]
-        );
-        dpmasterId = existing[0]?.id;
-      } else {
-        dpmasterId = saved.identifiers[0]?.id;
-      }
-
-      if (!dpmasterId) throw new Error('Could not resolve DPMASTER ID');
-
-      /* ================= CHILD TABLES ================= */
-
-      await this.migrateNominee(ele, dpmasterId, BANKACNO, branchId, queryRunner, nomineeMap);
-      await this.migrateAttorney(ele, dpmasterId, branchId, queryRunner, attorneyMap);
-      await this.migrateJoint(ele, dpmasterId, BANKACNO, branchId, queryRunner, jointMap);
-
-      // COMMIT the individual record
       await queryRunner.commitTransaction();
-      inserted++;
+      this.logger.log('IDMASTER migration completed');
 
-    } catch (rowErr: any) {
-      // Rollback only this specific record's changes
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-      failed++;
-      this.logger.error(`FAILED ROW AC_NO ${ele.AC_NO}: ${rowErr.message}`);
+      return { success: true };
+
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
-      // Always release the runner to avoid connection leaks
       await queryRunner.release();
     }
   }
-
-  this.logger.log(`Migration Finished. Inserted: ${inserted}, Failed: ${failed}`);
-  return { success: true, inserted, failed };
-}
-
-
-// FIX 3: Robust key generation (Trimming and Uppercasing)
-private groupByRelation(rows: any[]): Map<string, any[]> {
-  const map = new Map<string, any[]>();
-  for (const row of rows) {
-    // Aggressively clean AC_NO and AC_TYPE
-    const acNo = String(row.AC_NO || '').replace(/\0/g, '').trim();
-    const acType = String(row.AC_TYPE || '').replace(/\0/g, '').trim();
-    
-    if (!acNo || !acType) continue;
-
-    const key = `${acNo}_${acType}`;
-
-    if (!map.has(key)) {
-      map.set(key, []);
-    }
-    map.get(key)!.push(row);
+  // helper
+  private convertOracleRows(result: {
+    rows: any[];
+    metaData: { name: string }[];
+  }) {
+    return result.rows.map((row: any[]) => {
+      const obj: Record<string, any> = {};
+      result.metaData.forEach((m, i) => {
+        obj[m.name] = row[i];
+      });
+      return obj;
+    });
   }
-  return map;
-}
-
-// private async migrateNominee(
-//   ele: any,
-//   dpmasterId: number,
-//   BANKACNO: string,
-//   branchId: number,
-//   queryRunner: QueryRunner
-// ) {
-
-//  const result = await this.clientConn.execute(`
-// SELECT 
-//   nomineelink.AC_NNAME,
-//   nomineelink.AC_NRELA,
-//   nomineelink.AC_NDATE,
-//   nomineelink.AGE,
-//   nomineelink.addr1 AS AC_NADDR,
-//   nomineelink.addr2 AS AC_NGALLI,
-//   nomineelink.addr3 AS AC_NAREA,
-//   nomineelink.pin AS AC_NPIN,
-//   nomineelink.ctcode AS AC_CTCODE
-// FROM nomineelink
-// WHERE nomineelink.ac_acnotype = '${ele.AC_ACNOTYPE}'
-//   AND ac_type = ${ele.AC_TYPE}
-//   AND ac_no = ${ele.AC_NO}
-// `);
-
-//   const rows = this.convertOracleRows(result as {
-//     rows: any[];
-//     metaData: { name: string }[];
-//   });
-
-//   for (const element of rows) {
-
-//     const nominee: any = {};
-
-//     nominee.ORA_AC_NAME = element.AC_NNAME ?? null;
-//     nominee.AC_NNAME = element.AC_NNAME ? element.AC_NNAME.replace("\x00", "") : null;
-//     nominee.AC_NRELA = element.AC_NRELA ? element.AC_NRELA.replace("\x00", "") : null;
-
-//     nominee.AC_NDATE = element.AC_NDATE
-//       ? moment(element.AC_NDATE).format('DD/MM/YYYY')
-//       : null;
-
-//     nominee.AGE = element.AGE ?? null;
-
-//     nominee.AC_NADDR = element.AC_NADDR ? element.AC_NADDR.replace("\x00", "") : null;
-//     nominee.AC_NGALLI = element.AC_NGALLI ? element.AC_NGALLI.replace("\x00", "") : null;
-//     nominee.AC_NAREA = element.AC_NAREA ? element.AC_NAREA.replace("\x00", "") : null;
-//     nominee.AC_NPIN = element.AC_NPIN ?? null;
-
-//     // relation fields
-//     nominee.AC_TYPE = ele.AC_TYPE;
-//     nominee.AC_NO = ele.AC_NO;
-
-//     // safer branch code
-//     nominee.BRANCH_CODE = branchId;
-
-//     nominee.BANKACNO = BANKACNO;
-//    // nominee.OID = element.ID;
-//     nominee.DPMasterID = dpmasterId;
-
-//     await queryRunner.manager.insert('nomineelink', nominee);
-//   }
-// }
 
 
-// Example for migrateNominee (Apply the same logic to Attorney and Joint)
-private async migrateNominee(
-  ele: any, // The original row from DPMASTER
-  dpmasterId: number,
-  BANKACNO: string,
-  branchId: number,
-  queryRunner: QueryRunner,
-  nomineeMap: Map<string, any[]>
-) {
-  // MUST match the key format in groupByRelation exactly
-  const key = `${String(ele.AC_NO || '').trim()}_${String(ele.AC_TYPE || '').trim()}`;
-  
-  const rows = nomineeMap.get(key) || [];
+  private generateBankAcNo(
+    bankCode: number,
+    branchCode: number,
+    schemeCode: number,
+    acNo: number
+  ): string {
 
-  for (const element of rows) {
-    const nominee: any = {
-      ORA_AC_NAME: element.AC_NNAME ?? null,
-      AC_NNAME: this.transformValue(element.AC_NNAME),
-      AC_NRELA: this.transformValue(element.AC_NRELA),
-      AC_NDATE: element.AC_NDATE ? moment(element.AC_NDATE).format('DD/MM/YYYY') : null,
-      AGE: element.AGE ?? null,
-      AC_NADDR: this.transformValue(element.AC_NADDR),
-      AC_NGALLI: this.transformValue(element.AC_NGALLI),
-      AC_NAREA: this.transformValue(element.AC_NAREA),
-      AC_NPIN: element.AC_NPIN ?? null,
-      AC_TYPE: ele.AC_TYPE,
-      AC_NO: ele.AC_NO,
-      BRANCH_CODE: branchId,
-      BANKACNO: BANKACNO,
-      DPMasterID: dpmasterId,
-    };
-    
-    // Use insert to be faster
-      await queryRunner.manager
-      .createQueryBuilder()
-      .insert()
-      .into('nomineelink')
-      .values(nominee)
-      .execute();
-  }  
-}
+    const bank = String(bankCode).padStart(3, '0');
+    const branch = String(branchCode).padStart(3, '0');
+    const scheme = String(schemeCode).padStart(3, '0');
+    const account = String(acNo).padStart(6, '0');
 
-// private async migrateAttorney(
-//   ele: any,
-//   dpmasterId: number,
-//   branchId: number,
-//   queryRunner: QueryRunner
-// ) {
-
-//   const result = await this.clientConn.execute(`
-//     SELECT
-//       ATTERONEY_NAME,
-//       DATE_APPOINTED,
-//       DATE_EXPIRY,
-//       ID
-//     FROM ATTERONEYLINK
-//     WHERE ac_acnotype = '${ele.AC_ACNOTYPE}'
-//       AND ac_type = ${ele.AC_TYPE}
-//       AND ac_no = ${ele.AC_NO}
-//   `);
-
-//   const rows = this.convertOracleRows(result as {
-//     rows: any[];
-//     metaData: { name: string }[];
-//   });
-
-//   for (const element of rows) {
-
-//     const attorney: any = {};
-
-//     attorney.ORA_AC_NAME = element.ATTERONEY_NAME ?? null;
-//     attorney.ATTERONEY_NAME = element.ATTERONEY_NAME ?? null;
-
-//     attorney.DATE_APPOINTED = element.DATE_APPOINTED
-//       ? moment(element.DATE_APPOINTED).format('DD/MM/YYYY')
-//       : null;
-
-//     attorney.DATE_EXPIRY = element.DATE_EXPIRY
-//       ? moment(element.DATE_EXPIRY).format('DD/MM/YYYY')
-//       : null;
-
-//     // relation fields
-//     attorney.AC_TYPE = ele.AC_TYPE;
-//     attorney.AC_NO = ele.AC_NO;
-//     attorney.BRANCH_CODE = branchId;
-
-//     attorney.OID = element.ID;
-//     attorney.DPMasterID = dpmasterId;
-
-//     await queryRunner.manager.insert('atteroneylink', attorney);
-//   }
-// }
-
-private async migrateAttorney(
-  ele: any,
-  dpmasterId: number,
-  branchId: number,
-  queryRunner: QueryRunner,
-  attorneyMap: Map<string, any[]> // Added Map parameter
-) {
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}`;
-
-  const rows = attorneyMap.get(key) || []; 
-
-  for (const element of rows) {
-    const attorney: any = {
-      ORA_AC_NAME: element.ATTERONEY_NAME ?? null,
-      ATTERONEY_NAME: this.transformValue(element.ATTERONEY_NAME),
-      DATE_APPOINTED: element.DATE_APPOINTED ? moment(element.DATE_APPOINTED).format('DD/MM/YYYY') : null,
-      DATE_EXPIRY: element.DATE_EXPIRY ? moment(element.DATE_EXPIRY).format('DD/MM/YYYY') : null,
-      AC_TYPE: ele.AC_TYPE,
-      AC_NO: ele.AC_NO,
-      BRANCH_CODE: String(branchId),
-      DPMasterID: dpmasterId,
-    };
-    await queryRunner.manager.insert('atteroneylink', attorney);
+    return `${bank}${branch}${scheme}${account}`;
   }
-}
 
-private async migrateJoint(
-  ele: any,
-  dpmasterId: number,
-  BANKACNO: string,
-  branchId: number,
-  queryRunner: QueryRunner,
-  jointMap: Map<string, any[]>
-) {
-  // Normalize lookup key to match the Map keys
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}`;
-  const rows = jointMap.get(key) || [];
+  //---------------------DPMASTER MIGRATION---------------------
 
-  for (const element of rows) {
-    const joint: any = {
-      ORA_AC_NAME: element.JOINT_ACNAME ?? null,
-      JOINT_ACNAME: this.transformValue(element.JOINT_ACNAME),
-      // Use JOINT_AC_CUSTID as identified in your Oracle schema
-      JOINT_AC_CUSTID: element.JOINT_AC_CUSTID ?? element.AC_CUSTID ?? 0, 
-      OPERATOR: element.OPERATOR === 0 ? 'No' : 'Yes',
-      BANKACNO: BANKACNO,
-      AC_TYPE: ele.AC_TYPE,
-      AC_NO: ele.AC_NO,
-      BRANCH_CODE: String(branchId),
-      DPMasterID: dpmasterId,
-    };
-    await queryRunner.manager.insert('joint_ac_link', joint);
-  }
-}
 
-//--------------------------------LNMASTER LOGIC---------------------------------------------------
+  // async migrateDPMASTER() {
 
-// async migrateLNMASTER() {
+  //   if (!this.clientConn) throw new Error('Client DB not connected');
+  //   if (!this.serverDB) throw new Error('Server DB not connected');
 
-//   if (!this.clientConn) throw new Error('Client DB not connected');
-//   if (!this.serverDB) throw new Error('Server DB not connected');
+  //   const queryRunner = this.serverDB.createQueryRunner();
+  //   await queryRunner.connect();
+  //   await queryRunner.startTransaction();
 
-//   const queryRunner = this.serverDB.createQueryRunner();
-//   await queryRunner.connect();
+  //   try {
 
-//   try {
+  //     /* ---------------- LOAD IDMASTER ---------------- */
 
-//     /* ---------------- LOAD IDMASTER ---------------- */
+  //     const idmasterData = await queryRunner.manager.find(IDMASTER);
 
-//     const idmasterData = await queryRunner.manager.find(IDMASTER);
+  //     const idMasterMap = new Map(
+  //       idmasterData.map(x => [x.ORA_AC_NO, x])
+  //     );
 
-//     const idMasterMap = new Map(
-//       idmasterData.map(x => [x.ORA_AC_NO, x])
-//     );
+  //     /* ---------------- LOAD SCHEMAS ---------------- */
 
+  //     type SchemaType = {
+  //       id: number;
+  //       S_APPL: number;
+  //     };
 
-//     /* ---------------- LOAD SCHEMA ---------------- */
+  //     const schemaData: SchemaType[] = await queryRunner.manager.query(
+  //       `SELECT id,"S_APPL" FROM schemast`
+  //     );
 
-//         type SchemaType = {
-//       id: number;
-//       S_APPL: number;
-//     };
+  //     const schemaMap = new Map<number, SchemaType>(
+  //       schemaData.map(x => [Number(x.S_APPL), x])
+  //     );
 
-//     const schemaData: SchemaType[] = await queryRunner.manager.query(
-//       `SELECT id,"S_APPL" FROM schemast`
-//     );
+  //     /* ---------------- SYS PARAMETERS ---------------- */
 
-//     const schemaMap = new Map<number, SchemaType>(
-//       schemaData.map(x => [Number(x.S_APPL), x])
-//     );
+  //     const syspara = await queryRunner.manager.query(
+  //       `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
+  //     );
 
-//     /* ---------------- SYS PARAMETERS ---------------- */
+  //     const bankCode = syspara[0].BANK_CODE;
+  //     const branchCode = syspara[0].BRANCH_CODE;
 
-//     const syspara = await queryRunner.manager.query(
-//       `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
-//     );
+  //     const branch = await queryRunner.manager.query(
+  //       `SELECT id FROM ownbranchmaster WHERE "CODE" = ${branchCode}`
+  //     );
 
-//     const bankCode = syspara[0].BANK_CODE;
-//     const branchCode = syspara[0].BRANCH_CODE;
+  //     const branchId = branch[0].id;
 
-//     const branch = await queryRunner.manager.query(
-//       `SELECT id FROM ownbranchmaster WHERE "CODE"=${branchCode}`
-//     );
+  //     /* ---------------- LOAD DPMASTER ---------------- */
 
-//     const branchId = branch[0].id;
+  //     const result = await this.clientConn.execute(`
+  //       SELECT *
+  //       FROM DPMASTER
+  //       ORDER BY AC_NO
+  //     `);
 
+  //     const rows = this.convertOracleRows(result as {
+  //       rows: any[];
+  //       metaData: { name: string }[];
+  //     });
 
-//     /* ---------------- LOAD LNMASTER FROM ORACLE ---------------- */
+  //     for (const ele of rows) {
 
-//     const result = await this.clientConn.execute(`
-//       SELECT *
-//       FROM LNMASTER
-//       ORDER BY AC_NO
-//     `);
+  //       /* ---------------- SCHEMA ---------------- */
+  //       if (!ele.AC_TYPE) {
+  //         this.logger.warn(`Schema not found for AC_TYPE: ${ele.AC_TYPE}`);
+  //         continue;
+  //       }
 
-//     const rows = this.convertOracleRows(result as {
-//       rows: any[];
-//       metaData: { name: string }[];
-//     });
+  //       /* convert 20100 -> 201 */
+  //       let schemaCode = Number(ele.AC_TYPE);
 
+  //       if (schemaCode > 999) {
+  //         schemaCode = Math.floor(schemaCode / 100);
+  //       }
 
-//     const batchSize = 500;
+  //       const schema = schemaMap.get(schemaCode);
 
-//     for (let i = 0; i < rows.length; i += batchSize) {
+  //       if (!schema) {
+  //         this.logger.warn(`Schema not found for AC_TYPE: ${schemaCode}`);
+  //         continue;
+  //       }
 
-//       const batch = rows.slice(i, i + batchSize);
+  //       /* ---------------- BANKACNO ---------------- */
 
-//       await queryRunner.startTransaction();
+  //       const schemeCode = schema.S_APPL;
 
-//       try {
+  //       const BANKACNO = this.generateBankAcNo(
+  //         bankCode,
+  //         branchCode,
+  //         schemeCode,
+  //         ele.AC_NO
+  //       );
 
-//         for (const ele of batch) {
+  //       const acno = 100000 + Number(ele.AC_NO);
 
-//           /* ---------------- SCHEMA ---------------- */
+  //       /* ---------------- CUSTOMER ---------------- */
 
-//           if (!ele.AC_TYPE) continue;
+  //       const idmaster = idMasterMap.get(ele.AC_CUSTID);
 
-//           let schemaCode = Number(ele.AC_TYPE);
+  //       if (!idmaster) {
+  //         this.logger.warn(`Customer not found in IDMASTER: ${ele.AC_CUSTID}`);
+  //         continue;
+  //       }
 
-//           if (schemaCode > 999) {
-//             schemaCode = Math.floor(schemaCode / 100);
-//           }
+  //       const newObj: any = {};
 
-//           const schema = schemaMap.get(schemaCode);
+  //       newObj.AC_NO = acno;
+  //       newObj.BANKACNO = BANKACNO;
+  //       newObj.AC_TYPE = schema.id;
+  //       newObj.AC_ACNOTYPE = schema.S_APPL;
 
-//           if (!schema) {
-//             this.logger.warn(`Schema not found for ${ele.AC_TYPE}`);
-//             continue;
-//           }
+  //       newObj.AC_CUSTID = idmaster.id;
+  //       newObj.idmasterID = idmaster.id;
 
+  //       newObj.AC_NAME = idmaster?.AC_NAME ?? ele.AC_NAME;
+  //       newObj.ORA_AC_NAME = ele.AC_NAME;
 
-//           /* ---------------- ACCOUNT NUMBER ---------------- */
+  //       newObj.AC_OPDATE = ele.AC_OPDATE
+  //         ? moment(ele.AC_OPDATE).format('DD/MM/YYYY')
+  //         : null;
 
-//           const schemeCode = schema.S_APPL;
+  //       newObj.AC_INTRATE = ele.AC_INTRATE ?? 0;
+  //       newObj.AC_SCHMAMT = ele.AC_SCHMAMT ?? 0;
+  //       newObj.AC_MATUAMT = ele.AC_MATUAMT ?? 0;
 
-//           const BANKACNO = this.generateBankAcNo(
-//             bankCode,
-//             branchCode,
-//             schemeCode,
-//             ele.AC_NO
-//           );
+  //       newObj.ORA_CUSTID = ele.AC_CUSTID;
+  //       newObj.BRANCH_CODE = branchId;
+  //       newObj.OID = ele.AC_NO;
 
-//           const acno = 100000 + Number(ele.AC_NO);
+  //       const saved = await queryRunner.manager.insert('dpmaster', newObj);
 
+  //       const dpmasterId = saved.identifiers[0].id;
 
-//           /* ---------------- CUSTOMER ---------------- */
+  //       /* ---------------- CHILD TABLES ---------------- */
 
-//           const idmaster = idMasterMap.get(ele.AC_CUSTID);
 
-//           if (!idmaster) {
-//             this.logger.warn(`Customer not found: ${ele.AC_CUSTID}`);
-//             continue;
-//           }
+  //       await this.migrateNominee(ele, dpmasterId, BANKACNO, branchId, queryRunner);
+  //       await this.migrateAttorney(ele, dpmasterId, branchId, queryRunner);
+  //       await this.migrateJoint(ele, dpmasterId, BANKACNO, branchId, queryRunner);
 
+  //     }
 
-//           /* ---------------- LNMASTER OBJECT ---------------- */
+  //     await queryRunner.commitTransaction();
 
-//           const newObj: any = {};
+  //     this.logger.log('DPMASTER migration completed');
 
-//           newObj.AC_NO = acno;
-//           newObj.AC_ACNOTYPE = ele.AC_ACNOTYPE;
-//           newObj.AC_TYPE = schema.id;
+  //     return { success: true };
 
-//           newObj.BANKACNO = BANKACNO;
+  //   } catch (err) {
 
-//           newObj.AC_CUSTID = idmaster.id;
-//           newObj.idmasterID = idmaster.id;
+  //     await queryRunner.rollbackTransaction();
+  //     throw err;
 
-//           newObj.AC_NAME = idmaster?.AC_NAME ?? ele.AC_NAME;
-//           newObj.ORA_AC_NAME = ele.AC_NAME;
+  //   } finally {
 
-//           newObj.ORA_CUSTID = ele.AC_CUSTID;
+  //     await queryRunner.release();
 
-//           newObj.AC_OPDATE = ele.AC_OPDATE
-//             ? moment(ele.AC_OPDATE).format('DD/MM/YYYY')
-//             : null;
+  //   }
 
-//           newObj.AC_OPEN_OLD_DATE = ele.AC_OPEN_OLD_DATE
-//             ? moment(ele.AC_OPEN_OLD_DATE).format('DD/MM/YYYY')
-//             : null;
+  // }
 
-//           newObj.AC_SANCTION_DATE = ele.AC_SANCTION_DATE
-//             ? moment(ele.AC_SANCTION_DATE).format('DD/MM/YYYY')
-//             : null;
 
-//           newObj.AC_EXPIRE_DATE = ele.AC_EXPIRE_DATE
-//             ? moment(ele.AC_EXPIRE_DATE).format('DD/MM/YYYY')
-//             : null;
+  //=================================DPMASTER TABLE INSERTION =============================================
 
-//           newObj.AC_INTRATE = ele.AC_INTRATE ?? 0;
+  async migrateDPMASTER() {
+    if (!this.clientConn) throw new Error('Client DB not connected');
+    if (!this.serverDB) throw new Error('Server DB not connected');
 
-//           newObj.AC_SANCTION_AMOUNT = ele.AC_SANCTION_AMOUNT ?? 0;
+    this.logger.log('Pre-fetching child data from Oracle...');
 
-//           newObj.AC_DRAWPOWER_AMT = ele.AC_DRAWPOWER_AMT ?? 0;
-
-//           newObj.AC_INSTALLMENT = ele.AC_INSTALLMENT ?? 0;
-
-//           newObj.AC_ODAMT = ele.AC_ODAMT ?? 0;
-
-//           newObj.AC_SODAMT = ele.AC_SODAMT ?? 0;
-
-//           newObj.AC_OP_BAL = ele.AC_OP_BAL ?? 0;
-
-//           newObj.AC_MONTHS = ele.AC_MONTHS ?? 0;
-
-//           newObj.AC_ODDAYS = ele.AC_ODDAYS ?? 0;
-
-//           newObj.AC_REPAYMODE = ele.AC_REPAYMODE;
-
-//           newObj.INSTALLMENT_METHOD = ele.INSTALLMENT_METHOD;
-
-//           newObj.AC_MORATORIUM_PERIOD = ele.AC_MORATORIUM_PERIOD;
-
-//           newObj.AC_GRACE_PERIOD = ele.AC_GRACE_PERIOD;
-
-//           newObj.AC_REMARK = ele.AC_REMARK;
-
-//           newObj.AC_CLOSED = ele.AC_CLOSED === 0 ? 0 : 1;
-
-//           newObj.IS_AGGRI_LOAN = ele.IS_AGGRI_LOAN === 0 ? 0 : 1;
-
-//           newObj.IS_DORMANT = ele.IS_DORMANT === 0 ? false : true;
-
-//           newObj.IS_WEAKER = ele.IS_WEAKER === 0 ? 0 : 1;
-
-//           newObj.AC_IS_RECOVERY = ele.AC_IS_RECOVERY === 0 ? 0 : 1;
-
-//           newObj.BRANCH_CODE = branchId;
-
-//           newObj.OID = ele.ID;
-
-//           newObj.SYSCHNG_LOGIN = ele.OFFICER_CODE;
-
-
-//           /* ---------------- INSERT LNMASTER ---------------- */
-
-//           const saved = await queryRunner.manager.insert('lnmaster', newObj);
-
-//           const lnmasterId = saved.identifiers[0].id;
-
-
-//           /* ---------------- CHILD TABLES ---------------- */
-
-//           await this.migrateSecurity(ele, lnmasterId, BANKACNO, branchId, queryRunner);
-
-//           await this.migrateGuarantor(ele, lnmasterId, BANKACNO, branchId, queryRunner);
-
-//           await this.migrateCoborrower(ele, lnmasterId, BANKACNO, branchId, queryRunner);
-
-//           await this.migrateInterest(ele, lnmasterId, BANKACNO, branchId, queryRunner);
-
-//         }
-
-//         await queryRunner.commitTransaction();
-
-//         this.logger.log(`LNMASTER batch migrated up to ${i + batchSize}`);
-
-//       } catch (err) {
-
-//         await queryRunner.rollbackTransaction();
-
-//         throw err;
-
-//       }
-
-//     }
-
-//     this.logger.log('LNMASTER migration completed');
-
-//     return { success: true };
-
-//   } catch (err) {
-
-//     throw err;
-
-//   } finally {
-
-//     await queryRunner.release();
-
-//   }
-
-// }
-
-
-
-//-------------------------------------LNMASTER LOGIC ---------------------------------
-async migrateLNMASTER() {
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-
-  try {
-    /* 1. LOAD MAPPINGS */
-    const idmasterData = await queryRunner.manager.find(IDMASTER);
-    const idMasterMap = new Map(idmasterData.map(x => [x.ORA_AC_NO, x]));
-    const fallbackId = idmasterData.length > 0 ? idmasterData[0].id : null;
-
-    if (!fallbackId) {
-      throw new Error('Cannot migrate LNMASTER: IDMASTER table is empty in Postgres!');
-    }
-
-    const schemaData: any[] = await queryRunner.manager.query(`SELECT id, "S_APPL" FROM schemast`);
-    const schemaMap = new Map(schemaData.map(x => [Number(x.S_APPL), x]));
-
-    const syspara = await queryRunner.manager.query(`SELECT "BANK_CODE", "BRANCH_CODE" FROM syspara LIMIT 1`);
-    const branch = await queryRunner.manager.query(
-      `SELECT id FROM ownbranchmaster WHERE "CODE" = ${syspara[0].BRANCH_CODE}`
-    );
-    const branchId = branch[0].id;
-
-    /* 2. PRE-FETCH ORACLE DATA */
-    const result = await this.clientConn.execute(`SELECT * FROM LNMASTER ORDER BY AC_NO`);
-    const rows = this.convertOracleRows(result as any);
-
-    this.logger.log('Pre-fetching LN child tables into memory...');
-    const [secRes, guaRes, cobRes, intRes] = await Promise.all([
-      this.clientConn.execute(`SELECT * FROM SECURITYDETAILS`),
-      this.clientConn.execute(`SELECT * FROM GUARANTERDETAILS`),
-      this.clientConn.execute(`SELECT * FROM COBORROWER`),
-      this.clientConn.execute(`SELECT * FROM LNACINTRATE`)
+    // 1. Fetch lookup data upfront to avoid N+1 queries
+    const [nomRows, attRows, jntRows] = await Promise.all([
+      this.clientConn.execute(`SELECT * FROM NOMINEELINK`),
+      this.clientConn.execute(`SELECT * FROM ATTERONEYLINK`),
+      this.clientConn.execute(`SELECT * FROM JOINTACLINK`)
     ]);
 
-    const securityMap = this.groupByRelation(this.convertOracleRows(secRes as any));
-    const guarantorMap = this.groupByRelation(this.convertOracleRows(guaRes as any));
-    const coborrowerMap = this.groupByRelation(this.convertOracleRows(cobRes as any));
-    const interestMap = this.groupByRelation(this.convertOracleRows(intRes as any));
+    const nomineeMap = this.groupByRelation(this.convertOracleRows(nomRows as any));
+    const attorneyMap = this.groupByRelation(this.convertOracleRows(attRows as any));
+    const jointMap = this.groupByRelation(this.convertOracleRows(jntRows as any));
 
-    /* 3. BATCH PROCESSING */
-    const batchSize = 500;
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batch = rows.slice(i, i + batchSize);
+    // 2. Prepare Server Data Maps
+    const idmasterData = await this.serverDB.manager.find(IDMASTER);
+    const idMasterMap = new Map(idmasterData.map(x => [x.ORA_AC_NO, x]));
+
+    const schemaData: any[] = await this.serverDB.manager.query(`SELECT id, "S_APPL" FROM schemast`);
+    const schemaMap = new Map(schemaData.map(x => [Number(x.S_APPL), x]));
+    // const validSchemaSet = new Set(schemaData.map(s => Number(s.S_APPL)));
+
+    const syspara = await this.serverDB.manager.query(`SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`);
+    const { BANK_CODE: bankCode, BRANCH_CODE: branchCode } = syspara[0];
+
+    const branch = await this.serverDB.manager.query(`SELECT id FROM ownbranchmaster WHERE "CODE"=$1`, [branchCode]);
+    const branchId = branch[0]?.id;
+
+    // 3. Fetch Main Data
+    const result = await this.clientConn.execute(`SELECT * FROM DPMASTER ORDER BY AC_NO`);
+    const rows = this.convertOracleRows(result);
+    this.logger.log(`Total Oracle Rows: ${rows.length}`);
+
+    let inserted = 0;
+    let failed = 0;
+
+    for (const ele of rows) {
+      // Start a fresh transaction per record so one failure doesn't stop the whole migration
+      const queryRunner = this.serverDB.createQueryRunner();
+      await queryRunner.connect();
       await queryRunner.startTransaction();
 
       try {
-        for (const ele of batch) {
-  if (!ele.AC_TYPE) continue;
+        if (!ele.AC_TYPE) throw new Error('Missing AC_TYPE');
 
-  let schemaCode = Number(ele.AC_TYPE);
-  if (schemaCode > 999) schemaCode = Math.floor(schemaCode / 100);
+        /* ================= STRICT SCHEMA LOGIC ================= */
 
-  const schema = schemaMap.get(schemaCode);
-  if (!schema) continue;
+        const rawType = String(ele.AC_TYPE).match(/\d+/g)?.join('') || '';
+        let schemaCode = Number(rawType);
 
-  const newAcNo = 100000 + Number(ele.AC_NO);
-  const BANKACNO = this.generateBankAcNo( 
-    syspara[0].BANK_CODE,
-    syspara[0].BRANCH_CODE,
-    schema.S_APPL,
-    newAcNo
-  );
-
-  const idmaster = idMasterMap.get(ele.AC_CUSTID);
-  const finalCustId = idmaster ? idmaster.id : fallbackId;
-
-  const newObj: any = {
-    AC_NO: newAcNo,
-    BANKACNO: BANKACNO,
-    AC_TYPE: schema.id,
-    AC_ACNOTYPE: schema.S_APPL,
-    AC_CUSTID: finalCustId,
-    idmasterID: finalCustId,
-    AC_NAME: idmaster?.AC_NAME ?? this.transformValue(ele.AC_NAME),
-    ORA_AC_NAME: ele.AC_NAME,
-    AC_OPDATE: ele.AC_OPDATE ? moment(ele.AC_OPDATE).format('DD/MM/YYYY') : null,
-    AC_SANCTION_AMOUNT: Number(ele.AC_SANCTION_AMOUNT) || 0,
-    AC_INTRATE: Number(ele.AC_INTRATE) || 0,
-    BRANCH_CODE: branchId,
-    OID: ele.AC_NO,
-    SYSCHNG_LOGIN: ele.OFFICER_CODE
-  };
-
-  const saved = await queryRunner.manager
-    .createQueryBuilder()
-    .insert()
-    .into('lnmaster')
-    .values(newObj)
-    .orIgnore()
-    .execute();
-
-  const lnmasterId = saved.identifiers[0]?.id;
-
-  if (lnmasterId) {
-    // Correctly passing specific maps and IDs
-    await this.migrateLNSecurity(ele, lnmasterId, BANKACNO, queryRunner, securityMap);
-    await this.migrateLNGuarantors(ele, lnmasterId, BANKACNO, queryRunner, guarantorMap, idMasterMap);
-    await this.migrateLNCoborrowers(ele, lnmasterId, BANKACNO, queryRunner, coborrowerMap, idMasterMap);
-    await this.migrateLNInterestRates(ele, lnmasterId, BANKACNO, queryRunner, interestMap, branchId);
-  } else {
-    this.logger.warn(`Skipped children for ${BANKACNO}: Parent already exists.`);
-  }
+        if (schemaCode > 999) {
+          schemaCode = Math.floor(schemaCode / 100);
         }
+
+        // 1. Try to find the real schema
+        let schema = schemaMap.get(schemaCode);
+
+        // 2. IF MISSING (207, 213, etc.), assign the ID of a valid record (e.g., 201)
+        if (!schema) {
+          this.logger.warn(`AC_NO ${ele.AC_NO}: Schema ${schemaCode} missing. Mapping to existing ID for migration.`);
+
+          // Use code 201 as the structural fallback so the "NOT NULL" constraint is satisfied
+          const fallbackSchema = schemaMap.get(201);
+
+          schema = {
+            id: fallbackSchema ? fallbackSchema.id : 1,
+            S_APPL: schemaCode
+          };
+        }
+        /* ================= DATA MAPPING ================= */
+        const BANKACNO = this.generateBankAcNo(bankCode, branchCode, schema.S_APPL, ele.AC_NO);
+        const idmaster = idMasterMap.get(ele.AC_CUSTID);
+
+        const newObj: any = {
+          AC_NO: 100000 + Number(ele.AC_NO),
+          BANKACNO: BANKACNO,
+          AC_TYPE: schema.id,
+          AC_ACNOTYPE: schema.S_APPL,
+          AC_CUSTID: idmaster?.id || null,
+          idmasterID: idmaster?.id || null,
+          AC_NAME: idmaster?.AC_NAME ?? ele.AC_NAME,
+          ORA_AC_NAME: ele.AC_NAME,
+          AC_OPDATE: ele.AC_OPDATE ? moment(ele.AC_OPDATE).format('DD/MM/YYYY') : null,
+          AC_INTRATE: ele.AC_INTRATE ?? 0,
+          AC_SCHMAMT: ele.AC_SCHMAMT ?? 0,
+          AC_MATUAMT: ele.AC_MATUAMT ?? 0,
+          ORA_CUSTID: ele.AC_CUSTID,
+          BRANCH_CODE: branchId,
+          OID: ele.AC_NO
+        };
+
+        const saved = await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into('dpmaster')
+          .values(newObj)
+          .orIgnore() // Skips if OID/Primary Key already exists
+          .execute();
+
+        let dpmasterId: number;
+
+        if (!saved.identifiers || saved.identifiers.length === 0) {
+          const existing = await queryRunner.manager.query(
+            `SELECT id FROM dpmaster WHERE "OID" = $1`, [ele.AC_NO]
+          );
+          dpmasterId = existing[0]?.id;
+        } else {
+          dpmasterId = saved.identifiers[0]?.id;
+        }
+
+        if (!dpmasterId) throw new Error('Could not resolve DPMASTER ID');
+
+        /* ================= CHILD TABLES ================= */
+
+        await this.migrateNominee(ele, dpmasterId, BANKACNO, branchId, queryRunner, nomineeMap);
+        await this.migrateAttorney(ele, dpmasterId, branchId, queryRunner, attorneyMap);
+        await this.migrateJoint(ele, dpmasterId, BANKACNO, branchId, queryRunner, jointMap);
+
+        // COMMIT the individual record
         await queryRunner.commitTransaction();
-        this.logger.log(`Processed batch up to ${i + batchSize}`);
-      } catch (err) {
+        inserted++;
 
-  if (queryRunner.isTransactionActive) {
-    await queryRunner.rollbackTransaction();
-  }
-
-  this.logger.error(`Batch failed at index ${i}`, err);
-
-  throw err;
-}
+      } catch (rowErr: any) {
+        // Rollback only this specific record's changes
+        if (queryRunner.isTransactionActive) {
+          await queryRunner.rollbackTransaction();
+        }
+        failed++;
+        this.logger.error(`FAILED ROW AC_NO ${ele.AC_NO}: ${rowErr.message}`);
+      } finally {
+        // Always release the runner to avoid connection leaks
+        await queryRunner.release();
+      }
     }
-    this.logger.log('LNMASTER Migration completed successfully.');
-  } 
- finally {
-  if (!queryRunner.isReleased) {
-    await queryRunner.release();
+
+    this.logger.log(`Migration Finished. Inserted: ${inserted}, Failed: ${failed}`);
+    return { success: true, inserted, failed };
   }
-}
-}
 
-// ----------------------------------- CHILD HELPERS -----------------------------------
-// 1. SECURITY DETAILS (Key: lnmasterID)
-private async migrateLNSecurity(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>) {
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
-  const rows = map.get(key) || [];
 
-  for (const row of rows) {
+  // FIX 3: Robust key generation (Trimming and Uppercasing)
+  private groupByRelation(rows: any[]): Map<string, any[]> {
+    const map = new Map<string, any[]>();
+    for (const row of rows) {
+      // Aggressively clean AC_NO and AC_TYPE
+      const acNo = String(row.AC_NO || '').replace(/\0/g, '').trim();
+      const acType = String(row.AC_TYPE || '').replace(/\0/g, '').trim();
 
-    const migratedShortAcNo = Number(row.AC_NO);
-    await queryRunner.manager.insert('securitydetails', {
-      AC_ACNOTYPE: row.AC_ACNOTYPE,
-      AC_TYPE: String(ele.AC_TYPE),
-      AC_NO: migratedShortAcNo,
-      SECURITY_CODE: row.SECURITY_CODE,
-      SECURITY_VALUE: Number(row.SECURITY_VALUE) || 0,
-      lnmasterID: lnId // Corrected to match Entity
-    });
+      if (!acNo || !acType) continue;
+
+      const key = `${acNo}_${acType}`;
+
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+      map.get(key)!.push(row);
+    }
+    return map;
   }
-}
 
-// 2. GUARANTOR DETAILS (Key: lnmasterID)
-private async migrateLNGuarantors(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, idMap: Map<number, any>) {
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
-  const rows = map.get(key) || [];
+  // private async migrateNominee(
+  //   ele: any,
+  //   dpmasterId: number,
+  //   BANKACNO: string,
+  //   branchId: number,
+  //   queryRunner: QueryRunner
+  // ) {
 
-  for (const row of rows) {
-    const guarantor = idMap.get(row.AC_CUSTID);
-    const AC_MEMBNO = row.MEMBER_NO ? Number(row.MEMBER_NO) + 100000 : null;
-    const migratedShortAcNo = Number(row.AC_NO);
+  //  const result = await this.clientConn.execute(`
+  // SELECT 
+  //   nomineelink.AC_NNAME,
+  //   nomineelink.AC_NRELA,
+  //   nomineelink.AC_NDATE,
+  //   nomineelink.AGE,
+  //   nomineelink.addr1 AS AC_NADDR,
+  //   nomineelink.addr2 AS AC_NGALLI,
+  //   nomineelink.addr3 AS AC_NAREA,
+  //   nomineelink.pin AS AC_NPIN,
+  //   nomineelink.ctcode AS AC_CTCODE
+  // FROM nomineelink
+  // WHERE nomineelink.ac_acnotype = '${ele.AC_ACNOTYPE}'
+  //   AND ac_type = ${ele.AC_TYPE}
+  //   AND ac_no = ${ele.AC_NO}
+  // `);
 
-    await queryRunner.manager.insert('guaranterdetails', {
-      AC_ACNOTYPE: row.AC_ACNOTYPE,
-      AC_TYPE: String(ele.AC_TYPE),
-      AC_NO: migratedShortAcNo,
-      AC_NAME: guarantor?.AC_NAME ?? this.transformValue(row.NAME || row.AC_NAME),
-      MEMBER_TYPE: row.MEMBER_TYPE,
-      MEMBER_NO: AC_MEMBNO ? String(AC_MEMBNO) : null,
-      EXP_DATE: row.EXP_DATE ? moment(row.EXP_DATE).format('DD/MM/YYYY') : null,
-      GAC_CUSTID: guarantor ? String(guarantor.id) : "0",
-      lnmasterID: lnId // Corrected to match Entity
-    });
+  //   const rows = this.convertOracleRows(result as {
+  //     rows: any[];
+  //     metaData: { name: string }[];
+  //   });
+
+  //   for (const element of rows) {
+
+  //     const nominee: any = {};
+
+  //     nominee.ORA_AC_NAME = element.AC_NNAME ?? null;
+  //     nominee.AC_NNAME = element.AC_NNAME ? element.AC_NNAME.replace("\x00", "") : null;
+  //     nominee.AC_NRELA = element.AC_NRELA ? element.AC_NRELA.replace("\x00", "") : null;
+
+  //     nominee.AC_NDATE = element.AC_NDATE
+  //       ? moment(element.AC_NDATE).format('DD/MM/YYYY')
+  //       : null;
+
+  //     nominee.AGE = element.AGE ?? null;
+
+  //     nominee.AC_NADDR = element.AC_NADDR ? element.AC_NADDR.replace("\x00", "") : null;
+  //     nominee.AC_NGALLI = element.AC_NGALLI ? element.AC_NGALLI.replace("\x00", "") : null;
+  //     nominee.AC_NAREA = element.AC_NAREA ? element.AC_NAREA.replace("\x00", "") : null;
+  //     nominee.AC_NPIN = element.AC_NPIN ?? null;
+
+  //     // relation fields
+  //     nominee.AC_TYPE = ele.AC_TYPE;
+  //     nominee.AC_NO = ele.AC_NO;
+
+  //     // safer branch code
+  //     nominee.BRANCH_CODE = branchId;
+
+  //     nominee.BANKACNO = BANKACNO;
+  //    // nominee.OID = element.ID;
+  //     nominee.DPMasterID = dpmasterId;
+
+  //     await queryRunner.manager.insert('nomineelink', nominee);
+  //   }
+  // }
+
+
+  // Example for migrateNominee (Apply the same logic to Attorney and Joint)
+  private async migrateNominee(
+    ele: any, // The original row from DPMASTER
+    dpmasterId: number,
+    BANKACNO: string,
+    branchId: number,
+    queryRunner: QueryRunner,
+    nomineeMap: Map<string, any[]>
+  ) {
+    // MUST match the key format in groupByRelation exactly
+    const key = `${String(ele.AC_NO || '').trim()}_${String(ele.AC_TYPE || '').trim()}`;
+
+    const rows = nomineeMap.get(key) || [];
+
+    for (const element of rows) {
+      const nominee: any = {
+        ORA_AC_NAME: element.AC_NNAME ?? null,
+        AC_NNAME: this.transformValue(element.AC_NNAME),
+        AC_NRELA: this.transformValue(element.AC_NRELA),
+        AC_NDATE: element.AC_NDATE ? moment(element.AC_NDATE).format('DD/MM/YYYY') : null,
+        AGE: element.AGE ?? null,
+        AC_NADDR: this.transformValue(element.AC_NADDR),
+        AC_NGALLI: this.transformValue(element.AC_NGALLI),
+        AC_NAREA: this.transformValue(element.AC_NAREA),
+        AC_NPIN: element.AC_NPIN ?? null,
+        AC_TYPE: ele.AC_TYPE,
+        AC_NO: ele.AC_NO,
+        BRANCH_CODE: branchId,
+        BANKACNO: BANKACNO,
+        DPMasterID: dpmasterId,
+      };
+
+      // Use insert to be faster
+      await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into('nomineelink')
+        .values(nominee)
+        .execute();
+    }
   }
-}
 
-// 3. CO-BORROWERS (Key: LNMASTER_ID - as per your previous snippet)
-private async migrateLNCoborrowers(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, idMap: Map<number, any>) {
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
-  const rows = map.get(key) || [];
+  // private async migrateAttorney(
+  //   ele: any,
+  //   dpmasterId: number,
+  //   branchId: number,
+  //   queryRunner: QueryRunner
+  // ) {
 
-  for (const row of rows) {
-    const coborrower = idMap.get(row.AC_CUSTID);
-    const migratedShortAcNo = Number(row.AC_NO);
+  //   const result = await this.clientConn.execute(`
+  //     SELECT
+  //       ATTERONEY_NAME,
+  //       DATE_APPOINTED,
+  //       DATE_EXPIRY,
+  //       ID
+  //     FROM ATTERONEYLINK
+  //     WHERE ac_acnotype = '${ele.AC_ACNOTYPE}'
+  //       AND ac_type = ${ele.AC_TYPE}
+  //       AND ac_no = ${ele.AC_NO}
+  //   `);
 
-    await queryRunner.manager.insert('coborrower', {
-      AC_ACNOTYPE: row.AC_ACNOTYPE,
-      AC_NO: migratedShortAcNo,
-      AC_TYPE: String(ele.AC_TYPE),
-      AC_NAME: coborrower?.AC_NAME ?? this.transformValue(row.NAME || row.AC_NAME),
-      CAC_CUSTID: coborrower ? String(coborrower.id) : "0",
-      lnmasterID: lnId // Corrected to match your previous entity snippet
-    });
+  //   const rows = this.convertOracleRows(result as {
+  //     rows: any[];
+  //     metaData: { name: string }[];
+  //   });
+
+  //   for (const element of rows) {
+
+  //     const attorney: any = {};
+
+  //     attorney.ORA_AC_NAME = element.ATTERONEY_NAME ?? null;
+  //     attorney.ATTERONEY_NAME = element.ATTERONEY_NAME ?? null;
+
+  //     attorney.DATE_APPOINTED = element.DATE_APPOINTED
+  //       ? moment(element.DATE_APPOINTED).format('DD/MM/YYYY')
+  //       : null;
+
+  //     attorney.DATE_EXPIRY = element.DATE_EXPIRY
+  //       ? moment(element.DATE_EXPIRY).format('DD/MM/YYYY')
+  //       : null;
+
+  //     // relation fields
+  //     attorney.AC_TYPE = ele.AC_TYPE;
+  //     attorney.AC_NO = ele.AC_NO;
+  //     attorney.BRANCH_CODE = branchId;
+
+  //     attorney.OID = element.ID;
+  //     attorney.DPMasterID = dpmasterId;
+
+  //     await queryRunner.manager.insert('atteroneylink', attorney);
+  //   }
+  // }
+
+  private async migrateAttorney(
+    ele: any,
+    dpmasterId: number,
+    branchId: number,
+    queryRunner: QueryRunner,
+    attorneyMap: Map<string, any[]> // Added Map parameter
+  ) {
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}`;
+
+    const rows = attorneyMap.get(key) || [];
+
+    for (const element of rows) {
+      const attorney: any = {
+        ORA_AC_NAME: element.ATTERONEY_NAME ?? null,
+        ATTERONEY_NAME: this.transformValue(element.ATTERONEY_NAME),
+        DATE_APPOINTED: element.DATE_APPOINTED ? moment(element.DATE_APPOINTED).format('DD/MM/YYYY') : null,
+        DATE_EXPIRY: element.DATE_EXPIRY ? moment(element.DATE_EXPIRY).format('DD/MM/YYYY') : null,
+        AC_TYPE: ele.AC_TYPE,
+        AC_NO: ele.AC_NO,
+        BRANCH_CODE: String(branchId),
+        DPMasterID: dpmasterId,
+      };
+      await queryRunner.manager.insert('atteroneylink', attorney);
+    }
   }
-}
 
-// 4. INTEREST RATES (Key: LNMASTERID)
-private async migrateLNInterestRates(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, branchId: number) {
-  const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
-  const rows = map.get(key) || [];
+  private async migrateJoint(
+    ele: any,
+    dpmasterId: number,
+    BANKACNO: string,
+    branchId: number,
+    queryRunner: QueryRunner,
+    jointMap: Map<string, any[]>
+  ) {
+    // Normalize lookup key to match the Map keys
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}`;
+    const rows = jointMap.get(key) || [];
 
-  for (const row of rows) {
-    const migratedShortAcNo = Number(row.AC_NO);
-
-    await queryRunner.manager.insert('lnacintrate', {
-      AC_ACNOTYPE: row.AC_ACNOTYPE,
-      EFFECT_DATE: row.EFFECT_DATE ? moment(row.EFFECT_DATE).format('DD/MM/YYYY') : null,
-      AC_NO: migratedShortAcNo,
-      BANKACNO: bankAcNo,
-      SERIAL_NO: row.SERIAL_NO,
-      INT_RATE: Number(row.INT_RATE) || 0,
-      PENAL_INT_RATE: Number(row.PENAL_INT_RATE) || 0,
-      BRANCH_CODE: branchId,
-      UPDATEFLAG: 1,
-      lnmasterID: lnId // Corrected to match Entity (Uppercase)
-    });
+    for (const element of rows) {
+      const joint: any = {
+        ORA_AC_NAME: element.JOINT_ACNAME ?? null,
+        JOINT_ACNAME: this.transformValue(element.JOINT_ACNAME),
+        // Use JOINT_AC_CUSTID as identified in your Oracle schema
+        JOINT_AC_CUSTID: element.JOINT_AC_CUSTID ?? element.AC_CUSTID ?? 0,
+        OPERATOR: element.OPERATOR === 0 ? 'No' : 'Yes',
+        BANKACNO: BANKACNO,
+        AC_TYPE: ele.AC_TYPE,
+        AC_NO: ele.AC_NO,
+        BRANCH_CODE: String(branchId),
+        DPMasterID: dpmasterId,
+      };
+      await queryRunner.manager.insert('joint_ac_link', joint);
+    }
   }
-}
+
+  //--------------------------------LNMASTER LOGIC---------------------------------------------------
+
+  // async migrateLNMASTER() {
+
+  //   if (!this.clientConn) throw new Error('Client DB not connected');
+  //   if (!this.serverDB) throw new Error('Server DB not connected');
+
+  //   const queryRunner = this.serverDB.createQueryRunner();
+  //   await queryRunner.connect();
+
+  //   try {
+
+  //     /* ---------------- LOAD IDMASTER ---------------- */
+
+  //     const idmasterData = await queryRunner.manager.find(IDMASTER);
+
+  //     const idMasterMap = new Map(
+  //       idmasterData.map(x => [x.ORA_AC_NO, x])
+  //     );
+
+
+  //     /* ---------------- LOAD SCHEMA ---------------- */
+
+  //         type SchemaType = {
+  //       id: number;
+  //       S_APPL: number;
+  //     };
+
+  //     const schemaData: SchemaType[] = await queryRunner.manager.query(
+  //       `SELECT id,"S_APPL" FROM schemast`
+  //     );
+
+  //     const schemaMap = new Map<number, SchemaType>(
+  //       schemaData.map(x => [Number(x.S_APPL), x])
+  //     );
+
+  //     /* ---------------- SYS PARAMETERS ---------------- */
+
+  //     const syspara = await queryRunner.manager.query(
+  //       `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
+  //     );
+
+  //     const bankCode = syspara[0].BANK_CODE;
+  //     const branchCode = syspara[0].BRANCH_CODE;
+
+  //     const branch = await queryRunner.manager.query(
+  //       `SELECT id FROM ownbranchmaster WHERE "CODE"=${branchCode}`
+  //     );
+
+  //     const branchId = branch[0].id;
+
+
+  //     /* ---------------- LOAD LNMASTER FROM ORACLE ---------------- */
+
+  //     const result = await this.clientConn.execute(`
+  //       SELECT *
+  //       FROM LNMASTER
+  //       ORDER BY AC_NO
+  //     `);
+
+  //     const rows = this.convertOracleRows(result as {
+  //       rows: any[];
+  //       metaData: { name: string }[];
+  //     });
+
+
+  //     const batchSize = 500;
+
+  //     for (let i = 0; i < rows.length; i += batchSize) {
+
+  //       const batch = rows.slice(i, i + batchSize);
+
+  //       await queryRunner.startTransaction();
+
+  //       try {
+
+  //         for (const ele of batch) {
+
+  //           /* ---------------- SCHEMA ---------------- */
+
+  //           if (!ele.AC_TYPE) continue;
+
+  //           let schemaCode = Number(ele.AC_TYPE);
+
+  //           if (schemaCode > 999) {
+  //             schemaCode = Math.floor(schemaCode / 100);
+  //           }
+
+  //           const schema = schemaMap.get(schemaCode);
+
+  //           if (!schema) {
+  //             this.logger.warn(`Schema not found for ${ele.AC_TYPE}`);
+  //             continue;
+  //           }
+
+
+  //           /* ---------------- ACCOUNT NUMBER ---------------- */
+
+  //           const schemeCode = schema.S_APPL;
+
+  //           const BANKACNO = this.generateBankAcNo(
+  //             bankCode,
+  //             branchCode,
+  //             schemeCode,
+  //             ele.AC_NO
+  //           );
+
+  //           const acno = 100000 + Number(ele.AC_NO);
+
+
+  //           /* ---------------- CUSTOMER ---------------- */
+
+  //           const idmaster = idMasterMap.get(ele.AC_CUSTID);
+
+  //           if (!idmaster) {
+  //             this.logger.warn(`Customer not found: ${ele.AC_CUSTID}`);
+  //             continue;
+  //           }
+
+
+  //           /* ---------------- LNMASTER OBJECT ---------------- */
+
+  //           const newObj: any = {};
+
+  //           newObj.AC_NO = acno;
+  //           newObj.AC_ACNOTYPE = ele.AC_ACNOTYPE;
+  //           newObj.AC_TYPE = schema.id;
+
+  //           newObj.BANKACNO = BANKACNO;
+
+  //           newObj.AC_CUSTID = idmaster.id;
+  //           newObj.idmasterID = idmaster.id;
+
+  //           newObj.AC_NAME = idmaster?.AC_NAME ?? ele.AC_NAME;
+  //           newObj.ORA_AC_NAME = ele.AC_NAME;
+
+  //           newObj.ORA_CUSTID = ele.AC_CUSTID;
+
+  //           newObj.AC_OPDATE = ele.AC_OPDATE
+  //             ? moment(ele.AC_OPDATE).format('DD/MM/YYYY')
+  //             : null;
+
+  //           newObj.AC_OPEN_OLD_DATE = ele.AC_OPEN_OLD_DATE
+  //             ? moment(ele.AC_OPEN_OLD_DATE).format('DD/MM/YYYY')
+  //             : null;
+
+  //           newObj.AC_SANCTION_DATE = ele.AC_SANCTION_DATE
+  //             ? moment(ele.AC_SANCTION_DATE).format('DD/MM/YYYY')
+  //             : null;
+
+  //           newObj.AC_EXPIRE_DATE = ele.AC_EXPIRE_DATE
+  //             ? moment(ele.AC_EXPIRE_DATE).format('DD/MM/YYYY')
+  //             : null;
+
+  //           newObj.AC_INTRATE = ele.AC_INTRATE ?? 0;
+
+  //           newObj.AC_SANCTION_AMOUNT = ele.AC_SANCTION_AMOUNT ?? 0;
+
+  //           newObj.AC_DRAWPOWER_AMT = ele.AC_DRAWPOWER_AMT ?? 0;
+
+  //           newObj.AC_INSTALLMENT = ele.AC_INSTALLMENT ?? 0;
+
+  //           newObj.AC_ODAMT = ele.AC_ODAMT ?? 0;
+
+  //           newObj.AC_SODAMT = ele.AC_SODAMT ?? 0;
+
+  //           newObj.AC_OP_BAL = ele.AC_OP_BAL ?? 0;
+
+  //           newObj.AC_MONTHS = ele.AC_MONTHS ?? 0;
+
+  //           newObj.AC_ODDAYS = ele.AC_ODDAYS ?? 0;
+
+  //           newObj.AC_REPAYMODE = ele.AC_REPAYMODE;
+
+  //           newObj.INSTALLMENT_METHOD = ele.INSTALLMENT_METHOD;
+
+  //           newObj.AC_MORATORIUM_PERIOD = ele.AC_MORATORIUM_PERIOD;
+
+  //           newObj.AC_GRACE_PERIOD = ele.AC_GRACE_PERIOD;
+
+  //           newObj.AC_REMARK = ele.AC_REMARK;
+
+  //           newObj.AC_CLOSED = ele.AC_CLOSED === 0 ? 0 : 1;
+
+  //           newObj.IS_AGGRI_LOAN = ele.IS_AGGRI_LOAN === 0 ? 0 : 1;
+
+  //           newObj.IS_DORMANT = ele.IS_DORMANT === 0 ? false : true;
+
+  //           newObj.IS_WEAKER = ele.IS_WEAKER === 0 ? 0 : 1;
+
+  //           newObj.AC_IS_RECOVERY = ele.AC_IS_RECOVERY === 0 ? 0 : 1;
+
+  //           newObj.BRANCH_CODE = branchId;
+
+  //           newObj.OID = ele.ID;
+
+  //           newObj.SYSCHNG_LOGIN = ele.OFFICER_CODE;
+
+
+  //           /* ---------------- INSERT LNMASTER ---------------- */
+
+  //           const saved = await queryRunner.manager.insert('lnmaster', newObj);
+
+  //           const lnmasterId = saved.identifiers[0].id;
+
+
+  //           /* ---------------- CHILD TABLES ---------------- */
+
+  //           await this.migrateSecurity(ele, lnmasterId, BANKACNO, branchId, queryRunner);
+
+  //           await this.migrateGuarantor(ele, lnmasterId, BANKACNO, branchId, queryRunner);
+
+  //           await this.migrateCoborrower(ele, lnmasterId, BANKACNO, branchId, queryRunner);
+
+  //           await this.migrateInterest(ele, lnmasterId, BANKACNO, branchId, queryRunner);
+
+  //         }
+
+  //         await queryRunner.commitTransaction();
+
+  //         this.logger.log(`LNMASTER batch migrated up to ${i + batchSize}`);
+
+  //       } catch (err) {
+
+  //         await queryRunner.rollbackTransaction();
+
+  //         throw err;
+
+  //       }
+
+  //     }
+
+  //     this.logger.log('LNMASTER migration completed');
+
+  //     return { success: true };
+
+  //   } catch (err) {
+
+  //     throw err;
+
+  //   } finally {
+
+  //     await queryRunner.release();
+
+  //   }
+
+  // }
 
 
 
-async migratePGMASTER() {
+  //-------------------------------------LNMASTER LOGIC ---------------------------------
+  async migrateLNMASTER() {
+    if (!this.clientConn) throw new Error('Client DB not connected');
+    if (!this.serverDB) throw new Error('Server DB not connected');
 
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
+    const queryRunner = this.serverDB.createQueryRunner();
+    await queryRunner.connect();
 
-  const limit = 1000;
-  let offset = 0;
-  let inserted = 0;
-  let failed = 0;
+    try {
+      /* 1. LOAD MAPPINGS */
+      const idmasterData = await queryRunner.manager.find(IDMASTER);
+      const idMasterMap = new Map(idmasterData.map(x => [x.ORA_AC_NO, x]));
+      const fallbackId = idmasterData.length > 0 ? idmasterData[0].id : null;
 
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
+      if (!fallbackId) {
+        throw new Error('Cannot migrate LNMASTER: IDMASTER table is empty in Postgres!');
+      }
 
-  try {
+      const schemaData: any[] = await queryRunner.manager.query(`SELECT id, "S_APPL" FROM schemast`);
+      const schemaMap = new Map(schemaData.map(x => [Number(x.S_APPL), x]));
 
-    /* ---------- LOAD STATIC DATA ---------- */
+      const syspara = await queryRunner.manager.query(`SELECT "BANK_CODE", "BRANCH_CODE" FROM syspara LIMIT 1`);
+      const branch = await queryRunner.manager.query(
+        `SELECT id FROM ownbranchmaster WHERE "CODE" = ${syspara[0].BRANCH_CODE}`
+      );
+      const branchId = branch[0].id;
 
-    const idmasterData = await queryRunner.manager.find(IDMASTER);
-    const idMasterMap = new Map(idmasterData.map(x => [x.ORA_AC_NO, x]));
-    const fallbackId = idmasterData.length ? idmasterData[0].id : 1;
-
-    const schemaData: any[] = await queryRunner.manager.query(
-      `SELECT id,"S_APPL" FROM schemast`
-    );
-
-    const schemaMap = new Map(
-      schemaData.map(x => [Number(x.S_APPL), x])
-    );
-
-    const syspara = await queryRunner.manager.query(
-      `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
-    );
-
-    const bankCode = syspara[0].BANK_CODE;
-    const branchCode = syspara[0].BRANCH_CODE;
-
-    const branch = await queryRunner.manager.query(
-      `SELECT id FROM ownbranchmaster WHERE "CODE" = $1`,
-      [branchCode]
-    );
-
-    const branchId = branch[0]?.id;
-
-    /* ---------- PAGINATION LOOP ---------- */
-
-    while (true) {
-
-      const result = await this.clientConn.execute(`
-        SELECT * FROM (
-          SELECT rownum rn, t.* FROM (
-            SELECT * FROM PGMASTER ORDER BY AC_NO
-          ) t
-        )
-        WHERE rn > ${offset} AND rn <= ${offset + limit}
-      `);
-
+      /* 2. PRE-FETCH ORACLE DATA */
+      const result = await this.clientConn.execute(`SELECT * FROM LNMASTER ORDER BY AC_NO`);
       const rows = this.convertOracleRows(result as any);
 
-      if (rows.length === 0) break;
+      this.logger.log('Pre-fetching LN child tables into memory...');
+      const [secRes, guaRes, cobRes, intRes] = await Promise.all([
+        this.clientConn.execute(`SELECT * FROM SECURITYDETAILS`),
+        this.clientConn.execute(`SELECT * FROM GUARANTERDETAILS`),
+        this.clientConn.execute(`SELECT * FROM COBORROWER`),
+        this.clientConn.execute(`SELECT * FROM LNACINTRATE`)
+      ]);
+
+      const securityMap = this.groupByRelation(this.convertOracleRows(secRes as any));
+      const guarantorMap = this.groupByRelation(this.convertOracleRows(guaRes as any));
+      const coborrowerMap = this.groupByRelation(this.convertOracleRows(cobRes as any));
+      const interestMap = this.groupByRelation(this.convertOracleRows(intRes as any));
+
+      /* 3. BATCH PROCESSING */
+      const batchSize = 500;
+      for (let i = 0; i < rows.length; i += batchSize) {
+        const batch = rows.slice(i, i + batchSize);
+        await queryRunner.startTransaction();
+
+        try {
+          for (const ele of batch) {
+            if (!ele.AC_TYPE) continue;
+
+            let schemaCode = Number(ele.AC_TYPE);
+            if (schemaCode > 999) schemaCode = Math.floor(schemaCode / 100);
+
+            const schema = schemaMap.get(schemaCode);
+            if (!schema) continue;
+
+            const newAcNo = 100000 + Number(ele.AC_NO);
+            const BANKACNO = this.generateBankAcNo(
+              syspara[0].BANK_CODE,
+              syspara[0].BRANCH_CODE,
+              schema.S_APPL,
+              newAcNo
+            );
+
+            const idmaster = idMasterMap.get(ele.AC_CUSTID);
+            const finalCustId = idmaster ? idmaster.id : fallbackId;
+
+            const newObj: any = {
+              AC_NO: newAcNo,
+              BANKACNO: BANKACNO,
+              AC_TYPE: schema.id,
+              AC_ACNOTYPE: schema.S_APPL,
+              AC_CUSTID: finalCustId,
+              idmasterID: finalCustId,
+              AC_NAME: idmaster?.AC_NAME ?? this.transformValue(ele.AC_NAME),
+              ORA_AC_NAME: ele.AC_NAME,
+              AC_OPDATE: ele.AC_OPDATE ? moment(ele.AC_OPDATE).format('DD/MM/YYYY') : null,
+              AC_SANCTION_AMOUNT: Number(ele.AC_SANCTION_AMOUNT) || 0,
+              AC_INTRATE: Number(ele.AC_INTRATE) || 0,
+              BRANCH_CODE: branchId,
+              OID: ele.AC_NO,
+              SYSCHNG_LOGIN: ele.OFFICER_CODE
+            };
+
+            const saved = await queryRunner.manager
+              .createQueryBuilder()
+              .insert()
+              .into('lnmaster')
+              .values(newObj)
+              .orIgnore()
+              .execute();
+
+            const lnmasterId = saved.identifiers[0]?.id;
+
+            if (lnmasterId) {
+              // Correctly passing specific maps and IDs
+              await this.migrateLNSecurity(ele, lnmasterId, BANKACNO, queryRunner, securityMap);
+              await this.migrateLNGuarantors(ele, lnmasterId, BANKACNO, queryRunner, guarantorMap, idMasterMap);
+              await this.migrateLNCoborrowers(ele, lnmasterId, BANKACNO, queryRunner, coborrowerMap, idMasterMap);
+              await this.migrateLNInterestRates(ele, lnmasterId, BANKACNO, queryRunner, interestMap, branchId);
+            } else {
+              this.logger.warn(`Skipped children for ${BANKACNO}: Parent already exists.`);
+            }
+          }
+          await queryRunner.commitTransaction();
+          this.logger.log(`Processed batch up to ${i + batchSize}`);
+        } catch (err) {
+
+          if (queryRunner.isTransactionActive) {
+            await queryRunner.rollbackTransaction();
+          }
+
+          this.logger.error(`Batch failed at index ${i}`, err);
+
+          throw err;
+        }
+      }
+      this.logger.log('LNMASTER Migration completed successfully.');
+    }
+    finally {
+      if (!queryRunner.isReleased) {
+        await queryRunner.release();
+      }
+    }
+  }
+
+  // ----------------------------------- CHILD HELPERS -----------------------------------
+  // 1. SECURITY DETAILS (Key: lnmasterID)
+  private async migrateLNSecurity(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>) {
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
+    const rows = map.get(key) || [];
+
+    for (const row of rows) {
+
+      const migratedShortAcNo = Number(row.AC_NO);
+      await queryRunner.manager.insert('securitydetails', {
+        AC_ACNOTYPE: row.AC_ACNOTYPE,
+        AC_TYPE: String(ele.AC_TYPE),
+        AC_NO: migratedShortAcNo,
+        SECURITY_CODE: row.SECURITY_CODE,
+        SECURITY_VALUE: Number(row.SECURITY_VALUE) || 0,
+        lnmasterID: lnId // Corrected to match Entity
+      });
+    }
+  }
+
+  // 2. GUARANTOR DETAILS (Key: lnmasterID)
+  private async migrateLNGuarantors(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, idMap: Map<number, any>) {
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
+    const rows = map.get(key) || [];
+
+    for (const row of rows) {
+      const guarantor = idMap.get(row.AC_CUSTID);
+      const AC_MEMBNO = row.MEMBER_NO ? Number(row.MEMBER_NO) + 100000 : null;
+      const migratedShortAcNo = Number(row.AC_NO);
+
+      await queryRunner.manager.insert('guaranterdetails', {
+        AC_ACNOTYPE: row.AC_ACNOTYPE,
+        AC_TYPE: String(ele.AC_TYPE),
+        AC_NO: migratedShortAcNo,
+        AC_NAME: guarantor?.AC_NAME ?? this.transformValue(row.NAME || row.AC_NAME),
+        MEMBER_TYPE: row.MEMBER_TYPE,
+        MEMBER_NO: AC_MEMBNO ? String(AC_MEMBNO) : null,
+        EXP_DATE: row.EXP_DATE ? moment(row.EXP_DATE).format('DD/MM/YYYY') : null,
+        GAC_CUSTID: guarantor ? String(guarantor.id) : "0",
+        lnmasterID: lnId // Corrected to match Entity
+      });
+    }
+  }
+
+  // 3. CO-BORROWERS (Key: LNMASTER_ID - as per your previous snippet)
+  private async migrateLNCoborrowers(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, idMap: Map<number, any>) {
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
+    const rows = map.get(key) || [];
+
+    for (const row of rows) {
+      const coborrower = idMap.get(row.AC_CUSTID);
+      const migratedShortAcNo = Number(row.AC_NO);
+
+      await queryRunner.manager.insert('coborrower', {
+        AC_ACNOTYPE: row.AC_ACNOTYPE,
+        AC_NO: migratedShortAcNo,
+        AC_TYPE: String(ele.AC_TYPE),
+        AC_NAME: coborrower?.AC_NAME ?? this.transformValue(row.NAME || row.AC_NAME),
+        CAC_CUSTID: coborrower ? String(coborrower.id) : "0",
+        lnmasterID: lnId // Corrected to match your previous entity snippet
+      });
+    }
+  }
+
+  // 4. INTEREST RATES (Key: LNMASTERID)
+  private async migrateLNInterestRates(ele: any, lnId: number, bankAcNo: string, queryRunner: QueryRunner, map: Map<string, any[]>, branchId: number) {
+    const key = `${String(ele.AC_NO).trim()}_${String(ele.AC_TYPE).trim()}_${String(ele.AC_ACNOTYPE).trim().toUpperCase()}`;
+    const rows = map.get(key) || [];
+
+    for (const row of rows) {
+      const migratedShortAcNo = Number(row.AC_NO);
+
+      await queryRunner.manager.insert('lnacintrate', {
+        AC_ACNOTYPE: row.AC_ACNOTYPE,
+        EFFECT_DATE: row.EFFECT_DATE ? moment(row.EFFECT_DATE).format('DD/MM/YYYY') : null,
+        AC_NO: migratedShortAcNo,
+        BANKACNO: bankAcNo,
+        SERIAL_NO: row.SERIAL_NO,
+        INT_RATE: Number(row.INT_RATE) || 0,
+        PENAL_INT_RATE: Number(row.PENAL_INT_RATE) || 0,
+        BRANCH_CODE: branchId,
+        UPDATEFLAG: 1,
+        lnmasterID: lnId // Corrected to match Entity (Uppercase)
+      });
+    }
+  }
+
+
+
+  //------------------------------------PGMASTER--------------------------------------
+  async migratePGMASTER() {
+
+    if (!this.clientConn) throw new Error('Client DB not connected');
+    if (!this.serverDB) throw new Error('Server DB not connected');
+
+    const queryRunner = this.serverDB.createQueryRunner();
+    await queryRunner.connect();
+
+    let inserted = 0;
+    let failed = 0;
+
+    try {
+
+      /* ---------- LOAD IDMASTER ---------- */
+
+      const idmasterData = await queryRunner.manager.find(IDMASTER);
+
+      const idMasterMap = new Map(
+        idmasterData.map(x => [x.ORA_AC_NO, x])
+      );
+
+      const fallbackId = idmasterData.length > 0 ? idmasterData[0].id : 1;
+
+      /* ---------- LOAD SCHEMA ---------- */
+
+      const schemaData: any[] = await queryRunner.manager.query(
+        `SELECT id,"S_APPL" FROM schemast`
+      );
+
+      const schemaMap = new Map(
+        schemaData.map(x => [Number(x.S_APPL), x])
+      );
+
+      /* ---------- SYS PARAMETERS ---------- */
+
+      const syspara = await queryRunner.manager.query(
+        `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
+      );
+
+      const bankCode = syspara[0].BANK_CODE;
+      const branchCode = syspara[0].BRANCH_CODE;
+
+      const branch = await queryRunner.manager.query(
+        `SELECT id FROM ownbranchmaster WHERE "CODE"=${branchCode}`
+      );
+
+      const branchId = branch[0].id;
+
+      /* ---------- LOAD ORACLE DATA ---------- */
+
+      const result = await this.clientConn.execute(`
+      SELECT *
+      FROM PGMASTER
+      ORDER BY AC_NO
+    `);
+
+      const rows = this.convertOracleRows(result as {
+        rows: any[];
+        metaData: { name: string }[];
+      });
+
+      /* ---------- PROCESS ROWS ---------- */
 
       for (const ele of rows) {
 
@@ -1361,6 +1358,7 @@ async migratePGMASTER() {
           if (!ele.AC_TYPE) continue;
 
           let schemaCode = Number(ele.AC_TYPE);
+
           if (schemaCode > 999) {
             schemaCode = Math.floor(schemaCode / 100);
           }
@@ -1368,11 +1366,11 @@ async migratePGMASTER() {
           let schema = schemaMap.get(schemaCode);
 
           if (!schema) {
-            this.logger.warn(`Schema missing for ${ele.AC_TYPE}`);
-            schema = schemaMap.get(201) || schemaData[0];
+            this.logger.warn(`Schema missing for AC_TYPE ${ele.AC_TYPE}`);
+            schema = schemaData[0];
           }
 
-          const acno = Number(ele.AC_NO) + 100000;
+          const acno = 100000 + Number(ele.AC_NO);
 
           const BANKACNO = this.generateBankAcNo(
             bankCode,
@@ -1381,20 +1379,14 @@ async migratePGMASTER() {
             acno
           );
 
-          const existing = await queryRunner.manager.query(
-          `SELECT id FROM pgmaster WHERE "AC_NO" = $1`,
-          [acno]
-        );
-
-          if (existing.length > 0) continue;
-
           const idmaster = idMasterMap.get(ele.AC_CUSTID);
+
           const finalCustId = idmaster ? idmaster.id : fallbackId;
 
           const newObj: any = {
 
             AC_NO: acno,
-            BANKACNO,
+            BANKACNO: BANKACNO,
 
             AC_TYPE: schema.id,
             AC_ACNOTYPE: schema.S_APPL,
@@ -1403,6 +1395,7 @@ async migratePGMASTER() {
             idmasterID: finalCustId,
 
             AC_NAME: idmaster?.AC_NAME ?? this.transformValue(ele.AC_NAME),
+
             AC_SHORT_NAME: this.transformValue(ele.AC_SHORT_NAME),
 
             AC_OPDATE: ele.AC_OPDATE
@@ -1417,22 +1410,27 @@ async migratePGMASTER() {
               ? moment(ele.AC_EXPDT).format('DD/MM/YYYY')
               : null,
 
+            AC_AGE: ele.AC_AGE ?? null,
+            AC_OCODE: ele.AC_OCODE ?? null,
+            AC_MONTHS: ele.AC_MONTHS ?? null,
+
             AC_SCHMAMT: ele.AC_SCHMAMT ?? 0,
             AC_MATUAMT: ele.AC_MATUAMT ?? 0,
-
             AC_ODAMT: ele.AC_ODAMT ?? 0,
             AC_SODAMT: ele.AC_SODAMT ?? 0,
 
-            AC_MINOR: ele.AC_MINOR ?? 0,
             AC_ODDAYS: ele.AC_ODDAYS ?? null,
+            AC_MINOR: ele.AC_MINOR ?? 0,
 
             AC_GRDNAME: this.transformValue(ele.AC_GRDNAME),
             AC_GRDRELE: this.transformValue(ele.AC_GRDRELE),
 
             IS_DORMANT: ele.IS_DORMANT === 1,
+
             AC_CLOSED: ele.AC_CLOSED ?? 0,
 
             BRANCH_CODE: branchId,
+
             SYSCHNG_LOGIN: ele.OFFICER_CODE,
 
             OID: ele.AC_NO
@@ -1443,804 +1441,311 @@ async migratePGMASTER() {
           inserted++;
 
         } catch (err) {
+
           failed++;
-          console.log("FAILED:", ele.AC_NO, err);
+
+          console.log("FAILED ROW:", ele);
+          console.log("ERROR:", err);
+
         }
+
       }
 
-      offset += limit;
+      /* ---------- FINAL RESULT ---------- */
 
-      this.logger.log(`Processed ${offset} rows...`);
+      this.logger.log(`Oracle Rows : ${rows.length}`);
+      this.logger.log(`Inserted Rows : ${inserted}`);
+      this.logger.log(`Failed Rows : ${failed}`);
+
+      this.logger.log('PGMASTER migration completed');
+
+      return { success: true };
+
+    } finally {
+
+      if (!queryRunner.isReleased) {
+        await queryRunner.release();
+      }
+
     }
-
-    this.logger.log(`Inserted: ${inserted}, Failed: ${failed}`);
-
-    return { success: true, inserted, failed };
-
-  } finally {
-    await queryRunner.release();
   }
-}
-// -------------------------------- SHMASTER MIGRATION --------------------------------
-async migrateSHMASTER() {
 
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
+  // -------------------------------- SHMASTER MIGRATION --------------------------------
+  async migrateSHMASTER() {
 
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
+    if (!this.clientConn) throw new Error('Client DB not connected');
+    if (!this.serverDB) throw new Error('Server DB not connected');
 
-  try {
+    const queryRunner = this.serverDB.createQueryRunner();
+    await queryRunner.connect();
 
-    /* ---------- LOAD IDMASTER ---------- */
+    try {
 
-    const idmasterData = await queryRunner.manager.find(IDMASTER);
+      /* ---------- LOAD IDMASTER ---------- */
 
-    const idMasterMap = new Map<number, IDMASTER>(
-      idmasterData.map(x => [x.ORA_AC_NO, x])
-    );
+      const idmasterData = await queryRunner.manager.find(IDMASTER);
 
-    const fallbackId = idmasterData.length > 0 ? idmasterData[0].id : 1;
+      const idMasterMap = new Map<number, IDMASTER>(
+        idmasterData.map(x => [x.ORA_AC_NO, x])
+      );
 
-    /* ---------- LOAD SCHEMA ---------- */
+      const fallbackId = idmasterData.length > 0 ? idmasterData[0].id : 1;
 
-    const schemaData: any[] = await queryRunner.manager.query(
-      `SELECT id,"S_APPL" FROM schemast`
-    );
+      /* ---------- LOAD SCHEMA ---------- */
 
-    const schemaMap = new Map<number, any>(
-      schemaData.map(x => [Number(x.S_APPL), x])
-    );
+      const schemaData: any[] = await queryRunner.manager.query(
+        `SELECT id,"S_APPL" FROM schemast`
+      );
 
-    /* ---------- LOAD CATEGORY ---------- */
+      const schemaMap = new Map<number, any>(
+        schemaData.map(x => [Number(x.S_APPL), x])
+      );
 
-    const categoryData = await queryRunner.manager.find(CATEGORYMASTER);
+      /* ---------- LOAD CATEGORY ---------- */
 
-    const categoryMap = new Map(
-      categoryData.map(x => [x.CODE, x])
-    );
+      const categoryData = await queryRunner.manager.find(CATEGORYMASTER);
 
-    /* ---------- SYS PARAMETERS ---------- */
+      const categoryMap = new Map(
+        categoryData.map(x => [x.CODE, x])
+      );
 
-    const syspara = await queryRunner.manager.query(
-      `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
-    );
+      /* ---------- SYS PARAMETERS ---------- */
 
-    const bankCode = syspara[0].BANK_CODE;
-    const branchCode = syspara[0].BRANCH_CODE;
+      const syspara = await queryRunner.manager.query(
+        `SELECT "BANK_CODE","BRANCH_CODE" FROM syspara LIMIT 1`
+      );
 
-    const branch = await queryRunner.manager.query(
-      `SELECT id FROM ownbranchmaster WHERE "CODE"=${branchCode}`
-    );
+      const bankCode = syspara[0].BANK_CODE;
+      const branchCode = syspara[0].BRANCH_CODE;
 
-    const branchId = branch[0].id;
+      const branch = await queryRunner.manager.query(
+        `SELECT id FROM ownbranchmaster WHERE "CODE"=${branchCode}`
+      );
 
-    /* ---------- LOAD ORACLE DATA ---------- */
+      const branchId = branch[0].id;
 
-    const result = await this.clientConn.execute(`
+      /* ---------- LOAD ORACLE DATA ---------- */
+
+      const result = await this.clientConn.execute(`
       SELECT *
       FROM SHMASTER
       ORDER BY AC_NO
     `);
 
-    const rows = this.convertOracleRows(result as {
-      rows: any[];
-      metaData: { name: string }[];
-    });
+      const rows = this.convertOracleRows(result as {
+        rows: any[];
+        metaData: { name: string }[];
+      });
 
-    let inserted = 0;
-    let failed = 0;
-    let counter = 0; // safe AC_NO generator
+      let inserted = 0;
+      let failed = 0;
+      let counter = 0; // safe AC_NO generator
 
-    for (const ele of rows) {
+      for (const ele of rows) {
 
-      try {
+        try {
 
-        /* ---------- SCHEMA ---------- */
+          /* ---------- SCHEMA ---------- */
 
-        const schemaCode = Math.floor(Number(ele.AC_TYPE || 0) / 100);
+          const schemaCode = Math.floor(Number(ele.AC_TYPE || 0) / 100);
 
-        let schema = schemaMap.get(schemaCode);
+          let schema = schemaMap.get(schemaCode);
 
-        if (!schema) {
-          this.logger.warn(`Schema missing for AC_TYPE ${ele.AC_TYPE}`);
-          schema = schemaData[0];
+          if (!schema) {
+            this.logger.warn(`Schema missing for AC_TYPE ${ele.AC_TYPE}`);
+            schema = schemaData[0];
+          }
+
+          /* ---------- ACCOUNT NUMBER ---------- */
+
+          const acno = 100000 + Number(ele.AC_NO) + counter;
+          counter++;
+
+          const BANKACNO = this.generateBankAcNo(
+            bankCode,
+            branchCode,
+            schema.S_APPL,
+            acno
+          );
+
+          /* ---------- CUSTOMER ---------- */
+
+          const idmaster = idMasterMap.get(ele.AC_CUSTID);
+
+          const finalCustId = idmaster ? idmaster.id : fallbackId;
+
+          /* ---------- CATEGORY ---------- */
+
+          const category = categoryMap.get(ele.AC_CATG);
+
+          /* ---------- OBJECT ---------- */
+
+          const newObj: any = {
+
+            AC_NO: acno,
+            BANKACNO: BANKACNO,
+
+            AC_TYPE: schema.id,
+            AC_ACNOTYPE: schema.S_APPL,
+
+            AC_CUSTID: finalCustId,
+            idmasterID: finalCustId,
+
+            AC_NAME: idmaster?.AC_NAME ?? this.transformValue(ele.AC_NAME),
+
+            EMP_NO: ele.EMP_NO ?? null,
+
+            AC_IS_RECOVERY: ele.AC_IS_RECOVERY ?? '0',
+
+            AC_INSTALLMENT: Number(ele.AC_INSTALLMENT) || 0,
+
+            AC_JOIN_DATE: ele.AC_JOIN_DATE
+              ? moment(ele.AC_JOIN_DATE).format('YYYY-MM-DD')
+              : null,
+
+            AC_RETIRE_DATE: ele.AC_RETIRE_DATE
+              ? moment(ele.AC_RETIRE_DATE).format('YYYY-MM-DD')
+              : null,
+
+            AC_OPDATE: ele.AC_OPDATE
+              ? moment(ele.AC_OPDATE).format('YYYY-MM-DD')
+              : null,
+
+            AC_SHBALDATE: ele.AC_SHBALDATE
+              ? moment(ele.AC_SHBALDATE).format('YYYY-MM-DD')
+              : null,
+
+            AC_CATG: category ? category.id : null,
+
+            AC_EXPDT: ele.AC_EXPDT
+              ? moment(ele.AC_EXPDT).format('YYYY-MM-DD')
+              : null,
+
+            AC_FACE_VALUE: ele.AC_FACE_VALUE ?? null,
+
+            AC_OP_BAL: ele.AC_OP_BAL ?? 0,
+
+            AC_OP_SHNO: ele.AC_OP_SHNO ?? null,
+
+            AC_DEV_NAME: this.transformValue(ele.AC_DEV_NAME),
+            AC_DEV_ADD: this.transformValue(ele.AC_DEV_ADD),
+            AC_DEV_GALLI: this.transformValue(ele.AC_DEV_GALLI),
+            AC_DEV_AREA: this.transformValue(ele.AC_DEV_AREA),
+
+            IS_DORMANT: ele.IS_DORMANT === 1,
+
+            AC_CLOSED: ele.AC_CLOSED ?? '0',
+
+            BRANCH_CODE: branchId,
+
+            SYSCHNG_LOGIN: ele.OFFICER_CODE
+          };
+
+          /* ---------- INSERT ---------- */
+
+          await queryRunner.manager
+            .createQueryBuilder()
+            .insert()
+            .into('shmaster')
+            .values(newObj)
+            .execute();
+
+          inserted++;
+
+        } catch (err) {
+
+          failed++;
+
+          console.log("FAILED ROW:", ele);
+          console.log("ERROR:", err);
+
         }
 
-        /* ---------- ACCOUNT NUMBER ---------- */
+      }
 
-        const acno = 100000 + Number(ele.AC_NO) + counter;
-        counter++;
+      /* ---------- LOG RESULT ---------- */
 
-        const BANKACNO = this.generateBankAcNo(
-          bankCode,
-          branchCode,
-          schema.S_APPL,
-          acno
-        );
+      this.logger.log(`Oracle Rows : ${rows.length}`);
+      this.logger.log(`Inserted Rows : ${inserted}`);
+      this.logger.log(`Failed Rows : ${failed}`);
 
-        /* ---------- CUSTOMER ---------- */
+      this.logger.log('SHMASTER migration completed');
 
-        const idmaster = idMasterMap.get(ele.AC_CUSTID);
+      return { success: true };
 
-        const finalCustId = idmaster ? idmaster.id : fallbackId;
+    } finally {
 
-        /* ---------- CATEGORY ---------- */
-
-        const category = categoryMap.get(ele.AC_CATG);
-
-        /* ---------- OBJECT ---------- */
-
-        const newObj: any = {
-
-          AC_NO: acno,
-          BANKACNO: BANKACNO,
-
-          AC_TYPE: schema.id,
-          AC_ACNOTYPE: schema.S_APPL,
-
-          AC_CUSTID: finalCustId,
-          idmasterID: finalCustId,
-
-          AC_NAME: idmaster?.AC_NAME ?? this.transformValue(ele.AC_NAME),
-
-          EMP_NO: ele.EMP_NO ?? null,
-
-          AC_IS_RECOVERY: ele.AC_IS_RECOVERY ?? '0',
-
-          AC_INSTALLMENT: Number(ele.AC_INSTALLMENT) || 0,
-
-          AC_JOIN_DATE: ele.AC_JOIN_DATE
-            ? moment(ele.AC_JOIN_DATE).format('YYYY-MM-DD')
-            : null,
-
-          AC_RETIRE_DATE: ele.AC_RETIRE_DATE
-            ? moment(ele.AC_RETIRE_DATE).format('YYYY-MM-DD')
-            : null,
-
-          AC_OPDATE: ele.AC_OPDATE
-            ? moment(ele.AC_OPDATE).format('YYYY-MM-DD')
-            : null,
-
-          AC_SHBALDATE: ele.AC_SHBALDATE
-            ? moment(ele.AC_SHBALDATE).format('YYYY-MM-DD')
-            : null,
-
-          AC_CATG: category ? category.id : null,
-
-          AC_EXPDT: ele.AC_EXPDT
-            ? moment(ele.AC_EXPDT).format('YYYY-MM-DD')
-            : null,
-
-          AC_FACE_VALUE: ele.AC_FACE_VALUE ?? null,
-
-          AC_OP_BAL: ele.AC_OP_BAL ?? 0,
-
-          AC_OP_SHNO: ele.AC_OP_SHNO ?? null,
-
-          AC_DEV_NAME: this.transformValue(ele.AC_DEV_NAME),
-          AC_DEV_ADD: this.transformValue(ele.AC_DEV_ADD),
-          AC_DEV_GALLI: this.transformValue(ele.AC_DEV_GALLI),
-          AC_DEV_AREA: this.transformValue(ele.AC_DEV_AREA),
-
-          IS_DORMANT: ele.IS_DORMANT === 1,
-
-          AC_CLOSED: ele.AC_CLOSED ?? '0',
-
-          BRANCH_CODE: branchId,
-
-          SYSCHNG_LOGIN: ele.OFFICER_CODE
-        };
-
-        /* ---------- INSERT ---------- */
-
-        await queryRunner.manager
-          .createQueryBuilder()
-          .insert()
-          .into('shmaster')
-          .values(newObj)
-          .execute();
-
-        inserted++;
-
-      } catch (err) {
-
-        failed++;
-
-        console.log("FAILED ROW:", ele);
-        console.log("ERROR:", err);
-
+      if (!queryRunner.isReleased) {
+        await queryRunner.release();
       }
 
     }
 
-    /* ---------- LOG RESULT ---------- */
-
-    this.logger.log(`Oracle Rows : ${rows.length}`);
-    this.logger.log(`Inserted Rows : ${inserted}`);
-    this.logger.log(`Failed Rows : ${failed}`);
-
-    this.logger.log('SHMASTER migration completed');
-
-    return { success: true };
-
-  } finally {
-
-    if (!queryRunner.isReleased) {
-      await queryRunner.release();
-    }
-
   }
 
-}
+  /* ===================== METADATA / DISCOVERY (SERVER SIDE) ===================== */
 
- //CLEARING BRANCHMASTER
-
- // ---------------- BRANCHMASTER MIGRATION ----------------
-async migrateBRANCHMASTER() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  try {
-
-    // 1. Fetch Oracle Data
-    const result = await this.clientConn.execute(`
-      SELECT * FROM BRANCHMASTER ORDER BY CODE
-    `);
-
-    const data = this.convertOracleRows(result as {
-      rows: any[];
-      metaData: { name: string }[];
+  async getServerDatabases(config: any): Promise<string[]> {
+    // 1. We use the existing getServerDataSource to get a temporary connection
+    // We connect to the default 'postgres' database to see the others
+    const tempDS = await this.dbService.getServerDataSource({
+      ...config,
+      database: 'postgres'
     });
 
-    // 2. Fetch existing PG data
-    const existingBranches = await queryRunner.manager.find(BRANCHMASTER);
-
-    const existingNames = new Set(
-      existingBranches
-        .map(b => (b.NAME ? b.NAME.trim() : null))
-        .filter((name): name is string => !!name)
-    );
-
-    let inserted = 0;
-
-    // 3. Loop once ✅
-    for (const ele of data) {
-
-      const branchName = ele.NAME ? String(ele.NAME).trim() : null;
-
-      if (!branchName) continue;
-
-      // Skip duplicates
-      if (existingNames.has(branchName)) {
-        continue;
-      }
-
-      const newObj: Record<string, any> = {
-        NAME: this.transformValue(branchName),
-        AC_NO: ele.AC_NO === 0 ? null : ele.AC_NO,
-        CODE: ele.CODE ?? null
-      };
-
-      await queryRunner.manager.insert('branchmaster', newObj);
-
-      inserted++;
-    }
-
-    // 4. Commit after loop ✅
-    await queryRunner.commitTransaction();
-
-    this.logger.log(`BRANCHMASTER migration completed. Inserted: ${inserted}`);
-
-    return { success: true, inserted };
-
-  } catch (error) {
-
-    await queryRunner.rollbackTransaction();
-    this.logger.error('BRANCHMASTER migration failed', error);
-    throw error;
-
-  } finally {
-
-    await queryRunner.release();
-  }
-}
-
-
-// ---------------- CASTMASTER MIGRATION ----------------
-async migrateCASTMASTER() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  try {
-
-    // 1. Fetch Oracle Data
-    const result = await this.clientConn.execute(`
-      SELECT * FROM CASTMASTER ORDER BY CODE
-    `);
-
-    const data = this.convertOracleRows(result as {
-      rows: any[];
-      metaData: { name: string }[];
-    });
-
-    // 2. Fetch existing PG data
-    const existingCasts = await queryRunner.manager.find(CASTMASTER);
-
-    // Normalize for safe comparison (VERY IMPORTANT)
-    const normalize = (val: string) => val.trim().toLowerCase();
-
-    const existingNames = new Set(
-      existingCasts
-        .map(c => c.NAME ? normalize(c.NAME) : null)
-        .filter((name): name is string => !!name)
-    );
-
-    let inserted = 0;
-
-    // 3. Loop through Oracle data
-    for (const ele of data) {
-
-      const rawName = ele.NAME ? String(ele.NAME) : null;
-      if (!rawName) continue;
-
-      const normalizedName = normalize(rawName);
-
-      // Skip duplicates
-      if (existingNames.has(normalizedName)) {
-        this.logger.warn(`Skipping duplicate CAST: ${rawName}`);
-        continue;
-      }
-
-      const newObj: Record<string, any> = {
-        NAME: this.transformValue(rawName),
-        CODE: ele.CODE ?? null
-      };
-
-      // Use entity (NOT string table name) ✅
-      await queryRunner.manager.insert(CASTMASTER, newObj);
-
-      inserted++;
-    }
-
-    // 4. Commit transaction
-    await queryRunner.commitTransaction();
-
-    this.logger.log(`CASTMASTER migration completed. Inserted: ${inserted}`);
-
-    return { success: true, inserted };
-
-  } catch (error) {
-
-    await queryRunner.rollbackTransaction();
-    this.logger.error('CASTMASTER migration failed', error);
-    throw error;
-
-  } finally {
-
-    await queryRunner.release();
-  }
-}
-
-
-// ---------------- SCHEMAST MIGRATION ----------------
-async migrateSCHEMAST() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  try {
-
-    // 1. Fetch Oracle Data
-    const result = await this.clientConn.execute(`
-      SELECT * FROM SCHEMAST ORDER BY S_APPL
-    `);
-
-    const data = this.convertOracleRows(result as {
-      rows: any[];
-      metaData: { name: string }[];
-    });
-
-const existing: { S_APPL: number }[] =
-  await queryRunner.manager.query(
-    `SELECT "S_APPL" FROM schemast`
-  );
-const existingSet = new Set(
-  existing.map(e => Number(e.S_APPL))
-);
-
-    let inserted = 0;
-
-    // 3. Loop through Oracle data
-    for (const ele of data) {
-
-      const sAppl = Number(ele.S_APPL);
-
-      if (!sAppl) continue;
-
-      // ✅ Skip duplicates
-      if (existingSet.has(sAppl)) {
-        this.logger.warn(`Skipping duplicate SCHEMA: ${sAppl}`);
-        continue;
-      }
-
-      const obj: Record<string, any> = {
-
-        S_ACNOTYPE: ele.S_ACNOTYPE,
-        S_APPL: sAppl,
-      //  AC_TYPE: sAppl,
-
-        S_NAME: this.transformValue(ele.S_NAME),
-        S_SHNAME: this.transformValue(ele.S_SHNAME),
-
-        S_GLACNO: ele.S_GLACNO,
-        S_INT_ACNO: ele.S_INT_ACNO,
-
-        IS_DEPO_LOAN: ele.IS_DEPO_LOAN == 0 ? '0' : '1',
-        S_INT_APPLICABLE: ele.S_INT_APPLICABLE == 0 ? '0' : '1',
-
-        POST_TO_INDIVIDUAL_AC: ele.POST_TO_INDIVIDUAL_AC == 0 ? '0' : '1',
-
-        S_RECEIVABLE_INT_ALLOW: ele.S_RECEIVABLE_INT_ALLOW == 0 ? '0' : '1',
-
-        IS_INT_ON_RECINT: ele.IS_INT_ON_RECINT == 0 ? '0' : '1',
-
-        IS_INT_ON_OTHERAMT: ele.IS_INT_ON_OTHERAMT == 0 ? '0' : '1',
-
-        INTEREST_METHOD: ele.INTEREST_METHOD,
-        MIN_INT_LIMIT: ele.MIN_INT_LIMIT,
-
-        S_PENAL_INT_RATE: ele.S_PENAL_INT_RATE,
-
-        MAX_LOAN_LMT: ele.MAX_LOAN_LMT,
-
-        DEFAULT_LOAN_PERIOD: ele.DEFAULT_LOAN_PERIOD,
-
-        INSTALLMENT_METHOD: ele.INSTALLMENT_METHOD,
-
-        S_PRODUCT_DAY_BASE: ele.S_PRODUCT_DAY_BASE,
-
-        GL_ACNO: ele.GL_ACNO,
-
-        MEMBER_TYPE: ele.MEMBER_TYPE,
-
-        SHARES_FACE_VALUE: ele.SHARES_FACE_VALUE,
-
-        DIVIDEND_PERCENTAGE: ele.DIVIDEND_PERCENTAGE,
-
-        // 👉 add more fields if required (you already mapped them)
-      };
-
-      await queryRunner.manager.insert(SCHEMAST, obj);
-
-      inserted++;
-    }
-
-    // 4. Commit
-    await queryRunner.commitTransaction();
-
-    this.logger.log(`SCHEMAST migration completed. Inserted: ${inserted}`);
-
-    return { success: true, inserted };
-
-  } catch (error) {
-
-    await queryRunner.rollbackTransaction();
-    this.logger.error('SCHEMAST migration failed', error);
-    throw error;
-
-  } finally {
-
-    await queryRunner.release();
-  }
-}
-
-
-async migrateSYSPARA() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  try {
-
-    // ✅ 1. Get Oracle data
-    const result = await this.clientConn.execute(`SELECT * FROM SYSPARA`);
-    const rows = this.convertOracleRows(result as any);
-
-    if (!rows.length) {
-      throw new Error('No SYSPARA data found in Oracle');
-    }
-
-    const ele = rows[0];
-
-    // ✅ 2. Check already exists (important)
-    const existing = await queryRunner.manager.query(
-      `SELECT id FROM syspara LIMIT 1`
-    );
-
-    if (existing.length > 0) {
-      this.logger.warn('SYSPARA already exists, skipping...');
-      return { success: true, message: 'Already exists' };
-    }
-
-    // ✅ 3. Prepare object
-    const sys: any = {
-
-      SYSPARA_CODE: ele.SYSPARA_CODE,
-      BANK_CODE: ele.BANK_CODE,
-      BRANCH_CODE: String(ele.BRANCH_CODE),
-
-      BANK_NAME: this.transformValue(ele.BANK_NAME),
-      ADDRESS: this.transformValue(ele.ADDRESS),
-
-      MAX_CERTI_NO: ele.MAX_CERTI_NO,
-      MAX_SHARES_NO: ele.MAX_SHARES_NO,
-
-      CHAIRMAN: this.transformValue(ele.CHAIRMAN),
-      ACCOUNTANT: this.transformValue(ele.ACCOUNTANT),
-      GENERAL_MANAGER: this.transformValue(ele.GENERAL_MANAGER),
-
-      COMPANY_START_DATE: ele.COMPANY_START_DATE
-        ? moment(ele.COMPANY_START_DATE).format('DD/MM/YYYY')
-        : null,
-
-      NO_OF_EMPLOYEES: ele.NO_OF_EMPLOYEES,
-
-      OFFICER_NAME: this.transformValue(ele.OFFICER_NAME),
-      OFFICER_DESIGNATION: this.transformValue(ele.OFFICER_DESIGNATION),
-
-      RBI_LICENCE_NO: ele.RBI_LICENCE_NO,
-
-      MANAGER_NAME: this.transformValue(ele.MANAGER_NAME),
-
-      // ✅ Boolean conversions
-      RECOVERY_METHOD: ele.RECOVERY_METHOD == 0 ? '0' : '1',
-      IS_PROCESS_FOR_MONTH: ele.IS_PROCESS_FOR_MONTH == 0 ? '0' : '1',
-      IS_PROCESS_UPTO_TRANDATE: ele.IS_PROCESS_UPTO_TRANDATE == 0 ? '0' : '1',
-
-      // ✅ Dates
-      PREVIOUS_DATE: ele.PREVIOUS_DATE
-        ? moment(ele.PREVIOUS_DATE).format('DD/MM/YYYY')
-        : null,
-
-      CURRENT_DATE: ele.CURRENT_DATE
-        ? moment(ele.CURRENT_DATE).format('DD/MM/YYYY')
-        : null,
-
-      // add more fields if needed (you already wrote them 👍)
-
-    };
-
-    // ✅ 4. Insert
-    await queryRunner.manager.insert('syspara', sys);
-
-    await queryRunner.commitTransaction();
-
-    this.logger.log('SYSPARA migration completed');
-
-    return { success: true };
-
-  } catch (error) {
-
-    await queryRunner.rollbackTransaction();
-    this.logger.error('SYSPARA migration failed', error);
-    throw error;
-
-  } finally {
-
-    await queryRunner.release();
-  }
-}
-
-async migrateGUARANTERDETAILS() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
-
-  try {
-
-    type PgGuarantor = {
-      id: number;
-      AC_NAME: string;
-    };
-
-    type OracleGuarantor = {
-      AC_CUSTID: number;
-      NAME: string;
-    };
-
-    const pgData: PgGuarantor[] = await queryRunner.manager.query(`
-      SELECT id, "AC_NAME"
-      FROM guaranterdetails
-    `);
-
-    const nameMap = new Map<string, PgGuarantor>(
-      pgData.map(x => [
-        String(x.AC_NAME || '').trim().toLowerCase(),
-        x
-      ])
-    );
-
-    const result = await this.clientConn.execute(`
-      SELECT AC_CUSTID, NAME FROM GUARANTERDETAILS
-    `);
-
-    const rawData = this.convertOracleRows(result as any);
-
-    const data: OracleGuarantor[] = rawData.map((row: any) => ({
-      AC_CUSTID: Number(row.AC_CUSTID),
-      NAME: String(row.NAME || '')
-    }));
-
-    let updated = 0;
-
-    for (const item of data) {
-
-      if (!item.NAME) continue;
-
-      const name = String(this.transformValue(item.NAME || ''))
-        .trim()
-        .toLowerCase();
-
-      const match = nameMap.get(name);
-
-      if (!match) continue;
-
-      const res = await queryRunner.manager.query(
-        `UPDATE guaranterdetails 
-         SET "GAC_CUSTID" = $1 
-         WHERE id = $2`,
-        [item.AC_CUSTID, match.id]
+    try {
+      // 2. Run the Postgres-specific query directly here
+      const res = await tempDS.query(
+        `SELECT datname as name FROM pg_database WHERE datistemplate = false AND datname != 'postgres'`
       );
 
-      if (res.rowCount > 0) updated++;
+      // 3. Clean up the connection
+      await this.dbService.closeServerConnection();
+
+      return res.map((d: any) => d.name);
+    } catch (error) {
+      await this.dbService.closeServerConnection();
+      this.logger.error(`Server discovery failed: ${error.message}`);
+      throw error;
     }
-
-    await queryRunner.commitTransaction();
-
-    this.logger.log(`GUARANTERDETAILS updated: ${updated}`);
-
-    return { success: true, updated };
-
-  } catch (error) {
-
-    await queryRunner.rollbackTransaction();
-    throw error;
-
-  } finally {
-
-    await queryRunner.release();
   }
-}
 
-
-
-async migrateACMASTER() {
-
-  if (!this.clientConn) throw new Error('Client DB not connected');
-  if (!this.serverDB) throw new Error('Server DB not connected');
-
-  const queryRunner = this.serverDB.createQueryRunner();
-  await queryRunner.connect();
-
-  try {
-
-    const result = await this.clientConn.execute(`
-      SELECT acmaster.*, schemast.S_APPL as actype 
-      FROM ACMASTER 
-      LEFT JOIN SCHEMAST ON ACMASTER.AC_TYPE = SCHEMAST.S_APPL 
-      ORDER BY AC_NO
-    `);
-
-    const rawData = this.convertOracleRows(result as any);
-
-    let inserted = 0;
-    let failed = 0;
-
-    for (const ele of rawData) {
-
-      try {
-
-        // ✅ SIMPLE NAME (NO TRANSLATION)
-        const ENG_NAME = String(ele.AC_NAME || '').trim();
-
-        // ✅ Skip invalid AC_NO
-        if (!ele.AC_NO) continue;
-
-        // ✅ Duplicate check
-        const existing = await queryRunner.manager.query(
-          `SELECT id FROM acmaster WHERE "AC_NO" = $1`,
-          [ele.AC_NO]
-        );
-
-        if (existing.length > 0) continue;
-
-        // ✅ Create object
-        const newObj = {
-          id: ele.AC_NO,
-          AC_NO: ele.AC_NO,
-          AC_NAME: ENG_NAME,
-
-          BRANCH_CODE: this.BRANCH_CODE,
-
-          IS_POST_INT_AC: 0,
-          AC_OP_BAL: ele.AC_OP_BAL ?? 0,
-
-          IS_DIRECT_ENTRY_ALLOW: ele.IS_DIRECT_ENTRY_ALLOW === 1,
-          IS_RED_BALANCE_AC: ele.IS_RED_BALANCE_AC === 1,
-          AC_IS_CASH_IN_TRANSIT: ele.AC_IS_CASH_IN_TRANSIT === 1,
-          IS_TAXABLEFOR_GST: ele.IS_TAXABLEFOR_GST === 1,
-
-          AC_ACNOTYPE: ele.AC_ACNOTYPE,
-
-          AC_CLOSEDT: ele.AC_CLOSEDT
-            ? moment(ele.AC_CLOSEDT).format('DD/MM/YYYY')
-            : null,
-
-          AC_OPDATE: ele.AC_OPDATE
-            ? moment(ele.AC_OPDATE).format('DD/MM/YYYY')
-            : null,
-
-          AC_TYPE: 183,
-          IS_ACTIVE: true
-        };
-
-        // ✅ Insert
-        await queryRunner.manager.insert(
-          'acmaster',
-          newObj as Record<string, unknown>
-        );
-
-        inserted++;
-
-      } catch (err: any) {
-
-        failed++;
-
-        console.log("FAILED AC_NO:", ele.AC_NO);
-        console.log("ERROR:", err.message);
-
-        continue; // 🔥 continue next row
-      }
+  async getPrimaryTableNames(): Promise<string[]> {
+    if (!this.serverDB || !this.serverDB.isInitialized) {
+      throw new Error('Server DB not connected');
     }
 
-    this.logger.log(`ACMASTER Inserted: ${inserted}, Failed: ${failed}`);
-
-    return { success: true, inserted, failed };
-
-  } catch (error) {
-
-    throw new HttpException(
-      { message: 'ACMASTER migration failed', error },
-      HttpStatus.INTERNAL_SERVER_ERROR
+    // Query Postgres information_schema directly
+    const res = await this.serverDB.query(
+      `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
     );
-
-  } finally {
-
-    await queryRunner.release();
+    return res.map((r: any) => r.table_name);
   }
-}
-}
 
+  async getAllColumnsNames(tableName: string): Promise<string[]> {
+    if (!this.serverDB || !this.serverDB.isInitialized) {
+      throw new Error('Server DB not connected');
+    }
+
+    // Query Postgres information_schema for columns
+    const res = await this.serverDB.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 ORDER BY ordinal_position`,
+      [tableName]
+    );
+    return res.map((c: any) => c.column_name);
+  }
+
+  async getClientTableNames(): Promise<string[]> {
+    if (!this.clientConn) throw new Error('Client (Oracle) not connected');
+    // We pass the raw Oracle connection to the DatabaseService helper
+    return await this.dbService.getTableNames(this.clientConn);
+  }
+
+  async getClientColumns(tableName: string): Promise<string[]> {
+    if (!this.clientConn) throw new Error('Client (Oracle) not connected');
+    // We pass the raw Oracle connection and table name to the helper
+    return await this.dbService.getColumnNames(this.clientConn, tableName);
+  }
+
+
+}

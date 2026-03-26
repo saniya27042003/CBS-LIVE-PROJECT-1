@@ -91,7 +91,7 @@ export class DatabaseComponent implements OnInit {
     private http: HttpClient,
     private route: ActivatedRoute,
     private dbState: DbStateService
-  ) {}
+  ) { }
 
   // =========================
   // INIT
@@ -169,37 +169,41 @@ export class DatabaseComponent implements OnInit {
     });
   }
 
+
   // =========================
-  // ✅ LOAD SERVER DATABASE LIST (FIXED — ONLY ONE VERSION)
+  // ✅ LOAD SERVER DATABASE LIST (Correct Discovery Logic)
   // =========================
   onOpenDatabaseDropdown() {
-
+    // Only fetch if we have credentials and haven't loaded them yet
     if (this.primaryForm.invalid) {
-      this.showMessage('Enter server credentials first', 'error');
+      this.showMessage('Enter Host, Port, Username, and Password first.', 'error');
       return;
     }
 
-    const payload = {
-      host: this.primaryForm.value.host,
-      port: this.primaryForm.value.port,
-      username: this.primaryForm.value.username,
-      password: this.primaryForm.value.password,
-    };
+    // Optional: Avoid re-fetching if the list is already populated
+    if (this.databaseList.length > 0) return;
 
+    const payload = this.primaryForm.value;
     this.loadingDatabases = true;
 
+    // ✅ Hit the specialized DISCOVERY endpoint
     this.http.post<string[]>(
       'http://localhost:3000/database-mapping/server/databases',
       payload
     ).subscribe({
-      next: (dbs) => {
+      next: (res) => {
         this.loadingDatabases = false;
-        this.databaseList = dbs || [];
+        // The backend returns an array of strings like ["postgres", "nirmiti", "test"]
+        this.databaseList = res;
+
+        if (this.databaseList.length === 0) {
+          this.showMessage('No databases found on this server.', 'error');
+        }
       },
       error: (err) => {
         this.loadingDatabases = false;
-        console.error(err);
-        this.showMessage('Failed to load databases from server', 'error');
+        console.error('Discovery Error:', err);
+        this.showMessage('Could not fetch databases. Check credentials and IP.', 'error');
       }
     });
   }
@@ -252,7 +256,7 @@ export class DatabaseComponent implements OnInit {
         }
 
         // ✅ 4) CONNECT CLIENT
-          const clientConfig: ClientDbConfig = {
+        const clientConfig: ClientDbConfig = {
           type: this.clientForm.value.type,
           host: this.clientForm.value.host,
           port: Number(this.clientForm.value.port),
@@ -337,12 +341,12 @@ export class DatabaseComponent implements OnInit {
       this.navigateAfterSuccess = false;
 
       this.router.navigate(['/table'], {
-  queryParams: {
-    primary: this.selectedDatabase,
-    client: this.clientForm.value.database,
-    clientType: this.clientForm.value.type   // ✅ ADD THIS LINE
-  }
-});
+        queryParams: {
+          primary: this.selectedDatabase,
+          client: this.clientForm.value.database,
+          clientType: this.clientForm.value.type   // ✅ ADD THIS LINE
+        }
+      });
     }
   }
 
@@ -355,7 +359,7 @@ export class DatabaseComponent implements OnInit {
     const lightThemes = [
       'light', 'cupcake', 'bumblebee', 'emerald', 'corporate', 'retro',
       'cyberpunk', 'valentine', 'lofi', 'pastel', 'fantasy', 'wireframe',
-      'cmyk', 'autumn', 'acid', 'lemonade', 'winter','garden'
+      'cmyk', 'autumn', 'acid', 'lemonade', 'winter', 'garden'
     ];
     return lightThemes.includes(this.currentTheme);
   }
