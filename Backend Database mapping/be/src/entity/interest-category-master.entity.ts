@@ -11,7 +11,7 @@ export class INTCATEGORYMASTER {
   id: number;
 
   @Column()
-  @Generated('increment')
+  //@Generated('increment')
   CODE: number;
 
   @Column({ length: 100 })

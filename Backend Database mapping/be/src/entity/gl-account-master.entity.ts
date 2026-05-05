@@ -84,23 +84,23 @@ export class ACMASTER {
   @Column({ default: false })
   IS_DORMANT: boolean;
 
- @ManyToOne(() => OWNBRANCHMASTER, branch => branch.clearingAccounts)
-@JoinColumn({ name: 'CLEARING_BRANCH_ID' }) // use real FK column
-clearingBranch: OWNBRANCHMASTER;
+  //  @ManyToOne(() => OWNBRANCHMASTER, branch => branch.clearingAccounts)
+  // @JoinColumn({ name: 'CLEARING_BRANCH_ID' }) // use real FK column
+  // clearingBranch: OWNBRANCHMASTER;
 
- 
+
   @OneToMany(() => OWNBRANCHMASTER, branch => branch.accNo)
   ownBranches: OWNBRANCHMASTER[];
 
 
- @ManyToOne(() => DEPRCATEGORY)
-@JoinColumn({ name: 'DEPR_CATEGORY_ID' })   // use real FK
-deprecat: DEPRCATEGORY;
+  //  @ManyToOne(() => DEPRCATEGORY)
+  // @JoinColumn({ name: 'DEPR_CATEGORY_ID' })   // use real FK
+  // deprecat: DEPRCATEGORY;
 
 
   @ManyToOne(() => SCHEMAST)
-@JoinColumn({ name: 'AC_TYPE' })
-glAcMaster: SCHEMAST;
+  @JoinColumn({ name: 'AC_TYPE' })
+  glAcMaster: SCHEMAST;
 
 
 }

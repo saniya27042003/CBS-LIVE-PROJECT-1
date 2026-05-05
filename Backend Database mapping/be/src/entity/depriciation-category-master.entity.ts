@@ -11,7 +11,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity({ name: 'DEPRCATEGORY' })
+@Entity({ name: 'deprcategory' })
 export class DEPRCATEGORY {
 
   @PrimaryGeneratedColumn()

@@ -7,7 +7,7 @@ export class DIRECTORMASTER {
     id: number;
 
     @Column()
-    @Generated('increment')
+    // @Generated('increment')
     CODE: number;
 
     @Column({ length: 100 })
@@ -39,12 +39,12 @@ export class DIRECTORMASTER {
 
     @Column({ nullable: true })
 
- @Column({ nullable: true })
-CTCODE: number;
+    @Column({ nullable: true })
+    AC_CTCODE: number;
 
-@ManyToOne(() => CITYMASTER, { nullable: true })
-@JoinColumn({ name: "CTCODE" })
-city?: CITYMASTER;
+    // @ManyToOne(() => CITYMASTER, { nullable: true })
+    // @JoinColumn({ name: "CTCODE" })
+    // city?: CITYMASTER;
 
 
     @Column({ nullable: true })

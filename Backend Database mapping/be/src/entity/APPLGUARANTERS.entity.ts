@@ -40,10 +40,10 @@ export class APPLGUARANTERS {
 
 
     @Column({ nullable: true })
-CTCODE: number;
+    CTCODE: number;
 
-@ManyToOne(() => CITYMASTER, { nullable: true })
-@JoinColumn({ name: "CTCODE" })
-city?: CITYMASTER;
+    @ManyToOne(() => CITYMASTER, { nullable: true })
+    @JoinColumn({ name: "CTCODE" })
+    city?: CITYMASTER;
 
 }

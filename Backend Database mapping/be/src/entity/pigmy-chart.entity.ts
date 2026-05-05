@@ -9,88 +9,90 @@ import { PGMASTER } from './pgmaster.entity';
 export class PIGMYCHART {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
   @Generated('increment')
-  TRAN_NO: number;
+  TRAN_NO!: number;
 
   @Column({ nullable: true })
-  BRANCHCODE: number;
+  BRANCHCODE!: number;
 
   @Column({ nullable: true })
-  BRANCH_ID: number;
+  BRANCH_ID!: number;
 
   @Column()
-  TRAN_DATE: string
+  TRAN_DATE!: string;
 
   @Column()
-  TRAN_TIME: string
+  TRAN_TIME!: string;
 
   @Column({ default: "CS", length: 2 })
-  TRAN_TYPE: string
+  TRAN_TYPE!: string;
 
   @Column({ default: "C", length: 1 })
-  TRAN_DRCR: string
+  TRAN_DRCR!: string;
 
   @Column({ default: 1 })
-  TRAN_MODE: number
+  TRAN_MODE!: number;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  TRAN_AMOUNT: number
+  TRAN_AMOUNT!: number;
 
   @Column({ default: 1 })
-  TRAN_STATUS: number
+  TRAN_STATUS!: number;
 
   @Column({ default: "CH", length: 2 })
-  ENTRY_TYPE: string
+  ENTRY_TYPE!: string;
 
   @Column({ default: "AG", length: 2 })
-  AGENT_ACNOTYPE: string
+  AGENT_ACNOTYPE!: string;
 
   @Column()
-  AGENT_ACTYPE: number
+  AGENT_ACTYPE!: number;
 
   @Column()
-  AGENT_ACNO: number
+  AGENT_ACNO!: number;
 
   @Column({ length: 15 })
-  AGENT_BANKACNO: string
+  AGENT_BANKACNO!: string;
 
   @Column({ nullable: true })
-  CASHIER_CODE: string
+  CASHIER_CODE!: string;
 
   @Column()
-  USER_CODE: string
+  USER_CODE!: string;
 
   @Column()
-  OFFICER_CODE: string
+  OFFICER_CODE!: string;
 
   @Column({ type: 'date', nullable: true })
-  AUTO_VOUCHER_DATE: string
+  AUTO_VOUCHER_DATE!: string;
 
   @Column({ nullable: true })
-  AUTO_VOUCHER_NO: number
+  AUTO_VOUCHER_NO!: number;
 
   @Column()
-  CHART_NO: number
+  CHART_NO!: number;
 
   @Column({ nullable: true })
-  BRANCH_CODE: number;
+  BRANCH_CODE!: number;
 
-/* ✅ BRANCH RELATION (child side only) */
+  /* ✅ BRANCH RELATION (child side only) */
   @ManyToOne(() => OWNBRANCHMASTER)
   @JoinColumn({ name: 'BRANCHCODE' })
-  branch: OWNBRANCHMASTER;
+  branch!: OWNBRANCHMASTER;
 
 
- @ManyToOne(() => SCHEMAST)
-@JoinColumn({ name: 'SCHEMA_CODE' }) // or actual FK column
-scheme: SCHEMAST;
+  // ✅ Change this to use AGENT_ACTYPE which exists in your DB
+  @ManyToOne(() => SCHEMAST)
+  @JoinColumn({ name: 'AGENT_ACTYPE' })
+  scheme!: SCHEMAST;
 
-@ManyToOne(() => PGMASTER, pg => pg.pigmycharts)
-@JoinColumn({ name: 'AC_NO' })
-pgmaster: PGMASTER;
+  // ✅ Change this to use AGENT_ACNO which exists in your DB
+  @ManyToOne(() => PGMASTER, pg => pg.pigmycharts)
+  @JoinColumn({ name: 'AGENT_ACNO' })
+  pgmaster!: PGMASTER;
 
 
 

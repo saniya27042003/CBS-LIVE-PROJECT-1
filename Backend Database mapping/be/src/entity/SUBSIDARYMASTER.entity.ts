@@ -5,9 +5,9 @@ export class SUBSIDARYMASTER {
 
     @PrimaryGeneratedColumn()
     id: number;
-    
+
     @Column()
-    @Generated('increment')
+    // @Generated('increment')
     CODE: number
 
     @Column()

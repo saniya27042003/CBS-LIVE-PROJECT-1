@@ -18,8 +18,20 @@ export class AppService {
   connectServer(config: any) { return this.http.post(this.BASE_URL + 'connect-server', config); }
   connectClient(config: any) { return this.http.post(this.BASE_URL + 'connect-client', config); }
 
-  getServerTables() { return of(['IDMASTER', 'DPMASTER', 'LNMASTER', 'PGMASTER', 'SHMASTER', 'ACMASTER', 'BRANCHMASTER', 'CASTMASTER']); }
-  getClientTables() { return of(['IDMASTER', 'DPMASTER', 'LNMASTER', 'PGMASTER', 'SHMASTER', 'ACMASTER', 'BRANCHMASTER', 'CASTMASTER']); }
+  // 1. Fetches the list of tables you have written code for (SYSPARA, SCHEMAST, etc.)
+  getMigratableTables(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}migratable-tables`);
+  }
+
+  // 2. Fetches all physical tables currently in your Postgres database
+  getServerTables(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}server/tables`);
+  }
+
+  // 3. Fetches all physical tables currently in your Oracle database
+  getClientTables(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.BASE_URL}client/tables`);
+  }
 
   // ✅ RESTORED MISSING METHODS
   getChildTables(parentTable: string): Observable<any[]> {

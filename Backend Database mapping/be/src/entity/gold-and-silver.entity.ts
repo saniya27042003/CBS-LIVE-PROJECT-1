@@ -71,14 +71,14 @@ export class GOLDSILVER {
     @Column({ type: 'numeric', precision: 20, scale: 4, default: 0 })
     CLEAR_WEIGHT_GMS: number;
 
-    @Column({ type: 'numeric', precision: 7, scale: 2, default: 0 })
-    RATE: number;
+    @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
+    RATE: number; // Changed from 7 to 20
 
     @Column({ nullable: true })
     GOLD_BOX_NO: string;
 
-    @Column({ type: 'numeric', precision: 5, scale: 2, default: 0 })
-    MARGIN: number;
+    @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+    MARGIN: number; // Changed from 5 to 10 (just to be safe)
 
     @Column({ nullable: true })
     REMARK: string;

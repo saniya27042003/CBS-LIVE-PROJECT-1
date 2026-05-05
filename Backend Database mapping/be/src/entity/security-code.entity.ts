@@ -21,7 +21,7 @@ export class SECURITYMASTER {
   id!: number;
 
   @Column()
-  @Generated('increment')
+  // @Generated('increment')
   SECU_CODE!: number;
 
   @Column({ nullable: true })

@@ -20,7 +20,7 @@ export class INTRATETD {
   rate: TERMINTRATE[];
 
   @Column({ nullable: true })
-  ACNOTYPE: number;
+  ACNOTYPE: number | null;
 
   @ManyToOne(() => SCHEMAST)
   @JoinColumn({ name: "ACNOTYPE" })

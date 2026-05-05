@@ -22,8 +22,6 @@ export class DatabaseController {
   }
 
 
-
-
   // ---------------- CONNECT CLIENT (ANY DB) ----------------
   @Post('connect-client')
   async connectClient(@Body() config: ClientDBConfig) {

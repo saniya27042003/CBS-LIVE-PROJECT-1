@@ -15,7 +15,7 @@ export class BRANCHMASTER {
   @Column({ nullable: true })
   AC_NO: string;
 
-@OneToMany(() => ACMASTER, acc => acc.clearingBranch)
-clearingAccounts: ACMASTER[];
+  // @OneToMany(() => ACMASTER, acc => acc.clearingBranch)
+  // clearingAccounts: ACMASTER[];
 
 }

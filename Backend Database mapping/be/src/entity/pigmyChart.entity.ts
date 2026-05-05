@@ -6,40 +6,40 @@ import { PGMASTER } from './pgmaster.entity';
 export class PIGMYCHARTMASTER {
 
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  SERIAL_NO: number;
+  SERIAL_NO!: number;
 
   @Column({ default: 'PG', length: 2 })
-  TRAN_ACNOTYPE: string;
+  TRAN_ACNOTYPE!: string;
 
   @Column()
-  TRAN_ACTYPE: number;
+  TRAN_ACTYPE!: number;
 
   @Column()
-  TRAN_ACNO: number;
+  TRAN_ACNO!: number;
 
   @Column({ length: 15 })
-  TRAN_BANKACNO: string;
+  TRAN_BANKACNO!: string;
 
   @Column({ type: 'numeric', precision: 20, scale: 2, default: 0 })
-  TRAN_AMOUNT: number;
+  TRAN_AMOUNT!: number;
 
   @Column()
-  TRAN_GLACNO: number;
+  TRAN_GLACNO!: number;
 
   @Column({ nullable: true })
-  RECEIPT_NO: number;
+  RECEIPT_NO!: number;
 
   @Column({ nullable: true })
-  CHART_NO: number;
+  CHART_NO!: number;
 
   @Column()
-  PIGMYCHARTID: number;
+  PIGMYCHARTID!: number;
 
   @Column()
-  pigmyAccountID: number;
+  pigmyAccountID!: number;
 
   // ✅ FIX 1: NO inverse lambda
   // ✅ FIX 2: SINGLE object, not array
@@ -52,3 +52,5 @@ export class PIGMYCHARTMASTER {
   @JoinColumn({ name: 'pigmyAccountID' })
   account?: PGMASTER;
 }
+
+export { PIGMYCHART };

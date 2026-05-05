@@ -17,24 +17,20 @@
       </p>
     </div>
 
-    <div *ngFor="let tableName of selectedPrimaryTable" class="mb-3">
-      <h4 class="bg-gray-300 text-black font-semibold px-2 py-1 mt-4 mb-2">
-        Table: {{ tableName }}
+    <div *ngFor="let tableName of selectedPrimaryTable" class="mb-6 p-2 border-b border-gray-500 last:border-0">
+
+      <h4 class="font-semibold px-2 py-1 mt-4 mb-2 flex justify-between items-center"
+        [ngClass]="getMappingRows(tableName)[0]?.mapped ? 'bg-green-100 text-green-800' : 'bg-gray-300 text-black'">
+        <span>Table: {{ tableName }}</span>
+
+        <span *ngIf="getMappingRows(tableName)[0]?.mapped" class="text-xs font-bold">
+          ✓ MIGRATED
+        </span>
       </h4>
 
       <div class="overflow-x-auto border border-base-content/5 bg-base-100 mt-2 mb-2">
         <div *ngIf="getMappingRows(tableName).length > 0; else noMapping">
           <table class="table w-full text-center">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Row ID</th>
-                <th>Target Table</th>
-                <th>Client ID</th>
-                <th>Client Name</th>
-              </tr>
-            </thead>
-
             <tbody>
               <tr *ngFor="let map of getMappingRows(tableName); let i = index">
                 <td>{{ i + 1 }}</td>
@@ -43,9 +39,7 @@
                 <td>{{ map.clientId }}</td>
                 <td>{{ map.clientName }}</td>
               </tr>
-
             </tbody>
-
           </table>
         </div>
 
@@ -56,18 +50,14 @@
         </ng-template>
       </div>
 
-
     </div>
-
   </div>
   <div class="flex flex-col items-end mb-6">
 
-   <button
-  class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16"
-  (click)="saveMapping()"
-  [disabled]="isMigrating">
-  Save Mapping
-</button>
+    <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-none btn-md mt-2 me-16" (click)="saveMapping()"
+      [disabled]="isMigrating">
+      Save Mapping
+    </button>
 
 
 
@@ -83,52 +73,50 @@
 
   </div>
   <!-- ================= LOADING OVERLAY ================= -->
-<!-- ================= MIGRATION MODAL ================= -->
-<div *ngIf="isMigrating || showResultModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <!-- ================= MIGRATION MODAL ================= -->
+  <div *ngIf="isMigrating || showResultModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
 
-  <div class="bg-gray-800 border border-gray-600 rounded-xl p-8 w-[420px]
+    <div class="bg-gray-800 border border-gray-600 rounded-xl p-8 w-[420px]
               flex flex-col items-center shadow-2xl text-center">
 
-    <ng-container *ngIf="isMigrating">
+      <ng-container *ngIf="isMigrating">
 
-      <span class="loading loading-spinner loading-lg text-blue-500 mb-4"></span>
+        <span class="loading loading-spinner loading-lg text-blue-500 mb-4"></span>
 
-      <h3 class="text-lg font-semibold text-white mb-1">
-        Migrating Data
-      </h3>
+        <h3 class="text-lg font-semibold text-white mb-1">
+          Migrating Data
+        </h3>
 
-      <p class="text-gray-300 text-sm">
-        Please wait while tables are being migrated.<br />
-        Do not refresh or navigate away.
-      </p>
+        <p class="text-gray-300 text-sm">
+          Please wait while tables are being migrated.<br />
+          Do not refresh or navigate away.
+        </p>
 
-    </ng-container>
+      </ng-container>
 
-    <ng-container *ngIf="!isMigrating && showResultModal">
+      <ng-container *ngIf="!isMigrating && showResultModal">
 
-      <span class="text-4xl mb-3"
-            [ngClass]="migrationHasErrors ? 'text-red-400' : 'text-green-400'">
-        {{ migrationHasErrors ?  '✕':'✓' }}
-      </span>
+        <span class="text-4xl mb-3" [ngClass]="migrationHasErrors ? 'text-red-400' : 'text-green-400'">
+          {{ migrationHasErrors ? '✕':'✓' }}
+        </span>
 
-      <h3 class="text-lg font-semibold text-white mb-3">
-        Migration Result
-      </h3>
+        <h3 class="text-lg font-semibold text-white mb-3">
+          Migration Result
+        </h3>
 
-      <pre class="text-sm text-gray-200 bg-gray-900 p-3 rounded-md w-full max-h-48 overflow-auto">
+        <pre class="text-sm text-gray-200 bg-gray-900 p-3 rounded-md w-full max-h-48 overflow-auto">
 {{ migrationResultMessage }}
       </pre>
 
-      <button
-        class="btn btn-sm mt-4 bg-blue-600 hover:bg-blue-700 text-white border-none"
-        (click)="showResultModal = false">
-        OK
-      </button>
+        <button class="btn btn-sm mt-4 bg-blue-600 hover:bg-blue-700 text-white border-none"
+          (click)="showResultModal = false">
+          OK
+        </button>
 
-    </ng-container>
+      </ng-container>
 
+    </div>
   </div>
-</div>
 
 </div>

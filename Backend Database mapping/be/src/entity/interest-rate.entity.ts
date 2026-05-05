@@ -9,7 +9,7 @@ export class INTRATE {
 
   @Column()
   @Generated('increment')
-  SERIAL_NO :number;
+  SERIAL_NO: number;
 
   @Column({ default: 0 })
   MONTHS: string
@@ -23,8 +23,8 @@ export class INTRATE {
   @Column({ unique: false })
   idRateID: number
   @ManyToOne(() => INTRATEPATSCHEMES, (idRate) => idRate.rate, {
-      cascade: true
+    cascade: true
   })
   @JoinColumn({ name: "idRateID" })
-  idRate: INTRATEPATSCHEMES[]; 
+  idRate: INTRATEPATSCHEMES;
 }

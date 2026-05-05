@@ -48,4 +48,6 @@ export class LNACINTRATE {
     })
     @JoinColumn({ name: "lnmasterID" })
     termLoan!: LNMASTER[];
+    LNMASTERID!: number;
+    status!: string;
 }

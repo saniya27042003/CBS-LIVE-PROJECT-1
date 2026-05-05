@@ -196,8 +196,11 @@ export class RENEWALHISTORY {
     @Column({ nullable: true, default: 1 })
     status: number
 
+    // @ManyToOne(() => SCHEMAST)
+    // @JoinColumn({ name: 'SCHEMA_CODE' }) // or correct FK column
+    // scheme: SCHEMAST;
     @ManyToOne(() => SCHEMAST)
-    @JoinColumn({ name: 'SCHEMA_CODE' }) // or correct FK column
+    @JoinColumn({ name: 'AC_TYPE' })
     scheme: SCHEMAST;
 
 }

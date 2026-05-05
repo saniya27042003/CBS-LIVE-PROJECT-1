@@ -599,7 +599,8 @@ export class TablesComponent implements OnInit, OnDestroy {
   /* ================= PRIMARY ================= */
 
   getPrimaryTables() {
-    this.appService.getServerTables().subscribe(res => {
+    // ✅ Make sure it calls getMigratableTables() now
+    this.appService.getMigratableTables().subscribe(res => {
       this.dropdownItemsPrimary = res || [];
     });
   }
@@ -940,10 +941,10 @@ export class TablesComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (!this.includeChildTables) {
-      this.clearChildOnlyState();
-      this.clearClientChildTablesOnly();
-    }
+    // if (!this.includeChildTables) {
+    //   this.clearChildOnlyState();
+    //   this.clearClientChildTablesOnly();
+    // }
 
 
 
@@ -1027,3 +1028,9 @@ export class TablesComponent implements OnInit, OnDestroy {
   }
 
 }
+
+
+
+
+
+

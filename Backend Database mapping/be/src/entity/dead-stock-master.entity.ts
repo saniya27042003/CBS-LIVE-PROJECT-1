@@ -12,7 +12,7 @@ export class ITEMMASTER {
   ITEM_TYPE: string;
 
   @Column()
-  @Generated('increment')
+  // @Generated('increment')
   ITEM_CODE: number;
 
   @Column()
@@ -66,8 +66,8 @@ export class ITEMMASTER {
   @Column()
   BRANCH_CODE: number;
 
- @ManyToOne(() => OWNBRANCHMASTER)
-@JoinColumn({ name: 'BRANCH_CODE' })
-branch: OWNBRANCHMASTER;
+  @ManyToOne(() => OWNBRANCHMASTER)
+  @JoinColumn({ name: 'BRANCH_CODE' })
+  branch: OWNBRANCHMASTER;
 
 }

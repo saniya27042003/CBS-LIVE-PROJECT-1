@@ -11,7 +11,7 @@ export class BANKMASTER {
   id: number;
 
   @Column()
-  @Generated('increment')
+  // @Generated('increment')
   BANK_CODE: number;
 
 

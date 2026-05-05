@@ -2,6 +2,8 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 't
 import { CITYMASTER } from './city-master.entity';
 import { DPMASTER } from './dpmaster.entity';
 import { SHMASTER } from './share-master.entity';
+import { PGMASTER } from './pgmaster.entity'; // 1. Import PGMASTER
+
 @Entity()
 export class NOMINEELINK {
 
@@ -44,6 +46,10 @@ export class NOMINEELINK {
   @Column({ nullable: true })
   DPMasterID!: number;
 
+  // 2. Add the column name exactly as it appears in your DB (image_11d956.png)
+  @Column({ nullable: true })
+  pigmyAID!: number; 
+
   @Column({ nullable: true })
   AC_NCTCODE!: number;
 
@@ -58,5 +64,10 @@ export class NOMINEELINK {
   @ManyToOne(() => DPMASTER, { nullable: true })
   @JoinColumn({ name: 'DPMasterID' })
   dpmaster?: DPMASTER;
+
+  // 3. Add the relationship mapping for Pigmy accounts
+  @ManyToOne(() => PGMASTER, { nullable: true })
+  @JoinColumn({ name: 'pigmyAID' })
+  pgmaster?: PGMASTER;
 
 }

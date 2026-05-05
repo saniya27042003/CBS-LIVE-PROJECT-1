@@ -11,17 +11,18 @@ import { OCCUPATIONMASTER } from './occupation-master.entity';
 //import { CASTMASTER } from './cast-master.entity'
 //import { OCCUPATIONMASTER } from './ocuupation-master.entity'
 //import { RISKCATEGORYMASTER } from './risk-category.entity'
-@Entity({name:'idmaster'})
+@Entity({ name: 'idmaster' })
 @Unique(['AC_NO'])
 @Index("NDXIDMASTER", ["BRANCH_CODE", "AC_NO"])
 export class IDMASTER {
+    [x: string]: any;
 
-   @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn()
     id!: number;
 
 
     @Column({ name: 'AC_NO', type: 'int' })
-    AC_NO!: number;  
+    AC_NO!: number;
 
 
 
@@ -47,17 +48,17 @@ export class IDMASTER {
     AC_NAME!: string;
 
     // @Column({ default: 0 })
-   @Column({ type: 'int', nullable: true })
-AC_OCODE!: number | null;
+    @Column({ type: 'int', nullable: true })
+    AC_OCODE!: number | null;
 
     @Column({ nullable: true, length: 14 })
     AC_ADHARNO!: string;
 
     // @Column({ default: 0 })
-   @Column({ type: 'int', nullable: true })
-AC_RISKCATG!: number | null;
+    @Column({ type: 'int', nullable: true })
+    AC_RISKCATG!: number | null;
 
-   @Column({ type: 'varchar', nullable: true })
+    @Column({ type: 'varchar', nullable: true })
     AC_BIRTH_DT!: string | null;
 
     @Column({ nullable: true })
@@ -144,9 +145,9 @@ AC_RISKCATG!: number | null;
     // pgmaster: PGMASTER[];
 
     // @Column({ default: 0 })
-   
-@Column({ type: 'int', nullable: true })
-AC_CAST!: number | null;
+
+    @Column({ type: 'int', nullable: true })
+    AC_CAST!: number | null;
 
     @Column({ nullable: true })
     AC_TITLE_REG!: string;
@@ -166,9 +167,9 @@ AC_CAST!: number | null;
     @Column({ nullable: true })
     ORA_BRANCH!: number;
 
-//    @ManyToOne(() => CASTMASTER)
-// @JoinColumn({ name: "AC_CAST" })
-// castMaster: CASTMASTER;
+    //    @ManyToOne(() => CASTMASTER)
+    // @JoinColumn({ name: "AC_CAST" })
+    // castMaster: CASTMASTER;
 
 
 

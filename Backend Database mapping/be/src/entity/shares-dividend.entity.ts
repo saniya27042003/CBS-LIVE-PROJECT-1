@@ -86,9 +86,18 @@ export class HISTORYDIVIDEND {
   @Column({ nullable: true })
   BRANCH_CODE: number;
 
- 
-  
-  @OneToOne(() => SHMASTER, sh => sh.shareDividend)
-  @JoinColumn({ name: 'SH_ID' })   // FK column in HISTORYDIVIDEND table
-  shMaster: SHMASTER;
+
+
+  // @OneToOne(() => SHMASTER, sh => sh.shareDividend)
+  // @JoinColumn({ name: 'SH_ID' })   // FK column in HISTORYDIVIDEND table
+  // shMaster: SHMASTER;
+
+  @Column({ nullable: true })
+  sharesID: number
+
+  @OneToOne(() => SHMASTER, (sharesId) => sharesId.shareDividend, {
+    cascade: true
+  })
+  @JoinColumn({ name: "sharesID" })
+  sharesId: SHMASTER;
 }

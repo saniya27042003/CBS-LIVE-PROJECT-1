@@ -47,9 +47,21 @@ export class DatabaseService {
   }
 
   // ---------------- TARGET POSTGRES DB ----------------
+  // ---------------- TARGET POSTGRES DB ----------------
   async getServerDataSource(config: PostgresConfig): Promise<DataSource> {
+    // Check if we have an existing connection object
     if (this.serverDB) {
-      await this.serverDB.destroy();
+      // ONLY destroy if it actually successfully connected before
+      if (this.serverDB.isInitialized) {
+        try {
+          await this.serverDB.destroy();
+          this.logger.log('Previous active connection closed.');
+        } catch (err) {
+          this.logger.error(`Error: ${err.message}`);
+        }
+      }
+      // Always null it out so we start fresh with the new config/IP
+      this.serverDB = null;
     }
 
     this.serverDB = new DataSource({
@@ -63,9 +75,16 @@ export class DatabaseService {
       synchronize: false,
     });
 
-    await this.serverDB.initialize();
-    this.logger.log(`Connected to PostgreSQL: ${config.database}`);
-    return this.serverDB;
+    try {
+      await this.serverDB.initialize();
+      this.logger.log(`Connected to PostgreSQL: ${config.database}`);
+      return this.serverDB;
+    } catch (error) {
+      // If initialization fails (like a wrong IP), clear the reference 
+      // so the next attempt doesn't try to destroy a dead connection.
+      this.serverDB = null;
+      throw error;
+    }
   }
 
   // ---------------- METADATA DISCOVERY (THE HANDSHAKE) ----------------
@@ -77,7 +96,7 @@ export class DatabaseService {
       port: Number(config.port),
       username: config.username,
       password: config.password,
-      database: 'postgres',
+      database: 'postgres', // Default management DB
       synchronize: false,
     });
 
@@ -86,10 +105,16 @@ export class DatabaseService {
       const result = await tempDS.query(
         `SELECT datname as name FROM pg_database WHERE datistemplate = false AND datname != 'postgres'`
       );
+
+      // Clean up safely
       await tempDS.destroy();
       return result.map((db: any) => db.name);
     } catch (error) {
-      if (tempDS.isInitialized) await tempDS.destroy();
+      // Safety check here too to prevent the crash you were seeing earlier
+      if (tempDS && tempDS.isInitialized) {
+        await tempDS.destroy();
+      }
+     this.logger.error(`Handshake failed: ${error.message}`);
       throw error;
     }
   }
@@ -144,7 +169,7 @@ export class DatabaseService {
 
     switch (config.type) {
       case 'oracle':
-        this.logger.log(`Connecting to Oracle...`);
+        { this.logger.log(`Connecting to Oracle...`);
         const identifier = config.serviceName || config.database;
         if (!identifier) {
           throw new Error("Oracle connection failed: No Database Name or Service Name provided.");
@@ -154,7 +179,7 @@ export class DatabaseService {
           password: config.password,
           connectString: `${config.host!}:${config.port!}/${identifier}`,
         });
-        break;
+        break; }
 
       case 'mysql':
         this.logger.log(`Connecting to MySQL...`);
@@ -180,11 +205,11 @@ export class DatabaseService {
         break;
 
       case 'mongodb':
-        this.logger.log(`Connecting to MongoDB...`);
+        { this.logger.log(`Connecting to MongoDB...`);
         const client = new MongoClient(config.url!);
         await client.connect();
         conn = client.db(config.database);
-        break;
+        break; }
 
       default:
         throw new Error(`Unsupported DB type: ${config.type}`);
