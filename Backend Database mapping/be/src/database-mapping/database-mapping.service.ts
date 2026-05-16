@@ -689,6 +689,7 @@ export class DatabaseMappingService {
   }
 
   // ---------------- IDMASTER MIGRATION ----------------
+ // ---------------- IDMASTER MIGRATION ----------------
   async migrateIDMASTER() {
     if (!this.clientConn) throw new Error('Client DB not connected');
     if (!this.serverDB) throw new Error('Server DB not connected');
@@ -806,7 +807,7 @@ export class DatabaseMappingService {
         newObj['F_NAME_REG'] = namearrReg[1] ?? null;
         newObj['M_NAME_REG'] = namearrReg[2] ?? null;
 
-        newObj['AC_NAME_REG'] = marathiName || '';
+        newObj['AC_NAME_REG'] = marathiName;
 
 
         newObj['AC_MEMBNO'] =
@@ -1374,9 +1375,9 @@ export class DatabaseMappingService {
             // Use quotes to preserve the exact case for Postgres
             "DPMasterID": isPG ? null : parentId,
             "PGMasterID": isPG ? parentId : null,
-            "AC_NNAME": n.AC_NNAME?.replace("\x00", "") || 'Unknown',
-            "AC_NRELA": n.AC_NRELA?.replace("\x00", "") || '',
-            "AC_NDATE": n.AC_NDATE ? moment(n.AC_NDATE).format('DD/MM/YYYY') : '',
+            "AC_NNAME": this.transformValue(n.AC_NNAME),
+            "AC_NRELA": this.transformValue(n.AC_NRELA),
+            "AC_NDATE": this.transformValue(n.AC_NDATE),
             "AGE": n.AGE,
             "AC_NO": 100000 + Number(n.AC_NO),
             "status": '1',
@@ -1397,9 +1398,11 @@ export class DatabaseMappingService {
           await queryRunner.manager.insert('atteroneylink', {
             "DPMasterID": isPG ? null : parentId,
             "PGMasterID": isPG ? parentId : null,
-            "ATTERONEY_NAME": a.ATTERONEY_NAME?.replace("\x00", "") || '',
+            "ATTERONEY_NAME": this.transformValue(a.ATTERONEY_NAME),
+
             "DATE_APPOINTED": a.DATE_APPOINTED ? moment(a.DATE_APPOINTED).format('DD/MM/YYYY') : '',
             "DATE_EXPIRY": a.DATE_EXPIRY ? moment(a.DATE_EXPIRY).format('DD/MM/YYYY') : '',
+            
             "status": '1',
             "BRANCH_CODE": branchInternalId
           });
@@ -1418,7 +1421,7 @@ export class DatabaseMappingService {
           await queryRunner.manager.insert('joint_ac_link', {
             "DPMasterID": isPG ? null : parentId,
             "PGMasterID": isPG ? parentId : null,
-            "JOINT_ACNAME": j.JOINT_ACNAME?.replace("\x00", "") || '',
+            "JOINT_ACNAME": this.transformValue(j.JOINT_ACNAME),
             "OPERATOR": Number(j.OPERATOR) === 0 ? 'No' : 'Yes',
             "status": '1',
             "BRANCH_CODE": branchInternalId
@@ -1442,6 +1445,7 @@ export class DatabaseMappingService {
 
 
   //-------------------------------------LNMASTER LOGIC ---------------------------------
+
   async migrateLNMASTERWithChild(): Promise<{ success: boolean; successCount: number; skipCount: number }> {
     if (!this.clientConn || !this.serverDB) {
       throw new Error('Databases not connected.');
@@ -1745,7 +1749,7 @@ export class DatabaseMappingService {
 
   //============================PGMASTER MIGRATION ===================================
 
-  async migratePGMASTERWithChildren() {
+async migratePGMASTERWithChildren() {
     if (!this.clientConn || !this.serverDB) throw new Error('Databases not connected');
 
     if (this.offset === 0) {
@@ -2024,6 +2028,7 @@ export class DatabaseMappingService {
     }
   }
 
+
   // ---------------- SHMASTER WITH NOMINEE LINK ----------------
 
   async migrateSHMASTERWithChild() {
@@ -2038,7 +2043,6 @@ export class DatabaseMappingService {
     //const bankCode = String(syspara[0]?.BANK_CODE || '0').padStart(3, '0');
 
     const bankCode = Number(syspara[0]?.BANK_CODE || 0);
-
 
     const branches = await queryRunner.manager.query(`SELECT id, "CODE" FROM ownbranchmaster`);
     const branchMap = new Map(branches.map(b => [Number(b.CODE), b.id]));
@@ -2233,7 +2237,6 @@ export class DatabaseMappingService {
     }
   }
 
-
   // ---------------- SCHEMAST MIGRATION ----------------
   async migrateSCHEMAST() {
     if (!this.clientConn || !this.serverDB) throw new Error('DB not connected');
@@ -2297,7 +2300,7 @@ export class DatabaseMappingService {
           IS_INTUPTODATE: ele.IS_INTUPTODATE == 0 ? '0' : '1',
           IS_NO_POST_INT_AFT_OD: ele.IS_NO_POST_INT_AFT_OD == 0 ? '0' : '1',
 
-          // INTEREST
+          // INTEREST   
           INTEREST_METHOD: ele.INTEREST_METHOD,
           MIN_INT_LIMIT: ele.MIN_INT_LIMIT,
           S_INTCALC_METHOD: ele.S_INTCALC_METHOD,
@@ -2509,6 +2512,7 @@ export class DatabaseMappingService {
 
 
   // ---------------- SYSPARA MIGRATION ----------------
+  
   async migrateSYSPARA() {
 
     if (!this.clientConn) throw new Error('Client DB not connected');

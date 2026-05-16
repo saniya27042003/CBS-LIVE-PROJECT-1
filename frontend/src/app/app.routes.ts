@@ -5,6 +5,7 @@ import { LayoutComponent } from './layout/layout.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { TablesComponent } from './components/tables/tables.component';
 import { MappingTableComponent } from './components/mapping-table/mapping-table.component';
+import { DeleteSequenceComponent } from './components/delete-sequence/delete-sequence.component';
 
 export const routes: Routes = [
 
@@ -27,7 +28,8 @@ export const routes: Routes = [
       { path: 'database', component: DatabaseComponent },
       { path: 'table', component: TablesComponent },
       { path: 'setting', component: SettingsComponent },
-      { path: 'mapping-table', component: MappingTableComponent }
+      { path: 'mapping-table', component: MappingTableComponent },
+      { path: 'delete-sequence', component: DeleteSequenceComponent }
     ]
   }
 ];

@@ -1,0 +1,242 @@
+<div class="cleanup-container">
+
+  <!-- HEADER -->
+  <div class="header-section">
+
+    <h2>Delete & Sequence Tables</h2>
+
+
+
+  </div>
+
+  <!-- DATABASE FORM -->
+  <form [formGroup]="dbForm" class="db-form">
+
+    <input
+      type="text"
+      placeholder="Host"
+      formControlName="host"
+    />
+
+    <input
+      type="number"
+      placeholder="Port"
+      formControlName="port"
+    />
+
+    <input
+      type="text"
+      placeholder="Username"
+      formControlName="username"
+    />
+
+    <input
+      type="password"
+      placeholder="Password"
+      formControlName="password"
+    />
+
+    <input
+      type="text"
+      placeholder="Database Name"
+      formControlName="database"
+      class="full-width"
+    />
+
+    <button
+      type="button"
+      class="btn-connect"
+      (click)="connectDatabase()"
+      [disabled]="isLoading">
+
+      <span *ngIf="!isLoading">
+        Connect PostgreSQL
+      </span>
+
+      <span *ngIf="isLoading">
+        Connecting...
+      </span>
+
+    </button>
+
+  </form>
+
+  <!-- STATUS -->
+ <!-- STATUS -->
+<div class="status-strip">
+
+  <div
+    class="status-indicator"
+    [class.connected]="serverConnected"
+    [class.connecting]="isLoading">
+
+    <span class="dot"></span>
+
+    <strong
+  class="required-text"
+  *ngIf="!serverConnected && !isLoading">
+
+  Not Connected
+
+</strong>
+
+<strong
+  class="connecting-text"
+  *ngIf="isLoading">
+
+  Connecting...
+
+</strong>
+
+<strong
+  class="connected-text"
+  *ngIf="serverConnected && !isLoading">
+
+  Connected
+
+</strong>
+
+    <!-- REQUIRED -->
+    <strong
+      class="required-text"
+      *ngIf="!serverConnected && !isLoading">
+
+      Required
+
+    </strong>
+
+    <!-- CONNECTING -->
+    <strong
+      class="connecting-text"
+      *ngIf="isLoading">
+
+      Connecting...
+
+    </strong>
+
+    <!-- CONNECTED -->
+    <strong
+      class="connected-text"
+      *ngIf="serverConnected && !isLoading">
+
+      Connected
+
+    </strong>
+
+  </div>
+
+  <button
+    type="button"
+    class="btn-refresh"
+    (click)="checkDatabaseStatus()">
+
+    Refresh
+
+  </button>
+
+</div>
+
+  <!-- DROPZONE -->
+  <div
+    class="dropzone-area"
+    [class.file-loaded]="selectedFile"
+    (drop)="onFileDropped($event)"
+    (dragover)="onDragOver($event)">
+
+    <!-- EMPTY -->
+    <div *ngIf="!selectedFile" class="prompt-content">
+
+      <div class="upload-icon">
+        📂
+      </div>
+
+      <h3>Upload CSV File</h3>
+
+      <p class="upload-text">
+        Drag & drop file here or browse manually
+      </p>
+
+      <label class="file-label">
+
+        Choose File
+
+        <input
+          type="file"
+          hidden
+          (change)="onFileSelected($event)"
+          accept=".csv,.xlsx"
+        />
+
+      </label>
+
+      <span class="format-note">
+        Supports .csv and .xlsx files
+      </span>
+
+    </div>
+
+    <!-- FILE SELECTED -->
+    <div *ngIf="selectedFile" class="file-details">
+
+      <div class="file-left">
+
+        <span class="file-icon">📄</span>
+
+        <div class="meta">
+
+          <p class="name">
+            {{ selectedFile.name }}
+          </p>
+
+          <p class="size">
+            {{ (selectedFile.size / 1024).toFixed(2) }} KB
+          </p>
+
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        class="btn-clear"
+        (click)="selectedFile = null">
+
+        Remove
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- EXECUTE -->
+  <div class="action-bar">
+
+    <button
+      class="btn-execute"
+      [disabled]="!selectedFile || !serverConnected || isLoading"
+      (click)="executeDeleteSequence()">
+
+      <span *ngIf="!isLoading">
+        Execute Delete
+      </span>
+
+      <span *ngIf="isLoading">
+        Processing...
+      </span>
+
+    </button>
+
+  </div>
+
+  <!-- ALERT -->
+  <div
+    *ngIf="feedbackMessage"
+    class="alert-banner"
+    [ngClass]="feedbackType">
+
+    {{ feedbackMessage }}
+
+  </div>
+
+</div>

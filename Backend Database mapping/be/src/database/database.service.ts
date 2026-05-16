@@ -29,6 +29,10 @@ export interface PostgresConfig {
   database: string;
 }
 
+interface TableDependency {
+  child_table: string;
+  level: number;
+}
 @Injectable()
 export class DatabaseService {
   private readonly logger = new Logger(DatabaseService.name);
@@ -226,4 +230,165 @@ export class DatabaseService {
       this.logger.log('PostgreSQL connection closed');
     }
   }
+
+
+
+
+/**
+ * Recursively deletes data starting from child tables up to the base table
+ * and resets sequences for all affected tables.
+ */
+
+/**
+   * RECURSIVE DELETE LOGIC
+   */
+ async deleteTableRecursively(tableName: string): Promise<void> {
+
+  const ds = this.getServerDataSourceInstance();
+
+  if (!ds) {
+    throw new Error('PostgreSQL connection not established');
+  }
+
+  const queryRunner = ds.createQueryRunner();
+
+  await queryRunner.connect();
+
+  await queryRunner.startTransaction();
+
+  try {
+
+    // ✅ CHECK TABLE EXISTS
+    const exists = await queryRunner.query(
+      `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = $1
+      )
+      `,
+      [tableName]
+    );
+
+    if (!exists[0].exists) {
+      throw new Error(`Table "${tableName}" does not exist`);
+    }
+
+    this.logger.log(`Finding dependencies for: ${tableName}`);
+
+    // ✅ FIND DEPENDENCIES
+    const dependencyTree = await queryRunner.query(`
+
+WITH RECURSIVE fk_tree AS (
+
+    SELECT
+        ccu.table_name AS parent_table,
+        tc.table_name AS child_table,
+        1 AS level,
+        ARRAY[tc.table_name] AS visited
+
+    FROM information_schema.table_constraints tc
+
+    JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+
+    JOIN information_schema.constraint_column_usage ccu
+      ON ccu.constraint_name = tc.constraint_name
+
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+      AND ccu.table_name = $1
+
+    UNION ALL
+
+    SELECT
+        ccu.table_name,
+        tc.table_name,
+        ft.level + 1,
+        visited || tc.table_name
+
+    FROM information_schema.table_constraints tc
+
+    JOIN information_schema.key_column_usage kcu
+      ON tc.constraint_name = kcu.constraint_name
+
+    JOIN information_schema.constraint_column_usage ccu
+      ON ccu.constraint_name = tc.constraint_name
+
+    JOIN fk_tree ft
+      ON ccu.table_name = ft.child_table
+
+    WHERE tc.constraint_type = 'FOREIGN KEY'
+
+      AND NOT tc.table_name = ANY(ft.visited)
+)
+
+SELECT DISTINCT child_table, level
+FROM fk_tree
+ORDER BY level DESC;
+
+`, [tableName]) as TableDependency[];
+
+this.logger.log(
+  `Dependencies found: ${dependencyTree.length}`
+);
+
+    // ✅ DELETE CHILD TABLES FIRST
+   const processed = new Set<string>();
+
+for (const row of dependencyTree) {
+
+  if (processed.has(row.child_table)) {
+    continue;
+  }
+
+  processed.add(row.child_table);
+
+  await this.clearTableAndResetSeq(
+    queryRunner,
+    row.child_table
+  );
+}
+
+    // ✅ DELETE MAIN TABLE
+    await this.clearTableAndResetSeq(
+      queryRunner,
+      tableName
+    );
+
+    // ✅ COMMIT
+    await queryRunner.commitTransaction();
+
+    this.logger.log(
+  `Transaction committed for ${tableName}`
+);
+
+  } catch (error) {
+
+    // ❌ ROLLBACK IF FAILURE
+    await queryRunner.rollbackTransaction();
+
+    this.logger.error(
+      `Recursive delete failed for ${tableName}: ${error.message}`
+    );
+
+    throw error;
+
+  } finally {
+
+    await queryRunner.release();
+  }
+}
+
+  private async clearTableAndResetSeq(
+  queryRunner: any,
+  table: string
+): Promise<void> {
+
+  this.logger.log(`Cleaning table: ${table}`);
+
+  await queryRunner.query(
+    `TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`
+  );
+}
 }

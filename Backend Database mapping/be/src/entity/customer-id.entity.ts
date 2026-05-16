@@ -110,6 +110,9 @@ export class IDMASTER {
     @Column({ nullable: true })
     BRANCH_CODE!: number;
 
+    @Column({ nullable: true })
+    AC_NAME_REG!: string;
+
     // @OneToMany(() => CUSTOMERADDRESS, custAddress => custAddress.idmaster, {
     //     cascade: ["insert", "update"]
     // })

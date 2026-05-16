@@ -173,29 +173,27 @@ export class DatabaseComponent implements OnInit {
   // =========================
   // ✅ LOAD SERVER DATABASE LIST (Correct Discovery Logic)
   // =========================
+ // =========================
+  //  LOAD SERVER DATABASE LIST
+  // =========================
   onOpenDatabaseDropdown() {
-    // Only fetch if we have credentials and haven't loaded them yet
     if (this.primaryForm.invalid) {
       this.showMessage('Enter Host, Port, Username, and Password first.', 'error');
       return;
     }
-
-    // Optional: Avoid re-fetching if the list is already populated
     if (this.databaseList.length > 0) return;
 
     const payload = this.primaryForm.value;
     this.loadingDatabases = true;
 
-    // ✅ Hit the specialized DISCOVERY endpoint
+    //  CHANGE THIS PATH to match your structural db controller prefix
     this.http.post<string[]>(
-      'http://localhost:3000/database-mapping/server/databases',
+      'http://localhost:3000/db/server/databases', // 🌟 Changed from /database-mapping/...
       payload
     ).subscribe({
       next: (res) => {
         this.loadingDatabases = false;
-        // The backend returns an array of strings like ["postgres", "nirmiti", "test"]
         this.databaseList = res;
-
         if (this.databaseList.length === 0) {
           this.showMessage('No databases found on this server.', 'error');
         }
@@ -209,31 +207,24 @@ export class DatabaseComponent implements OnInit {
   }
 
   // =========================
-  // ✅ CONNECT BUTTON
+  //  CONNECT BUTTON
   // =========================
   onOkClick() {
-
-    // ✅ 1) Validate PRIMARY (SERVER)
     if (this.primaryForm.invalid) {
       this.showMessage('Fill ALL Primary (Server) credentials.', 'error');
       return;
     }
-
     if (!this.selectedDatabase) {
       this.showMessage('Please select a Source (server) database.', 'error');
       return;
     }
-
-    // ✅ 2) Validate CLIENT
     if (this.clientForm.invalid) {
       this.showMessage('Fill ALL Client database credentials.', 'error');
       return;
     }
 
-    // ✅ START LOADING
     this.isConnecting = true;
 
-    // ✅ 3) CONNECT SERVER
     const primaryConfig = {
       type: 'postgres',
       host: this.primaryForm.value.host,
@@ -243,19 +234,18 @@ export class DatabaseComponent implements OnInit {
       database: this.selectedDatabase
     };
 
+    //  CHANGE THIS PATH
     this.http.post(
-      'http://localhost:3000/database-mapping/connect-server',
+      'http://localhost:3000/db/connect-server', // 🌟 Changed from /database-mapping/...
       primaryConfig
     ).subscribe({
       next: (res: any) => {
-
         if (!res?.success) {
-          this.isConnecting = false; // Stop loading
+          this.isConnecting = false;
           this.showMessage('Server connection failed', 'error');
           return;
         }
 
-        // ✅ 4) CONNECT CLIENT
         const clientConfig: ClientDbConfig = {
           type: this.clientForm.value.type,
           host: this.clientForm.value.host,
@@ -264,46 +254,35 @@ export class DatabaseComponent implements OnInit {
           password: this.clientForm.value.password,
         };
 
-        // 🔁 SMART MAPPING
         if (this.clientForm.value.type === 'oracle') {
-          clientConfig.serviceName = this.clientForm.value.database; // XEPDB1
+          clientConfig.serviceName = this.clientForm.value.database;
         } else {
-          clientConfig.database = this.clientForm.value.database; // postgres, mysql, mongo, mssql
+          clientConfig.database = this.clientForm.value.database;
         }
 
-
-        console.log('✅ CLIENT CONFIG SENT:', clientConfig);
-
+        //  CHANGE THIS PATH
         this.http.post(
-          'http://localhost:3000/database-mapping/connect-client',
+          'http://localhost:3000/db/connect-client', // 🌟 Changed from /database-mapping/...
           clientConfig
         ).subscribe({
           next: (res: any) => {
-            this.isConnecting = false; // Stop loading
-
+            this.isConnecting = false;
             if (res.success) {
               this.navigateAfterSuccess = true;
-              this.showMessage(
-                'Both Server & Client Databases Connected Successfully!',
-                'success'
-              );
+              this.showMessage('Both Server & Client Databases Connected Successfully!', 'success');
             } else {
-              this.showMessage(
-                'Client connection failed: ' + res.message,
-                'error'
-              );
+              this.showMessage('Client connection failed: ' + res.message, 'error');
             }
           },
           error: (err) => {
-            this.isConnecting = false; // Stop loading
+            this.isConnecting = false;
             console.error('Client connect error:', err);
             this.showMessage('Failed to connect Client database.', 'error');
           }
         });
-
       },
       error: (err) => {
-        this.isConnecting = false; // Stop loading
+        this.isConnecting = false;
         console.error('Server connect error:', err);
         this.showMessage('Failed to connect Server (source) database.', 'error');
       }
@@ -363,4 +342,9 @@ export class DatabaseComponent implements OnInit {
     ];
     return lightThemes.includes(this.currentTheme);
   }
+
+
+
+
+
 }

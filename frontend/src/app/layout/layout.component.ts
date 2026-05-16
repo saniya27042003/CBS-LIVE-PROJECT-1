@@ -17,7 +17,7 @@ export class LayoutComponent {
   class1 = 'basis-2/28';
   class2 = 'basis-26/28';
 
-  
+
 
   toggle() {
     if (this.class1 === 'basis-2/28') {
@@ -29,7 +29,7 @@ export class LayoutComponent {
       this.class2 = 'basis-26/28';
     }
   }
-  
+
 
   expanded: boolean = false;
 
@@ -41,7 +41,9 @@ export class LayoutComponent {
   menuItems = [
     { icon: 'database', label: 'database', path: 'database' },
     { icon: 'table', label: 'Tables', path: 'table' },
+    { icon: 'upload', label: 'Delete & Sequence', path: 'delete-sequence' },
     { icon: 'cog', label: 'Settings', path: 'setting' },
+
 
   ];
  constructor(private router: Router) {

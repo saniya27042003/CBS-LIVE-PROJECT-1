@@ -1,38 +1,28 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { Logger } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-dotenv.config();
 
 async function bootstrap() {
+  dotenv.config();
+  const logger = new Logger('Bootstrap');
+  
   const app = await NestFactory.create(AppModule);
 
+  // ✅ Fix: Proper CORS configuration
+  // If using credentials: true, origin cannot be '*'
   app.enableCors({
-    allowedHeaders: '*',
-    origin: '*',
+    origin: ['http://localhost:4200'], // Add your frontend URLs here
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
-  //await app.listen(3000);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`Backend running on http://localhost:${port}`);
+  logger.log(`🚀 Backend running on: http://localhost:${port}`);
 }
+
 bootstrap();
-// import { NestFactory } from '@nestjs/core';
-// import { AppModule } from './app.module';
-
-// async function bootstrap() {
-
-//   const app = await NestFactory.create(AppModule);
-//   app.enableCors(); // ✅ Allow frontend calls
-
-//   app.enableCors({
-//     allowedHeaders: "*",
-//     origin: "*"
-//   });
-
-//   await app.listen(8000);
-// }
-// bootstrap();

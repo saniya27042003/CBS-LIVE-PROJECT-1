@@ -541,7 +541,7 @@ export class DatabaseMappingController {
   async migrateGLREPORTLINK() {
     return await this.db.migrateGLREPORTLINK();
   }
-
+  
   //table82
   @Post('migrate/managerview')
   async migrateMANAGERVIEW() {
