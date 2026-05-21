@@ -188,7 +188,7 @@ export class DatabaseComponent implements OnInit {
 
     //  CHANGE THIS PATH to match your structural db controller prefix
     this.http.post<string[]>(
-      'http://localhost:3000/db/server/databases', // 🌟 Changed from /database-mapping/...
+      'http://localhost:3000/database-mapping/server/databases', // 🌟 Changed from /database-mapping/...
       payload
     ).subscribe({
       next: (res) => {
@@ -236,7 +236,7 @@ export class DatabaseComponent implements OnInit {
 
     //  CHANGE THIS PATH
     this.http.post(
-      'http://localhost:3000/db/connect-server', // 🌟 Changed from /database-mapping/...
+      'http://localhost:3000/database-mapping/connect-server', // 🌟 Changed from /database-mapping/...
       primaryConfig
     ).subscribe({
       next: (res: any) => {
@@ -262,7 +262,7 @@ export class DatabaseComponent implements OnInit {
 
         //  CHANGE THIS PATH
         this.http.post(
-          'http://localhost:3000/db/connect-client', // 🌟 Changed from /database-mapping/...
+          'http://localhost:3000/database-mapping/connect-client', // 🌟 Changed from /database-mapping/...
           clientConfig
         ).subscribe({
           next: (res: any) => {
